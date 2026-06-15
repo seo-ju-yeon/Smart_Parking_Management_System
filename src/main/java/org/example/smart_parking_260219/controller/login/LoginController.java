@@ -14,32 +14,51 @@ import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Random;
+import java.security.SecureRandom;
 
+/**
+ * 관리자 로그인 요청을 처리하는 컨트롤러입니다.
+ *
+ * <p>
+ * 아이디/비밀번호 기반 1차 인증을 처리하고,
+ * 관리자 권한에 따라 이메일 인증 또는 이메일+OTP 인증으로 분기합니다.
+ * </p>
+ *
+ * <p>
+ * 일반 관리자는 이메일 확인만 수행하고,
+ * 최고 관리자와 슈퍼 계정은 이메일 확인 후 OTP 인증까지 수행합니다.
+ * </p>
+ */
 @Log4j2
 @WebServlet(name = "loginController", value = {"/login", "/login/verifyEmail", "/login/sendLoginOtp", "/login/verifyEmailOtp"})
 public class LoginController extends HttpServlet {
 
     private final ManagerDAO managerDAO = ManagerDAO.getInstance();
-    private final MailService mailService = new MailService(); // MailService 인스턴스 추가
+    private final MailService mailService = new MailService();
 
+    /**
+     * 로그인 페이지와 2차 인증 페이지 요청을 처리합니다.
+     */
     @Override
-    /* 로그인 폼 요청 처리 */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String servletPath = request.getServletPath();  // 사용자가 들어온 경로 확인
+        // 요청 경로 확인
+        String servletPath = request.getServletPath();
 
-        // 로그인 없이, /login/verifyEmail 또는 /login/verifyEmailOtp 경로로 직접 접근 시도 차단
+        // 2차 인증 페이지 직접 접근 차단
         if ("/login/verifyEmail".equals(servletPath) || "/login/verifyEmailOtp".equals(servletPath)) {
             HttpSession session = request.getSession(false);
+
             if (session == null || session.getAttribute("loginManager") == null) {
                 log.warn("2차 인증 페이지 직접 접근 시도 차단");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
-            // 세션이 있으면 해당 2차 인증 페이지로 포워딩
-            log.info("2차 인증 페이지로 포워딩");
+
+            // 세션이 있으면 요청한 2차 인증 페이지로 이동
+            log.info("2차 인증 페이지로 이동");
+
             if ("/login/verifyEmail".equals(servletPath)) {
                 request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
             } else {
@@ -48,29 +67,36 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 세션 확인 - 이미 로그인된 경우 대시보드로 리다이렉트 (중복 로그인 방지)
-        HttpSession session = request.getSession(false);  // 기존 세션이 없으면 null 반환
+        // 이미 인증 완료된 사용자는 대시보드로 이동
+        HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("loginManager") != null) {
             Boolean fullyAuth = (Boolean) session.getAttribute("fullyAuthenticated");
+
             if (fullyAuth != null && fullyAuth) {
                 log.info("이미 로그인된 사용자 - 대시보드로 리다이렉트");
                 response.sendRedirect(request.getContextPath() + "/dashboard");
                 return;
             }
         }
-        // 로그인하지 않은 상태라면 로그인 페이지(jsp) 페이지로 포워딩
+        // 로그인하지 않은 사용자는 로그인 페이지로 이동
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
     }
 
+    /**
+     * 로그인 POST 요청을 처리합니다.
+     *
+     * <p>
+     * 요청 경로에 따라 1차 로그인, 이메일 인증, OTP 발송, 이메일+OTP 인증으로 분기합니다.
+     * </p>
+     */
     @Override
-    /* 로그인 데이터 처리 */
-    // 1차 로그인 데이터 처리 및 2차 인증
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");  // 한글 깨짐 방지
 
-        String servletPath = request.getServletPath();  // 사용자가 들어온 경로 확인
+        // 요청 경로에 따라 처리할 기능 분기
+        String servletPath = request.getServletPath();
         log.info("doPost 호출 - servletPath: {}", servletPath);
 
         // 이메일 인증 처리 (일반 관리자)
@@ -94,13 +120,13 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 1차 인증 처리 (기존 로직) -> 파라미터 수집, JSP의 <input name=" "> 값 가져옴
+        // 1차 로그인 정보 수집
         String managerId = request.getParameter("id");
         String password = request.getParameter("pw");
 
         log.info("로그인 시도 - ID: {}", managerId);
 
-        // 입력값 검증
+        // 아이디와 비밀번호 입력 여부 확인
         if (managerId == null || managerId.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
             request.setAttribute("error", "아이디와 비밀번호를 입력해주세요.");
@@ -109,31 +135,28 @@ public class LoginController extends HttpServlet {
         }
 
         try {
-            // DB에서 관리자 정보 조회 (1차 인증)
-            // DAO를 통해 아이디에 해다하는 관리자 객체(VO) 가져옴
-            ManagerVO manager = managerDAO.selectOne(managerId);
+            // 관리자 계정 조회
+            ManagerVO managerVO = managerDAO.selectOne(managerId);
 
             // 계정 존재 여부 확인
-            if (manager == null) {
+            if (managerVO == null) {
                 log.warn("존재하지 않는 관리자 ID: {}", managerId);
                 request.setAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
                 request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
                 return;
             }
 
-            // 계정 활성화(active) 여부 확인
-            if (!manager.isActive()) {
+            // 비활성화 계정 로그인 차단
+            if (!managerVO.isActive()) {
                 log.warn("비활성화된 계정 로그인 시도: {}", managerId);
                 request.setAttribute("error", "비활성화된 계정입니다.<br> 관리자에게 문의하세요.");
                 request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
                 return;
             }
 
-            // BCrypt로 비밀번호 검증
-            // 입력된 평문 암호와 DB의 암호화를 BCrypt로 비교
-            boolean passwordMatch = PasswordUtil.checkPassword(password, manager.getPassword());
+            // 입력된 비밀번호와 DB의 BCrypt 해시값 비교
+            boolean passwordMatch = PasswordUtil.checkPassword(password, managerVO.getPassword());
 
-            // 암호화된 비밀번호 확인
             if (!passwordMatch) {
                 log.warn("비밀번호 불일치 - ID: {}", managerId);
                 request.setAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
@@ -141,23 +164,22 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
-            log.info("1차 인증 성공: {}, 권한: {}", managerId, manager.getRole());
+            log.info("1차 인증 성공: {}, 권한: {}", managerId, managerVO.getRole());
 
-            // 로그인 성공 - 세션 생성
+            // 1차 인증 성공 후 세션 생성
             HttpSession session = request.getSession();
-            session.setAttribute("managerId", manager.getManagerId());
-            session.setAttribute("managerName", manager.getManagerName());
-            session.setAttribute("managerRole", manager.getRole());
+            session.setAttribute("managerId", managerVO.getManagerId());
+            session.setAttribute("managerName", managerVO.getManagerName());
+            session.setAttribute("managerRole", managerVO.getRole());
             session.setMaxInactiveInterval(30 * 60);
 
-            // 세션에 임시 정보 저장 (2차 인증 전 단계)
-            session.setAttribute("loginManager", manager);
+            // 2차 인증 전까지 사용할 관리자 정보 저장
+            session.setAttribute("loginManager", managerVO);
             session.setAttribute("awaitingSecondAuth", true);
 
-            // 권한(Role)에 따른 2차 인증 페이지 분기
-            // -> 슈퍼 계정은 최고관리자 OTP 화면으로 이동
-            //   (이메일 입력 + 슈퍼패스 OTP 111111 입력 시 로그인)
-            if ("ADMIN".equals(manager.getRole()) || SuperKeyConfig.isSuperAccount(managerId)) {
+            // 권한에 따라 2차 인증 페이지 분기
+            // 이메일 입력 후 슈퍼패스 OTP를 입력하면 최고관리자 인증 단계 통과
+            if ("ADMIN".equals(managerVO.getRole()) || SuperKeyConfig.isSuperAccount(managerId)) {
                 log.info("최고관리자/슈퍼 계정 2차 인증(이메일+OTP) 단계로 이동: {}", managerId);
                 request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
             } else {
@@ -172,17 +194,21 @@ public class LoginController extends HttpServlet {
         }
     }
 
-    /* 2차 인증 - 이메일 확인 처리 */
+    /**
+     * 일반 관리자 이메일 인증을 처리합니다.
+     *
+     * <p>
+     * 1차 로그인 성공 후 세션에 저장된 관리자 정보와 사용자가 입력한 이메일을 비교합니다.
+     * </p>
+     */
     private void verifyEmail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        log.info("verifyEmail, 이메일 확인 처리 메서드 시작");
+        log.info("일반 관리자 이메일 인증 처리 시작");
 
-        // 기존 세션 가져오기 (없으면 null 반환)
-        // 1차 인증 때 이미 세션이 생성되었어야 하므로, 여기서 null이면 비정상적인 접근임
-        HttpSession session = request.getSession(false);
+        // 1차 인증 때 생성된 세션 확인
+        HttpSession session = request.getSession(false);  // null = 비정상 접근
 
-        // 세션 존재 여부 검증
         if (session == null) {
             log.warn("세션이 null입니다");
             request.setAttribute("error", "세션이 만료되었습니다. 다시 로그인해주세요.");
@@ -190,22 +216,21 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 세션에 저장된 관리자 객체 꺼내기
-        // 1차 로그인 성공 시 doPost에 저장했던 "loginManager" 객체를 가져옴
-        ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
+        // 세션에 저장된 관리자 정보 확인
+        ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");  // 1차 로그인 성공 시 doPost에 저장했던 loginManager 객체
 
-        if (manager == null) {
+        if (managerVO == null) {
             log.warn("세션에 loginManager 정보 없음");
             request.setAttribute("error", "세션 정보가 없습니다. 다시 로그인해주세요.");
             request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
             return;
         }
 
-        // 사용자 입력 값 - JSP 화면에서 사용자가 입력한 이메일 값 가져옴, <input name = "email">
+        // 사용자가 입력한 이메일
         String inputEmail = request.getParameter("email");
         log.info("입력된 이메일: {}", inputEmail);
 
-        // 입력값 검증 - 이메일을 입력하지 않았을 경우 다시 이메일 입력 페이지로 포워딩
+        // 입력값 검증
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
             log.warn("이메일 입력 없음");
             request.setAttribute("error", "이메일을 입력해주세요.");
@@ -213,55 +238,51 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // DB 값 비교, 세션 내 manager 객체에 저장된 실제 이메일 주소를 가져옴
-        String registeredEmail = manager.getEmail();
+        // DB에 등록된 이메일 확인
+        String registeredEmail = managerVO.getEmail();
         log.info("등록된 이메일: {}", registeredEmail);
 
-        // DB에 등록된 이메일 정보가 없으면 에러 처리
         if (registeredEmail == null || registeredEmail.trim().isEmpty()) {
-            log.error("DB에 등록된 이메일 없음 - ID: {}", manager.getManagerId());
+            log.error("DB에 등록된 이메일 없음 - ID: {}", managerVO.getManagerId());
             request.setAttribute("error", "등록된 이메일 정보가 없습니다. 관리자에게 문의하세요.");
             request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
             return;
         }
 
-        // 이메일 일치 확인 (대소문자 구분 없이)
-        // 사용자가 입력한 이메일(inputEmail) & DB에 등록된 이메일(registeredEmail) 비교
+        // 입력 이메일과 등록 이메일 비교
         if (!inputEmail.trim().equalsIgnoreCase(registeredEmail.trim())) {
             log.warn("이메일 불일치 - ID: {}, 입력: {}, 등록: {}",
-                    manager.getManagerId(), inputEmail, registeredEmail);
+                    managerVO.getManagerId(), inputEmail, registeredEmail);
             request.setAttribute("error", "등록된 이메일 주소와 일치하지 않습니다.");
             request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
             return;
         }
 
-        log.info("2차 인증 성공 - ID: {}, 이메일: {}", manager.getManagerId(), inputEmail);
+        log.info("2차 인증 성공 - ID: {}, 이메일: {}", managerVO.getManagerId(), inputEmail);
 
-        // 2차 인증 완료
-        // 2차 인증 대기 임시 플래그 제거
+        // 2차 인증 완료 처리
         session.removeAttribute("awaitingSecondAuth");
-        // 1차(ID/PW), 2차(OTP) 모두 통과한 '완전 인증' 표시를 저장
         session.setAttribute("fullyAuthenticated", true);
+        session.setMaxInactiveInterval(30 * 60);  // 세션 타임아웃
 
-        // 세션 타임아웃 설정 (30분)
-        session.setMaxInactiveInterval(30 * 60);
-
-        // 로그인 완료 - 대시보드로 리다이렉트
-        /** 최종 merge 진행 시 경로 재설정 */
-        log.info("로그인 완료 - 대시보드로 이동: {}", manager.getManagerId());
+        log.info("로그인 완료 - 대시보드로 이동: {}", managerVO.getManagerId());
         response.sendRedirect(request.getContextPath() + "/dashboard");
     }
 
-    /* OTP 발송 처리 (최고 관리자) - 네이버 이메일로 실제 발송 */
+    /**
+     * 최고 관리자 로그인용 OTP를 이메일로 발송합니다.
+     */
     private void sendLoginOtp(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");  // 응답을 HTML이 아닌 JSON 형태로 보냄
-        response.setCharacterEncoding("UTF-8");  // 한글 깨짐 방지
-        PrintWriter out = response.getWriter();  // 글자를 써서 보낼 펜 역할을 하는 객체
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8"); // 한글 깨짐 방지
+
+        PrintWriter out = response.getWriter(); // JSON 응답 작성 객체
 
         try {
-            HttpSession session = request.getSession(false);  // 기존 세션 확인, 없으면 null
+            // 1차 인증 세션 확인
+            HttpSession session = request.getSession(false);
 
             if (session == null || session.getAttribute("loginManager") == null) {
                 log.warn("OTP 발송 요청 - 유효하지 않은 세션");
@@ -270,7 +291,7 @@ public class LoginController extends HttpServlet {
             }
 
             ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
-            String inputEmail = request.getParameter("email");  // JSP 파일에서 입력한 이메일
+            String inputEmail = request.getParameter("email");
 
             log.info("OTP 발송 요청 - ID: {}, 입력 이메일: {}", manager.getManagerId(), inputEmail);
 
@@ -279,7 +300,7 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
-            // 1차 로그인한 계정의 DB 저장 이메일(registeredEmail)과 지금 입력한 이메일이 같은지 확인
+            // 등록된 이메일과 입력 이메일 비교
             String registeredEmail = manager.getEmail();
 
             if (registeredEmail == null || registeredEmail.trim().isEmpty()) {
@@ -288,8 +309,6 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
-            // 이메일 일치 확인 (대소문자 구분 없이)
-            // 일치하지 않을 경우, 실패 메시지를 JSON으로 보냄
             if (!inputEmail.trim().equalsIgnoreCase(registeredEmail.trim())) {
                 log.warn("이메일 불일치 - 입력: {}, 등록: {}", inputEmail, registeredEmail);
                 out.print("{\"success\":false,\"message\":\"등록된 이메일 주소와 일치하지 않습니다.\"}");
@@ -300,30 +319,24 @@ public class LoginController extends HttpServlet {
             String otp = generateOTP();
             log.info("OTP 생성 완료 - ID: {}, OTP: {}", manager.getManagerId(), otp);
 
-            // 세션에 OTP 저장 (5분 유효)
-            session.setAttribute("loginOtp", otp);  // 생성 OTP를 세션에 임시 보관
-            session.setAttribute("otpGeneratedTime", System.currentTimeMillis());  // 생성 시간 설정
-            session.setAttribute("otpVerifiedEmail", inputEmail.trim().toLowerCase());  // 인증된 이메일 주소 저장
+            // OTP 발송 정보를 세션에 저장 (5분 유효)
+            session.setAttribute("loginOtp", otp); // 생성 OTP를 세션에 임시 보관
+            session.setAttribute("otpGeneratedTime", System.currentTimeMillis()); // 생성 시간 설정
+            session.setAttribute("otpVerifiedEmail", inputEmail.trim().toLowerCase()); // 인증된 이메일 주소 저장
 
-            // 실제 네이버 이메일로 OTP 발송
             try {
                 String emailTitle = "[보안인증] 로그인 인증번호";
-                // buildOtpEmailContent : HTML 디자인이 입혀진 이메일 본문을 만드는 메서드 호출
-                String emailBody = buildOtpEmailContent(manager.getManagerName(), otp);
+                String emailBody = buildOtpEmailContent(manager.getManagerName(), otp);  // buildOtpEmailContent: HTML 디자인이 입혀진 이메일 본문을 만드는 메서드
 
-                // mailService를 통해 실제 메일 전송
                 mailService.sendMailWithHtml(emailTitle, emailBody, inputEmail);
 
-                log.info("OTP 이메일 발송 성공, 유효시간 5분");
-                log.info("📧 수신 이메일: {}, 🔐 OTP 코드: {}", inputEmail, otp);
-
-                // 전송 성공 시 화면(JavaScript)에 성공 메시지 전달
+                log.info("OTP 이메일 발송 성공 - ID: {}", manager.getManagerId());
+//                log.info("수신 이메일: {}, OTP 코드: {}", inputEmail, otp);
                 out.print("{\"success\":true,\"message\":\"인증번호가 이메일로 발송되었습니다.\"}");
 
             } catch (Exception emailError) {
                 log.error("이메일 발송 실패", emailError);
                 out.print("{\"success\":false,\"message\":\"이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.\"}");
-                return;
             }
 
         } catch (Exception e) {
@@ -332,13 +345,16 @@ public class LoginController extends HttpServlet {
         }
     }
 
-    /* 이메일 + OTP 인증 처리 (최고 관리자) */
+    /**
+     * 최고 관리자 이메일+OTP 인증을 처리합니다.
+     */
     private void verifyEmailOtp(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        log.info("verifyEmailOtp 메서드 시작");
+        log.info("최고관리자 이메일+OTP 인증 처리 시작");
 
-        HttpSession session = request.getSession(false);  // 기존 세션 가져오기
+        // 1차 인증 세션 확인
+        HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("loginManager") == null) {
             log.warn("유효하지 않은 세션");
@@ -347,15 +363,14 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
-        // 사용자가 화면 <input>에 입력한 이메일과 OTP 번호 가져옴
+        ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");
+
+        // 사용자가 입력한 이메일과 OTP
         String inputEmail = request.getParameter("email");
         String inputOtp = request.getParameter("otp");
+//        log.info("입력 - 이메일: {}, OTP: {}", inputEmail, inputOtp);
 
-        log.info("입력 - 이메일: {}, OTP: {}", inputEmail, inputOtp);
-
-        // 입력값 검증
-        // 아무것도 입력 하지 않고 '인증' 눌렀을 경우를 대비
+        // 입력값 확인
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
             request.setAttribute("error", "이메일을 입력해주세요.");
             request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
@@ -369,12 +384,10 @@ public class LoginController extends HttpServlet {
         }
 
         // 세션에 저장된 OTP 정보 확인
-        // sendLoginOtp 메서드에서 메모해두었던 진짜 인증 번호 꺼냄
         String sessionOtp = (String) session.getAttribute("loginOtp");
         String otpVerifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
         Long otpGeneratedTime = (Long) session.getAttribute("otpGeneratedTime");
 
-        // 메일 발송 누르지도 않고 인증 시도 -> 세션값(메모)가 없으므로 에러 발생
         if (sessionOtp == null || otpVerifiedEmail == null || otpGeneratedTime == null) {
             log.warn("OTP 정보 없음 - 먼저 인증번호를 발송받아야 함");
             request.setAttribute("error", "먼저 인증번호를 발송받아주세요.");
@@ -382,21 +395,23 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // OTP 유효 시간 확인 (5분)
-        long currentTime = System.currentTimeMillis();  // 지금시간
-        long elapsedTime = currentTime - otpGeneratedTime;  // 경과 시간
+        // OTP 유효 시간 확인
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - otpGeneratedTime;
         if (elapsedTime > 5 * 60 * 1000) {
             log.warn("OTP 만료 - 경과 시간: {}ms", elapsedTime);
-            // 만료 시 세션에 있는 OTP 정보를 싹 지워서 보안을 유지
+
+            // 유효시간 만료 후 정보 삭제
             session.removeAttribute("loginOtp");
             session.removeAttribute("otpGeneratedTime");
             session.removeAttribute("otpVerifiedEmail");
+
             request.setAttribute("error", "인증번호가 만료되었습니다. 다시 발송받아주세요.");
             request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
             return;
         }
 
-        // 이메일 일치 확인 (인증번호를 받은 이메일 & 지금 입력한 이메일 비교)
+        // OTP를 발송받은 이메일과 입력 이메일 비교
         if (!inputEmail.trim().equalsIgnoreCase(otpVerifiedEmail)) {
             log.warn("이메일 불일치 - 입력: {}, OTP 발송: {}", inputEmail, otpVerifiedEmail);
             request.setAttribute("error", "인증번호를 발송받은 이메일과 일치하지 않습니다.");
@@ -404,10 +419,10 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // ★ [포트폴리오 시연용] 슈퍼패스 OTP 입력 시 최고관리자 OTP 검증도 무조건 통과
+        // 포트폴리오 시연용 슈퍼 OTP 확인
         boolean superOtpBypass = SuperKeyConfig.isSuperOtp(inputOtp.trim());
 
-        // OTP 일치 확인 (슈퍼패스 OTP이면 실제 OTP와 달라도 통과)
+        // OTP 일치 확인
         if (!superOtpBypass && !inputOtp.trim().equals(sessionOtp)) {
             log.warn("OTP 불일치 - 입력: {}, 저장: {}", inputOtp, sessionOtp);
             request.setAttribute("error", "인증번호가 일치하지 않습니다.");
@@ -415,47 +430,58 @@ public class LoginController extends HttpServlet {
             return;
         }
         if (superOtpBypass) {
-            log.info("슈퍼패스 OTP로 최고관리자 2차 인증 통과: {}", manager.getManagerId());
+            log.info("슈퍼패스 OTP로 최고관리자 2차 인증 통과: {}", managerVO.getManagerId());
         }
 
-        log.info("이메일+OTP 인증 성공 - ID: {}", manager.getManagerId());
+        log.info("이메일+OTP 인증 성공 - ID: {}", managerVO.getManagerId());
 
-        // 2차 인증 완료 - OTP 정보 삭제
+        // 2차 인증 완료 후 OTP 정보 삭제
         session.removeAttribute("loginOtp");
         session.removeAttribute("otpGeneratedTime");
         session.removeAttribute("otpVerifiedEmail");
         session.removeAttribute("awaitingSecondAuth");
         session.setMaxInactiveInterval(30 * 60);
 
-        // ★ 슈퍼 계정이면 role을 SUPER로 세팅하여 모든 메뉴 권한 부여
-        if (SuperKeyConfig.isSuperAccount(manager.getManagerId())) {
-            log.info("슈퍼 계정 OTP 인증 완료 - SUPER 역할 세션 세팅: {}", manager.getManagerId());
+        // 슈퍼 계정이면 role만 SUPER로 변경
+        if (SuperKeyConfig.isSuperAccount(managerVO.getManagerId())) {
+            log.info("슈퍼 계정 OTP 인증 완료 - SUPER 역할 세션 세팅: {}", managerVO.getManagerId());
+
             ManagerVO superVO = ManagerVO.builder()
-                    .managerNo(manager.getManagerNo())
-                    .managerId(manager.getManagerId())
-                    .managerName(manager.getManagerName())
-                    .password(manager.getPassword())
-                    .email(manager.getEmail())
+                    .managerNo(managerVO.getManagerNo())
+                    .managerId(managerVO.getManagerId())
+                    .managerName(managerVO.getManagerName())
+                    .password(managerVO.getPassword())
+                    .email(managerVO.getEmail())
                     .active(true)
-                    .role(SuperKeyConfig.SUPER_ROLE)  // "SUPER" — DB role 컬럼은 변경하지 않음
+                    .role(SuperKeyConfig.SUPER_ROLE)
                     .build();
             session.setAttribute("loginManager", superVO);
         }
 
-        session.setAttribute("fullyAuthenticated", true);  // 모든 인증을 마친 사용자임을 표시
-        log.info("로그인 완료 - 대시보드로 리다이렉트: {}", manager.getManagerId());
+        session.setAttribute("fullyAuthenticated", true);
+
+        log.info("로그인 완료 - 대시보드로 리다이렉트: {}", managerVO.getManagerId());
         response.sendRedirect(request.getContextPath() + "/dashboard");
     }
 
-    /* 6자리 랜덤 OTP 생성 */
+    /**
+     * 6자리 숫자 OTP를 생성합니다.
+     *
+     * @return 생성된 OTP
+     */
     private String generateOTP() {
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }
 
-    /* OTP 이메일 HTML 템플릿 생성  */
-    // 최고 관리자 전용 - 로그인 인증 이메일 HTML
+    /**
+     * OTP 인증 메일 HTML 본문을 생성합니다.
+     *
+     * @param managerName 관리자 이름
+     * @param otp         발송할 OTP
+     * @return OTP 이메일 HTML 본문
+     */
     private String buildOtpEmailContent(String managerName, String otp) {
         return "<!DOCTYPE html>" +
                 "<html>" +
@@ -508,10 +534,4 @@ public class LoginController extends HttpServlet {
                 "</html>";
     }
 
-    /* 에러 메시지 처리를 위한 공통 메서드 */
-    private void sendError(HttpServletRequest request, HttpServletResponse response, String message)
-            throws ServletException, IOException {
-        request.setAttribute("error", message);
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
-    }
 }

@@ -57,7 +57,7 @@ dependencies {
     implementation 'org.eclipse.angus:jakarta.mail:2.0.4'
 
     // naver 메일, 의존성 추가
-    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+//    implementation 'com.sun.mail:jakarta.mail:2.0.1'
 
     //암호화 기능
     // Source: https://mvnrepository.com/artifact/org.mindrot/jbcrypt

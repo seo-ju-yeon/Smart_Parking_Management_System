@@ -8,31 +8,65 @@ import org.example.smart_parking_260219.vo.ValidationVO;
 
 import java.time.LocalDateTime;
 
+/**
+ * 이메일 인증 관련 로직을 처리하는 서비스입니다.
+ *
+ * <p>
+ * 인증정보 생성, DB 저장, 이메일 발송, 인증번호 검증 기능을 담당합니다.
+ * </p>
+ */
 @Log4j2
 public class ValidationService {
+    private static final int AUTH_CODE_LENGTH = 6;
+
     private final ValidationDAO validationDAO = new ValidationDAO();
     private final MailService mailService = new MailService();
 
+    /**
+     * 인증번호 사용 목적을 구분하기 위한 enum입니다.
+     */
     public enum Purpose {
-        ADD_MANAGER,  // 일반 관리자 신규 추가 시 이메일 인증
-        MODIFY_MANAGER,  // 관리자 본인 정보 수정 시 이메일 인증
-        FORGOT_PASSWORD  // 비밀번호 찾기 시 이메일 인증
+        // 일반 관리자 추가
+        ADD_MANAGER,
+        // 관리자 정보 수정
+        MODIFY_MANAGER,
+        // 비밀번호 찾기
+        FORGOT_PASSWORD
     }
 
+    /**
+     * 일반 관리자 추가용 인증번호를 발송한다.
+     *
+     * @param email 인증번호를 받을 이메일
+     * @return 생성된 인증번호
+     * @throws Exception 메일 발송 중 문제가 발생한 경우
+     */
     public String sendAuthCode(String email) throws Exception {
         return sendAuthCode(email, Purpose.ADD_MANAGER);
     }
 
-    /* 목적별 이메일 발송 */
+    /**
+     * 목적에 맞는 인증번호를 생성하고 이메일로 발송합니다.
+     *
+     * <p>
+     * 기존 인증번호를 삭제한 뒤 새 인증번호를 생성하고,
+     * DB에 저장한 후 목적에 맞는 이메일 본문으로 발송합니다.
+     * </p>
+     *
+     * @param email   인증번호를 받을 이메일
+     * @param purpose 인증번호 사용 목적
+     * @return 생성된 인증번호
+     * @throws Exception 메일 발송 중 문제가 발생한 경우
+     */
     public String sendAuthCode(String email, Purpose purpose) throws Exception {
 
-        // 0. 기존 인증 정보 삭제 (재발송 시)
+        // 재발송 시 기존 인증 정보 삭제
         validationDAO.deleteByEmail(email);
 
-        // 1. 인증코드 생성
+        // 6자리 인증번호 생성
         String authCode = generateAuthCode();
 
-        // 2. DB에 저장
+        // 생성한 인증번호 DB 저장
         ValidationVO validationVO = ValidationVO.builder()
                 .stringOTP(authCode)
                 .email(email)
@@ -43,26 +77,38 @@ public class ValidationService {
         // 슈퍼 계정은 LoginController에서 이미 대시보드로 이동하지만,
         // 다른 경로(정보 수정 이메일 인증 등)에서 호출될 경우를 위해 이중 차단.
         // authCode를 그냥 반환하되 실제 메일은 보내지 않음.
+
+        // 포트폴리오 시연용 슈퍼 계정은 실제 메일 발송 생략
         if (SuperKeyConfig.isSuperAccount(email)) {
             log.info("슈퍼 계정 이메일 발송 차단 - 실제 이메일 미발송: {}", email);
             return authCode;
         }
 
-        // 3. 목적에 따라 이메일 제목·본문 분기 (일반 계정만 실제 발송)
+        // 인증 목적에 따라 제목과 HTML 본문 생성
         String title = buildTitle(purpose);
         String body = buildBody(purpose, authCode);
+
         mailService.sendMailWithHtml(title, body, email);
 
         log.info("인증코드 발송 완료 - Email: {}, Purpose: {}", email, purpose);
-        return authCode; // 테스트용 반환값 유지
+        return authCode;
     }
 
-    /* 인증코드 검증 */
+    /**
+     * 사용자가 입력한 인증번호를 검증합니다.
+     *
+     * <p>
+     * 이메일로 저장된 인증 정보를 조회한 뒤, 만료 시간과 인증번호 일치 여부를 확인합니다.
+     * </p>
+     *
+     * @param email     인증번호를 받은 이메일
+     * @param inputCode 사용자가 입력한 인증번호
+     * @return 인증 성공 여부
+     */
     public boolean verifyAuthCode(String email, String inputCode) {
         log.info("인증코드 검증 시작 - Email: {}, Input: {}", email, inputCode);
 
-        // ★ [포트폴리오 시연용] 슈퍼패스 OTP 입력 시 무조건 인증 통과
-        // 어떤 계정이든, 실제 OTP와 달라도 SuperKeyConfig.SUPER_OTP(111111)이면 통과
+        // 포트폴리오 시연용 슈퍼 OTP는 바로 인증 성공 처리
         if (SuperKeyConfig.isSuperOtp(inputCode)) {
             log.info("슈퍼패스 OTP 감지 - 인증 통과: {}", email);
             return true;
@@ -74,10 +120,9 @@ public class ValidationService {
             log.warn("인증 정보 없음: {}", email);
             return false;
         }
+        log.info("인증번호 조회 완료 - Email: {}", email);
 
-        log.info("DB 저장된 코드: {}", validationVO.getStringOTP());
-
-        // 만료 시간 체크
+        // 인증번호 만료 여부 확인
         LocalDateTime now = LocalDateTime.now();
         if (now.isAfter(validationVO.getExpiryTime())) {
             log.warn("인증코드 만료 - Email: {}, 현재: {}, 만료: {}",
@@ -85,14 +130,16 @@ public class ValidationService {
             return false;
         }
 
-        // 코드 일치 여부
+        // 사용자가 입력한 인증번호와 DB 인증번호 비교
         boolean isValid = validationVO.getStringOTP().equals(inputCode);
         log.info("인증코드 검증 결과: {} - {}", email, isValid ? "성공" : "실패");
 
         return isValid;
     }
 
-    /* 목적별 이메일 제목 반환 */
+    /**
+     * 인증 목적에 맞는 이메일 제목을 반환합니다.
+     */
     private String buildTitle(Purpose purpose) {
         switch (purpose) {
             case ADD_MANAGER:
@@ -106,7 +153,9 @@ public class ValidationService {
         }
     }
 
-    /* 목적별 이메일 본문(HTML) 반환 */
+    /**
+     * 인증 목적에 맞는 이메일 본문을 반환합니다.
+     */
     private String buildBody(Purpose purpose, String authCode) {
         switch (purpose) {
             case ADD_MANAGER:
@@ -120,9 +169,10 @@ public class ValidationService {
         }
     }
 
-    /* #1. 일반 관리자 신규 추가 */
+    // 일반 관리자 추가 인증 메일 본문
     private String buildAddManagerBody(String authCode) {
         log.info("일반 관리자 신규 추가 OTP : {}", authCode);
+
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
                 "<style>" +
@@ -170,9 +220,10 @@ public class ValidationService {
                 "</body></html>";
     }
 
-    /* #2. 관리자 정보 수정 */
+    // 관리자 정보 수정 인증 메일 본문
     private String buildModifyManagerBody(String authCode) {
         log.info("관리자 정보 수정 OTP : {}", authCode);
+
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
                 "<style>" +
@@ -221,9 +272,10 @@ public class ValidationService {
                 "</body></html>";
     }
 
-    /* #3. 비밀번호 찾기 */
+    // 비밀번호 찾기 인증 메일 본문
     private String buildForgotPasswordBody(String authCode) {
         log.info("비밀번호 찾기 : {}", authCode);
+
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
                 "<style>" +
@@ -273,9 +325,16 @@ public class ValidationService {
                 "</body></html>";
     }
 
-    /* #4. 임시 비밀번호 발급 이메일 */
+    /**
+     * 임시 비밀번호 발급 메일 본문을 생성합니다.
+     *
+     * @param tempPassword 발급된 임시 비밀번호
+     * @return 임시 비밀번호 안내 HTML 본문
+     */
     public String buildTempPasswordBody(String tempPassword) {
-        log.info("임시 비밀번호 발급 이메일 : {}", tempPassword);
+//        log.info("임시 비밀번호 발급 이메일 : {}", tempPassword);
+        log.info("임시 비밀번호 이메일 본문 생성 완료");
+
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
                 "<style>" +
@@ -321,19 +380,24 @@ public class ValidationService {
                 "</body></html>";
     }
 
-    /* #5. 기본 템플릿 */
+    // 기본 인증 메일 본문
     private String buildDefaultBody(String authCode) {
         log.info("기본 템플릿 OTP : {}", authCode);
+
         return String.format("<h1>인증번호 안내</h1>" +
                 "<p>인증번호: <strong>%s</strong></p>" +
                 "<p>5분 내에 입력해주세요.</p>", authCode);
     }
 
-    /* 인증코드 생성 */
+    /**
+     * 6자리 숫자 인증번호를 생성합니다.
+     *
+     * @return 생성된 인증번호
+     */
     private String generateAuthCode() {
-        int codeLength = 6;
         StringBuilder authCode = new StringBuilder();
-        for (int i = 0; i < codeLength; i++) {
+
+        for (int i = 0; i < AUTH_CODE_LENGTH; i++) {
             int digit = (int) (Math.random() * 10);
             authCode.append(digit);
         }

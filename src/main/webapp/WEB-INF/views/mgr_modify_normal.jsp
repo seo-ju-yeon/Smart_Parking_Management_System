@@ -1,9 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <%
-    // ★ 보안: ADMIN만 접근 가능. NORMAL 관리자가 직접 URL로 접근 시 차단
+    // ★ 보안: ADMIN 또는 SUPER만 접근 가능. NORMAL 관리자가 직접 URL로 접근 시 차단
     ManagerVO loginCheck = (ManagerVO) session.getAttribute("loginManager");
-    if (loginCheck == null || !"ADMIN".equals(loginCheck.getRole())) {
+    if (loginCheck == null ||
+            (!"ADMIN".equals(loginCheck.getRole()) && !"SUPER".equals(loginCheck.getRole()))) {
         response.sendRedirect(request.getContextPath() + "/mgr/my_modify");
         return;
     }
@@ -220,7 +221,8 @@
             <!-- 아이디 -->
             <div class="form-group">
                 <label for="id">아이디 <span class="required">*</span></label>
-                <input type="text" id="id" name="managerId" value="<%= manager.getManagerId() %>">
+                <input type="text" id="id" name="managerId" value="<%= manager.getManagerId() %>" readonly>
+                <div class="field-hint">아이디는 변경할 수 없습니다</div>
                 <%--                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">--%>
             </div>
 
@@ -614,11 +616,10 @@
             isValid = false;
         }
 
-        // 이메일이 변경된 경우 인증 완료 여부 검사
-        const currentEmail = emailInput.value.trim();
-        if (currentEmail !== originalEmail && !isEmailVerified) {
+        // ★ 이메일 변경 여부와 무관하게 반드시 이메일 인증 완료 필요
+        if (!isEmailVerified) {
             showError('email', '이메일 인증을 완료해주세요.');
-            alert('변경된 이메일 인증을 완료해주세요.');
+            alert('변경사항을 적용하려면 이메일 인증을 먼저 완료해주세요.');
             isValid = false;
         }
 
@@ -632,8 +633,8 @@
         submitBtn.textContent = '적용 중...';
     });
 
-    // 초기 로드 시 원래 이메일은 인증된 것으로 간주
-    isEmailVerified = true;
+    // ★ 초기 로드 시 이메일 미인증 상태 (반드시 인증 후 제출 가능)
+    isEmailVerified = false;
 </script>
 </body>
 </html>
