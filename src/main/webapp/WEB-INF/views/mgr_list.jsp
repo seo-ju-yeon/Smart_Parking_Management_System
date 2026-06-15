@@ -8,24 +8,24 @@
     <title>관리자 목록 - 스마트 파킹 시스템</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
     <style>
-        /* 메인 컨텐츠 영역 정렬 */
+        /* 메인 컨텐츠 영역 */
         .main-content {
             padding: 40px;
             background-color: #f4f7f6;
             min-height: 100vh;
         }
 
-        /* 테이블 디자인 수정 핵심 */
+        /* 관리자 목록 테이블 */
         .manager-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
 
-        /* 분류(Header) 부분 강조 */
+        /* 테이블 헤더 강조 */
         .manager-table thead th {
-            background-color: #2c3e50; /* 진한 네이비톤으로 분류 명확화 */
-            color: #ffffff; /* 글자는 흰색으로 대비 */
+            background-color: #2c3e50;
+            color: #ffffff;
             padding: 15px;
             font-size: 1.1em;
             border-bottom: 3px solid #1a252f;
@@ -39,7 +39,7 @@
             color: #333;
         }
 
-        /* 행 마우스 오버 효과 */
+        /* 행 hover 효과 */
         .manager-table tbody tr:hover {
             background-color: #f8f9fa;
         }
@@ -57,7 +57,7 @@
             border-radius: 4px;
         }
 
-        /* 페이징 스타일 */
+        /* 페이징 */
         .pagination {
             display: flex;
             justify-content: center;
@@ -97,7 +97,7 @@
             color: #ccc;
         }
 
-        /* ── 최고관리자 클릭 차단 안내 모달 ── */
+        /* 관리자 접근 제한 모달 */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -173,7 +173,7 @@
             background: #1a252f;
         }
 
-        /* 최고관리자 행 강조 */
+        /* 특수 관리자 행 강조 */
         .row-admin td {
             background-color: #f0f4ff;
         }
@@ -193,7 +193,7 @@
 <body>
 <%@ include file="../main/menu.jsp" %>
 
-<%-- ── 최고관리자 접근 차단 안내 모달 ── --%>
+<%-- 최고관리자 접근 차단 안내 모달 --%>
 <div id="adminModal" class="modal-backdrop">
     <div class="modal-box">
         <div class="modal-icon">🔒</div>
@@ -206,7 +206,7 @@
     </div>
 </div>
 
-<%-- ── 슈퍼관리자 접근 차단 안내 모달 ── --%>
+<%-- 슈퍼관리자 접근 차단 안내 모달 --%>
 <div id="superModal" class="modal-backdrop">
     <div class="modal-box">
         <div class="modal-icon">🛡️</div>
@@ -220,7 +220,7 @@
 </div>
 
     <%
-    /* 현재 로그인한 관리자의 role을 세션에서 꺼냄 */
+    /* 현재 로그인한 관리자 권한 확인 */
     ManagerVO sessionMgr = (ManagerVO) session.getAttribute("loginManager");
     String loginRole = (sessionMgr != null) ? sessionMgr.getRole() : "";
 %>
@@ -229,8 +229,6 @@
     <div id="entry" class="page">
         <div style="overflow: hidden;">
             <h2 style="display: inline-block;">관리자 계정 목록</h2>
-
-            <%--            <a href="${pageContext.request.contextPath}/mgr/add" class="btn-add">신규 관리자 추가</a>--%>
 
         </div>
 
@@ -247,14 +245,14 @@
                 </thead>
                 <tbody>
                 <%
-                    // 컨트롤러에서 보낸 "managerList"를 가져옴
+                    // 컨트롤러에서 전달한 관리자 목록 가져옴
                     List<ManagerDTO> managerList = (List<ManagerDTO>) request.getAttribute("managerList");
 
-                    // 페이징 처리를 위한 변수
-                    int pageSize = 5; // 한 페이지에 5명씩
-                    int currentPage = 1; // 현재 페이지 (기본값 1)
+                    // 페이징 기본값 설정
+                    int pageSize = 5;
+                    int currentPage = 1;
 
-                    // URL에서 page 파라미터 가져오기
+                    // 요청 파라미터에서 현재 페이지 확인
                     String pageParam = request.getParameter("page");
                     if (pageParam != null) {
                         try {
@@ -273,15 +271,15 @@
                         totalCount = managerList.size();
                         totalPages = (int) Math.ceil((double) totalCount / pageSize);
 
-                        // 현재 페이지가 유효한 범위인지 체크
+                        // 현재 페이지 범위 보정
                         if (currentPage < 1) currentPage = 1;
                         if (currentPage > totalPages) currentPage = totalPages;
 
-                        // 현재 페이지에 표시할 데이터의 시작/끝 인덱스
+                        // 현재 페이지에 표시할 목록 범위 계산
                         startIndex = (currentPage - 1) * pageSize;
                         endIndex = Math.min(startIndex + pageSize, totalCount);
 
-                        // 현재 페이지의 데이터만 출력
+                        // 현재 페이지 데이터만 출력
                         for (int i = startIndex; i < endIndex; i++) {
                             ManagerDTO mgr = managerList.get(i);
                 %>
@@ -292,7 +290,7 @@
                     </td>
                     <td>
                         <% if ("ADMIN".equals(mgr.getRole())) { %>
-                        <%-- 최고관리자: 클릭 시 view/modify 진입 차단 → 안내 모달 표시 --%>
+                        <%-- 최고관리자는 상세/수정 진입 대신 안내 모달 표시 --%>
                         <a href="javascript:void(0);"
                            onclick="openAdminModal();"
                            style="color: #667eea; font-weight: bold; cursor: pointer;">
@@ -300,7 +298,7 @@
                         </a>
                         <span class="badge-admin">최고관리자</span>
                         <% } else if ("SUPER".equals(mgr.getRole())) { %>
-                        <%-- 슈퍼관리자: 클릭 시 view/modify 진입 차단 → 슈퍼관리자 전용 안내 모달 표시 --%>
+                        <%-- 슈퍼관리자는 전용 안내 모달 표시 --%>
                         <a href="javascript:void(0);"
                            onclick="openSuperModal();"
                            style="color: #667eea; font-weight: bold; cursor: pointer;">
@@ -308,7 +306,7 @@
                         </a>
                         <span class="badge-admin">슈퍼관리자</span>
                         <% } else { %>
-                        <%-- 일반관리자: 기존처럼 view 페이지로 이동 --%>
+                        <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
                         <a href="${pageContext.request.contextPath}/mgr/view?id=<%= mgr.getManagerId() %>"
                            style="color: #007bff; font-weight: bold;">
                             <%= mgr.getManagerName() %>
@@ -337,7 +335,7 @@
             </table>
 
             <%
-                // 페이징 네비게이션 출력
+                // 페이징 영역 출력
                 if (managerList != null && !managerList.isEmpty() && totalPages > 1) {
             %>
             <div class="pagination">
@@ -350,11 +348,11 @@
 
                 <!-- 페이지 번호 -->
                 <%
-                    // 페이지 번호 표시 범위 (현재 페이지 기준 앞뒤 2개씩)
+                    // 현재 페이지 기준 앞뒤 2개까지 표시
                     int startPage = Math.max(1, currentPage - 2);
                     int endPage = Math.min(totalPages, currentPage + 2);
 
-                    // 첫 페이지
+                    // 첫 페이지 바로가기 표시
                     if (startPage > 1) {
                 %>
                 <a href="?page=1">1</a>
@@ -363,7 +361,7 @@
                 <% } %>
                 <% } %>
 
-                <!-- 페이지 번호들 -->
+                <!-- 페이지 번호 목록 -->
                 <% for (int i = startPage; i <= endPage; i++) { %>
                 <% if (i == currentPage) { %>
                 <span class="current"><%= i %></span>
@@ -373,7 +371,7 @@
                 <% } %>
                 <% } %>
 
-                <!-- 마지막 페이지 -->
+                <!-- 마지막 페이지 바로가기 표시 -->
                 <% if (endPage < totalPages) { %>
                 <% if (endPage < totalPages - 1) { %>
                 <span>...</span>
@@ -397,7 +395,7 @@
 <script src="${pageContext.request.contextPath}/JS/menu.js"></script>
 <script src="${pageContext.request.contextPath}/JS/function.js"></script>
 <script>
-    /* ── 최고관리자 접근 차단 모달 제어 ── */
+    // 최고관리자 접근 차단 모달 제어
     function openAdminModal() {
         document.getElementById('adminModal').classList.add('show');
     }
@@ -406,7 +404,7 @@
         document.getElementById('adminModal').classList.remove('show');
     }
 
-    /* ── 슈퍼관리자 모달 제어 ── */
+    // 슈퍼관리자 접근 차단 모달 제어
     function openSuperModal() {
         document.getElementById('superModal').classList.add('show');
     }
@@ -415,14 +413,14 @@
         document.getElementById('superModal').classList.remove('show');
     }
 
-    /* 모달 바깥 영역 클릭 시 닫기 */
+    // 모달 바깥 영역을 클릭하면 닫음
     document.getElementById('adminModal').addEventListener('click', function (e) {
         if (e.target === this) closeAdminModal();
     });
     document.getElementById('superModal').addEventListener('click', function (e) {
         if (e.target === this) closeSuperModal();
     });
-    /* ESC 키로 닫기 */
+    // ESC 키로 모달 닫기
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') { closeAdminModal(); closeSuperModal(); }
     });

@@ -17,8 +17,8 @@
             background: #f5f5f5;
             margin: 0;
             display: flex;
-            justify-content: center; /* 가로 중앙 */
-            align-items: center;     /* 세로 중앙 */
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
         .main-content {
@@ -155,13 +155,11 @@
     </style>
 </head>
 <body>
-<!-- Navigation -->
 <%@ include file="../main/menu.jsp" %>
 
 <%
-    /* ✅ 세션에서 로그인한 관리자 정보를 꺼냄
-     *  주의: menu.jsp(include)에 이미 loginManager 변수가 선언되어 있으므로
-     *        중복 선언을 피하기 위해 sessionLoginManager 로 명명 */
+    /* 로그인 관리자 정보 확인
+     * menu.jsp의 loginManager 변수와 이름이 겹치지 않도록 sessionLoginManager 사용 */
     ManagerVO sessionLoginManager = (ManagerVO) session.getAttribute("loginManager");
     String loginId   = (sessionLoginManager != null) ? sessionLoginManager.getManagerId() : "";
     String loginRole = (sessionLoginManager != null) ? sessionLoginManager.getRole()      : "";
@@ -195,17 +193,15 @@
             ManagerVO manager = (ManagerVO) request.getAttribute("manager");
             if (manager != null) {
 
-                /* ✅ 핵심 판별 플래그
-                 *  - isSelf      : 현재 조회 중인 계정이 본인 계정인지
-                 *  - isAdminRole : 조회 대상 계정이 최고관리자(ADMIN)인지  */
+                /* 조회 대상이 본인 계정인지, 최고관리자인지 확인 */
                 boolean isSelf      = manager.getManagerId().equals(loginId);
                 boolean isAdminRole = "ADMIN".equals(manager.getRole());
 
-                /* 최고관리자가 본인 계정을 비활성화하려는 경우를 차단할지 여부 */
+                /* 최고관리자 본인 계정 비활성화 차단 여부 */
                 boolean blockDeactivate = isSelf && isAdminRole;
         %>
 
-        <!-- 관리자 정보 표시 -->
+        <!-- 관리자 정보 영역 -->
         <div class="info-section">
             <div class="info-row">
                 <div class="info-label">아이디</div>
@@ -231,7 +227,7 @@
             </div>
         </div>
 
-        <!-- 버튼 그룹 -->
+        <!-- 처리 버튼 영역 -->
         <div class="btn-group">
             <button type="button" class="btn btn-secondary"
                     onclick="location.href='${pageContext.request.contextPath}/mgr/list'">
@@ -244,11 +240,12 @@
             </button>
 
             <% if (manager.isActive()) { %>
+            <%-- 관리자 계정 비활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" style="flex: 1;">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="false">
                 <button type="submit" class="btn btn-danger" style="width: 100%;"
-                <%-- ✅ 최고관리자 본인이면 JS 알림 후 제출 차단, 아니면 일반 confirm --%>
+                <%-- 최고관리자 본인은 비활성화 제출 차단 --%>
                         <% if (blockDeactivate) { %>
                         onclick="return alertAdminCannotDeactivate();"
                         <% } else { %>
@@ -259,6 +256,7 @@
                 </button>
             </form>
             <% } else { %>
+            <%-- 관리자 계정 활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" style="flex: 1;">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="true">
@@ -271,7 +269,7 @@
         </div>
 
         <% } else { %>
-        <!-- 조회할 관리자가 없을 때 -->
+        <!-- 조회 결과 없음 -->
         <div class="empty-state">
             <div class="empty-state-icon">👤</div>
             <div class="empty-state-text">조회할 관리자 정보가 없습니다.</div>
@@ -285,15 +283,15 @@
 </div>
 
 <script>
-    /* ✅ 최고관리자 본인 비활성화 차단 알림 함수
-     *  - alert() 로 안내 후 false 를 반환해 폼 제출을 막음 */
+    // 최고관리자 본인 계정 비활성화 차단
     function alertAdminCannotDeactivate() {
         alert('최고 관리자 계정은 비활성화할 수 없습니다.\n계정을 비활성화하려면 다른 최고 관리자에게 문의하세요.');
-        return false; // 폼 제출 차단
+        return false;
     }
 
-    // 성공 메시지가 있으면 3초 후 자동으로 사라지게
+    // 성공 메시지는 3초 후 자동 제거
     window.onload = function() {
+        // 성공 메시지 요소 가져오기
         const successMsg = document.querySelector('.success-message');
         if (successMsg) {
             setTimeout(() => {

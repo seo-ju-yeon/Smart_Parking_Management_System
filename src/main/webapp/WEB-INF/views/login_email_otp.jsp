@@ -11,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -18,35 +19,41 @@
             align-items: center;
             min-height: 100vh;
         }
+
         .auth-container {
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 450px;
         }
+
         h2 {
             color: #333;
             margin-bottom: 10px;
             text-align: center;
             font-size: 24px;
         }
+
         .subtitle {
             color: #666;
             text-align: center;
             margin-bottom: 30px;
             font-size: 14px;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             color: #555;
             font-weight: 500;
         }
+
         input[type="email"],
         input[type="text"] {
             width: 100%;
@@ -56,28 +63,34 @@
             font-size: 14px;
             transition: border-color 0.3s;
         }
+
         input:focus {
             outline: none;
             border-color: #667eea;
         }
+
         input.error {
             border-color: #dc3545;
         }
+
         input:read-only {
             background: #f5f5f5;
             cursor: not-allowed;
         }
+
         .field-error {
             font-size: 12px;
             color: #dc3545;
             margin-top: 4px;
             display: none;
         }
+
         .field-hint {
             font-size: 12px;
             color: #6c757d;
             margin-top: 4px;
         }
+
         .btn {
             width: 100%;
             padding: 12px;
@@ -88,29 +101,36 @@
             cursor: pointer;
             transition: background 0.3s;
         }
+
         .btn-primary {
             background: #667eea;
             color: white;
             margin-bottom: 10px;
         }
+
         .btn-primary:hover:not(:disabled) {
             background: #5568d3;
         }
+
         .btn-primary:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
+
         .btn-secondary {
             background: #6c757d;
             color: white;
         }
+
         .btn-secondary:hover:not(:disabled) {
             background: #5a6268;
         }
+
         .btn-secondary:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
+
         .error-message {
             background: #f8d7da;
             color: #721c24;
@@ -120,6 +140,7 @@
             border: 1px solid #f5c6cb;
             text-align: center;
         }
+
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -129,6 +150,7 @@
             border: 1px solid #c3e6cb;
             text-align: center;
         }
+
         .info-box {
             background: #fff3cd;
             color: #856404;
@@ -138,14 +160,17 @@
             border: 1px solid #ffeaa7;
             font-size: 14px;
         }
+
         .email-input-group {
             display: flex;
             gap: 8px;
             align-items: flex-start;
         }
+
         .email-input-group input {
             flex: 1;
         }
+
         .email-input-group button {
             width: 100px;
             padding: 12px 0;
@@ -153,10 +178,12 @@
             height: 46px;
             white-space: nowrap;
         }
+
         #otpGroup {
             display: none;
             margin-top: 20px;
         }
+
         .admin-badge {
             display: inline-block;
             background: #667eea;
@@ -166,6 +193,7 @@
             font-size: 12px;
             margin-left: 8px;
         }
+
         .timer {
             font-size: 14px;
             color: #dc3545;
@@ -183,7 +211,7 @@
         🔒 보안을 위해 이메일 인증과 OTP 확인이 필요합니다.
     </div>
 
-    <%-- 에러 메시지 표시 --%>
+    <%-- OTP 인증 실패 메시지 표시 --%>
     <% String error = (String) request.getAttribute("error");
         if (error != null && !error.isEmpty()) { %>
     <div class="error-message" id="errorMessage">
@@ -191,8 +219,9 @@
     </div>
     <% } %>
 
+    <%-- 이메일과 OTP 인증 정보 전송 --%>
     <form id="otpForm" action="${pageContext.request.contextPath}/login/verifyEmailOtp" method="post">
-        <!-- Step 1: 이메일 입력 및 인증번호 발송 -->
+        <!-- 이메일 입력 및 인증번호 발송 영역 -->
         <div class="form-group">
             <label for="email">이메일 주소</label>
             <div class="email-input-group">
@@ -203,7 +232,7 @@
             <div class="field-error" id="emailError"></div>
         </div>
 
-        <!-- Step 2: OTP 입력 (이메일 발송 후 표시) -->
+        <!-- 인증번호 발송 후 표시되는 입력 영역 -->
         <div id="otpGroup">
             <div class="form-group">
                 <label for="otp">인증번호</label>
@@ -221,6 +250,7 @@
 </div>
 
 <script>
+    // 화면 요소 가져오기
     const emailInput = document.getElementById('email');
     const sendOtpBtn = document.getElementById('sendOtpBtn');
     const otpGroup = document.getElementById('otpGroup');
@@ -231,22 +261,23 @@
     const timerDiv = document.getElementById('timer');
     const timeLeftSpan = document.getElementById('timeLeft');
 
+    // 인증 상태와 타이머 저장
     let isEmailVerified = false;
     let timerInterval = null;
 
-    // 타이머 시작 (5분)
+    // 인증번호 유효 시간 시작
     function startTimer() {
-        let timeLeft = 300; // 5분 = 300초
+        let timeLeft = 300;
         timerDiv.style.display = 'block';
-        
-        timerInterval = setInterval(function() {
+
+        timerInterval = setInterval(function () {
             timeLeft--;
-            
+
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            timeLeftSpan.textContent = 
+            timeLeftSpan.textContent =
                 String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-            
+
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 alert('인증 시간이 만료되었습니다. 다시 인증번호를 요청해주세요.');
@@ -255,7 +286,7 @@
         }, 1000);
     }
 
-    // 폼 초기화
+    // 인증 상태 초기화
     function resetForm() {
         clearInterval(timerInterval);
         timerDiv.style.display = 'none';
@@ -266,8 +297,8 @@
         sendOtpBtn.textContent = '인증요청';
     }
 
-    // 이메일 유효성 검사
-    emailInput.addEventListener('blur', function() {
+    // 이메일 형식 검사
+    emailInput.addEventListener('blur', function () {
         const value = this.value.trim();
         const emailPattern = /^[A-Za-z0-9+_.-]+@(.+)$/;
         const errorDiv = document.getElementById('emailError');
@@ -289,8 +320,8 @@
         }
     });
 
-    // 인증번호 발송 버튼
-    sendOtpBtn.addEventListener('click', function() {
+    // 인증번호 발송 처리
+    sendOtpBtn.addEventListener('click', function () {
         const email = emailInput.value.trim();
         const emailPattern = /^[A-Za-z0-9+_.-]+@(.+)$/;
 
@@ -312,7 +343,7 @@
         const url = '${pageContext.request.contextPath}/login/sendLoginOtp';
         const body = 'email=' + encodeURIComponent(email);
 
-        // OTP 발송 요청
+        // 입력한 이메일로 로그인 OTP 발송 요청
         fetch(url, {
             method: 'POST',
             headers: {
@@ -328,7 +359,7 @@
             })
             .then(data => {
                 if (data.success) {
-                    // 성공 메시지 표시
+                    // 기존 에러 영역을 성공 메시지 영역으로 재사용
                     const errorMessage = document.getElementById('errorMessage');
                     if (errorMessage) {
                         errorMessage.className = 'success-message';
@@ -344,8 +375,8 @@
                     otpGroup.style.display = 'block';
                     otpInput.focus();
                     isEmailVerified = true;
-                    
-                    // 타이머 시작
+
+                    // 인증번호 유효 시간 시작
                     startTimer();
 
                     alert('✅ 이메일로 인증번호가 발송되었습니다!\n\n' + email + '\n\n이메일함을 확인하고 6자리 인증번호를 입력해주세요.\n(스팸함도 확인해주세요)');
@@ -363,13 +394,13 @@
             });
     });
 
-    // OTP 입력 시 숫자만 허용
-    otpInput.addEventListener('input', function(e) {
+    // 인증번호는 숫자만 입력 가능
+    otpInput.addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 
-    // 폼 제출
-    otpForm.addEventListener('submit', function(e) {
+    // OTP 인증 폼 제출 전 최종 검사
+    otpForm.addEventListener('submit', function (e) {
         const email = emailInput.value.trim();
         const otp = otpInput.value.trim();
 
@@ -400,8 +431,8 @@
         return true;
     });
 
-    // 취소 버튼
-    cancelBtn.addEventListener('click', function() {
+    // 인증 취소 시 로그인 화면으로 이동
+    cancelBtn.addEventListener('click', function () {
         if (confirm('로그인을 취소하시겠습니까?')) {
             clearInterval(timerInterval);
             window.location.href = '${pageContext.request.contextPath}/login';

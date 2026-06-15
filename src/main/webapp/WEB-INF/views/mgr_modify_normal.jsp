@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <%
-    // ★ 보안: ADMIN 또는 SUPER만 접근 가능. NORMAL 관리자가 직접 URL로 접근 시 차단
+    // ADMIN 또는 SUPER만 접근 가능
     ManagerVO loginCheck = (ManagerVO) session.getAttribute("loginManager");
     if (loginCheck == null ||
             (!"ADMIN".equals(loginCheck.getRole()) && !"SUPER".equals(loginCheck.getRole()))) {
@@ -184,14 +184,13 @@
     </style>
 </head>
 <body>
-<!-- Navigation -->
 <%@ include file="../main/menu.jsp" %>
 
 <div class="main-content">
     <div class="container">
         <h2>일반 관리자 정보 수정</h2>
 
-        <%-- 안내 메시지 --%>
+        <%-- 수정 안내 메시지 표시 --%>
         <div class="message info-message">
             ℹ️ 정보 수정 시 이메일 인증이 필요합니다.
         </div>
@@ -205,7 +204,7 @@
         </div>
         <% } %>
 
-        <%-- 에러 메시지 표시 --%>
+        <%-- 수정 실패 메시지 표시 --%>
         <% String error = (String) request.getAttribute("error");
             if (error != null) { %>
         <div class="message error-message">
@@ -217,16 +216,16 @@
             ManagerVO manager = (ManagerVO) request.getAttribute("manager");
             if (manager != null) {
         %>
+        <%-- 일반 관리자 수정 정보 전송 --%>
         <form id="modifyForm" action="${pageContext.request.contextPath}/mgr/modify_normal" method="post">
-            <!-- 아이디 -->
+            <!-- 수정 불가 아이디 영역 -->
             <div class="form-group">
                 <label for="id">아이디 <span class="required">*</span></label>
                 <input type="text" id="id" name="managerId" value="<%= manager.getManagerId() %>" readonly>
                 <div class="field-hint">아이디는 변경할 수 없습니다</div>
-                <%--                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">--%>
             </div>
 
-            <!-- 이름 -->
+            <!-- 이름 입력 영역 -->
             <div class="form-group">
                 <label for="name">이름 <span class="required">*</span></label>
                 <input type="text" id="name" name="name" value="<%= manager.getManagerName() %>"
@@ -235,7 +234,7 @@
                 <div class="field-error" id="nameError"></div>
             </div>
 
-            <!-- 비밀번호 (선택) -->
+            <!-- 새 비밀번호 입력 영역 -->
             <div class="form-group">
                 <label for="pw">새 비밀번호</label>
                 <input type="password" id="pw" name="pw">
@@ -244,14 +243,14 @@
                 <div class="field-error" id="pwError"></div>
             </div>
 
-            <!-- 비밀번호 확인 -->
+            <!-- 새 비밀번호 확인 영역 -->
             <div class="form-group">
                 <label for="passwordConfirm">새 비밀번호 확인</label>
                 <input type="password" id="passwordConfirm" name="passwordConfirm">
                 <div class="field-error" id="passwordConfirmError"></div>
             </div>
 
-            <!-- 이메일 -->
+            <!-- 이메일 인증 영역 -->
             <div class="form-group">
                 <label for="email">이메일 <span class="required">*</span></label>
                 <div style="display: flex; gap: 8px;">
@@ -264,7 +263,7 @@
                 <div class="field-hint">변경된 이메일 인증이 필요합니다</div>
                 <div class="field-error" id="emailError"></div>
 
-                <!-- 이메일 인증번호 입력 -->
+                <!-- 인증번호 입력 영역 -->
                 <div id="emailAuthGroup" style="margin-top: 12px; display: none;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="authCode" placeholder="인증번호 6자리"
@@ -278,7 +277,7 @@
                 </div>
             </div>
 
-            <!-- 버튼 그룹 -->
+            <!-- 처리 버튼 영역 -->
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary"
                         onclick="location.href='${pageContext.request.contextPath}/mgr/list'">
@@ -304,10 +303,11 @@
 </div>
 
 <script>
-    // 이메일 인증 완료 플래그
+    // 인증 상태와 기존 이메일 저장
     let isEmailVerified = false;
     const originalEmail = '<%= manager != null ? manager.getEmail() : "" %>';
 
+    // 수정 폼 요소 가져오기
     const form = document.getElementById('modifyForm');
     const nameInput = document.getElementById('name');
     const pwInput = document.getElementById('pw');
@@ -315,12 +315,12 @@
     const emailInput = document.getElementById('email');
     const submitBtn = document.getElementById('submitBtn');
 
-    // 타이머 관련 변수
+    // 인증번호 타이머 상태 저장
     let authTimerInterval = null;
     const authTimerDiv   = document.getElementById('authTimer');
     const authTimeLeft   = document.getElementById('authTimeLeft');
 
-    /* 타이머 시작 (5분 = 300초) */
+    // 인증번호 유효 시간 시작
     function startAuthTimer() {
         if (authTimerInterval) clearInterval(authTimerInterval);
 
@@ -353,7 +353,7 @@
         }, 1000);
     }
 
-    /* 타이머 정지 */
+    // 인증번호 타이머 정지
     function stopAuthTimer() {
         if (authTimerInterval) {
             clearInterval(authTimerInterval);
@@ -362,7 +362,7 @@
         authTimerDiv.style.display = 'none';
     }
 
-    // 에러 메시지 표시 함수
+    // 필드 오류 메시지 표시
     function showError(fieldId, message) {
         const errorDiv = document.getElementById(fieldId + 'Error');
         const inputField = document.getElementById(fieldId);
@@ -375,7 +375,7 @@
         }
     }
 
-    // 에러 메시지 숨김 함수
+    // 필드 오류 메시지 숨김
     function hideError(fieldId) {
         const errorDiv = document.getElementById(fieldId + 'Error');
         const inputField = document.getElementById(fieldId);
@@ -387,7 +387,7 @@
         }
     }
 
-    // 비밀번호 강도 체크
+    // 비밀번호 강도 표시
     pwInput.addEventListener('input', function() {
         const value = this.value;
         const strengthBar = document.getElementById('passwordStrength');
@@ -413,7 +413,7 @@
         }
     });
 
-    // 이름 유효성 검사
+    // 이름 입력 여부 검사
     nameInput.addEventListener('blur', function() {
         if (this.value.trim().length === 0) {
             showError('name', '이름을 입력해주세요.');
@@ -422,7 +422,7 @@
         }
     });
 
-    // 비밀번호 유효성 검사 (입력된 경우만)
+    // 새 비밀번호를 입력한 경우만 길이 검사
     pwInput.addEventListener('blur', function() {
         const value = this.value;
         if (value.length > 0 && value.length < 4) {
@@ -432,12 +432,12 @@
         }
     });
 
-    // 비밀번호 확인 검사
+    // 새 비밀번호 확인값 검사
     passwordConfirmInput.addEventListener('blur', function() {
         const password = pwInput.value;
         const confirmPassword = this.value;
 
-        // 비밀번호 입력이 있을 때만 확인 검사
+        // 새 비밀번호를 입력한 경우만 확인값 검사
         if (password.length > 0) {
             if (confirmPassword.length === 0) {
                 showError('passwordConfirm', '비밀번호 확인을 입력해주세요.');
@@ -449,7 +449,7 @@
         }
     });
 
-    // 이메일 유효성 검사
+    // 이메일 형식 검사
     emailInput.addEventListener('blur', function() {
         const value = this.value.trim();
         const emailPattern = /^[A-Za-z0-9+_.-]+@(.+)$/;
@@ -463,14 +463,14 @@
         }
     });
 
-    // 입력 시 에러 메시지 자동 제거
+    // 입력값 변경 시 필드 오류 제거
     [nameInput, pwInput, passwordConfirmInput, emailInput].forEach(input => {
         input.addEventListener('input', function() {
             hideError(this.id);
         });
     });
 
-    // 이메일 인증 요청 버튼 클릭 시
+    // 이메일 인증번호 발송 처리
     document.getElementById('sendEmailBtn').addEventListener('click', function() {
         const email = document.getElementById('email').value;
         const sendBtn = this;
@@ -480,11 +480,11 @@
             return;
         }
 
-        // 버튼 비활성화 (중복 클릭 방지)
+        // 중복 클릭 방지
         sendBtn.disabled = true;
         sendBtn.textContent = '발송 중...';
 
-        // 서버에 이메일 발송 요청
+        // 서버에 이메일 인증번호 발송 요청
         fetch('${pageContext.request.contextPath}/auth/sendCode', {
             method: 'POST',
             headers: {
@@ -496,7 +496,7 @@
             .then(data => {
                 if(data.success) {
                     alert(email + '로 인증번호를 발송했습니다.');
-                    // 인증번호 입력창 보이기
+                    // 인증번호 입력 영역 표시
                     document.getElementById('emailAuthGroup').style.display = 'block';
                     document.getElementById('authCode').focus();
                     startAuthTimer();
@@ -509,13 +509,13 @@
                 alert('인증번호 발송 중 오류가 발생했습니다.');
             })
             .finally(() => {
-                // 버튼 다시 활성화
+                // 요청 완료 후 버튼 복구
                 sendBtn.disabled = false;
                 sendBtn.textContent = '인증요청';
             });
     });
 
-    // 확인 버튼 클릭 시
+    // 인증번호 확인 처리
     document.getElementById('verifyBtn').addEventListener('click', function() {
         const code = document.getElementById('authCode').value;
         const email = document.getElementById('email').value;
@@ -526,7 +526,7 @@
             return;
         }
 
-        // 버튼 비활성화
+        // 중복 확인 방지
         verifyBtn.disabled = true;
         verifyBtn.textContent = '확인 중...';
 
@@ -543,8 +543,8 @@
                 if(data.success) {
                     alert('인증이 완료되었습니다.');
                     isEmailVerified = true;
-                    document.getElementById('email').readOnly = true; // 이메일 수정 불가
-                    verifyBtn.disabled = true; // 확인 버튼 비활성화
+                    document.getElementById('email').readOnly = true;
+                    verifyBtn.disabled = true;
                     verifyBtn.textContent = '인증완료';
                     document.getElementById('sendEmailBtn').disabled = true;
                     stopAuthTimer();
@@ -562,7 +562,7 @@
             });
     });
 
-    // 이메일 입력 필드 변경 시 인증 상태 초기화
+    // 이메일 변경 시 인증 상태 초기화
     emailInput.addEventListener('input', function() {
         const currentEmail = this.value.trim();
 
@@ -577,14 +577,14 @@
                 stopAuthTimer();
             }
         } else {
-            // 원래 이메일로 돌아가면 인증 불필요
+            // 원래 이메일로 돌아가도 인증 필요
             isEmailVerified = true;
         }
 
         hideError(this.id);
     });
 
-    // 폼 제출 시 전체 유효성 검사
+    // 폼 제출 전 입력값 전체 검사
     form.addEventListener('submit', function(e) {
         let isValid = true;
 
@@ -594,7 +594,7 @@
             isValid = false;
         }
 
-        // 비밀번호 검사 (입력된 경우만)
+        // 새 비밀번호를 입력한 경우만 검사
         const password = pwInput.value;
         if (password.length > 0) {
             if (password.length < 4) {
@@ -602,7 +602,7 @@
                 isValid = false;
             }
 
-            // 비밀번호 확인 검사
+            // 새 비밀번호 확인값 검사
             if (password !== passwordConfirmInput.value) {
                 showError('passwordConfirm', '비밀번호가 일치하지 않습니다.');
                 isValid = false;
@@ -616,7 +616,7 @@
             isValid = false;
         }
 
-        // ★ 이메일 변경 여부와 무관하게 반드시 이메일 인증 완료 필요
+        // 이메일 변경 여부와 무관하게 인증 필수
         if (!isEmailVerified) {
             showError('email', '이메일 인증을 완료해주세요.');
             alert('변경사항을 적용하려면 이메일 인증을 먼저 완료해주세요.');
@@ -633,7 +633,7 @@
         submitBtn.textContent = '적용 중...';
     });
 
-    // ★ 초기 로드 시 이메일 미인증 상태 (반드시 인증 후 제출 가능)
+    // 초기 로드 시 이메일 미인증 상태로 시작
     isEmailVerified = false;
 </script>
 </body>

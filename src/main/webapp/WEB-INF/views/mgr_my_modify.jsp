@@ -71,29 +71,29 @@
     <div class="container">
         <h2>내 정보 수정</h2>
 
-        <%-- 안내 메시지 --%>
+        <%-- 수정 안내 메시지 표시 --%>
         <div class="message info-message">
             ℹ️ 정보 수정을 위해 이메일 인증이 필요합니다. <br>
             ℹ️ 수정 완료 후 재로그인이 필요합니다.
         </div>
 
-        <%-- 성공 메시지 --%>
+        <%-- 성공 메시지 표시 --%>
         <% String successMsg = (String) session.getAttribute("successMessage");
            if (successMsg != null) { session.removeAttribute("successMessage"); %>
         <div class="message success-message"><%= successMsg %></div>
         <% } %>
 
-        <%-- 에러 메시지 --%>
+        <%-- 수정 실패 메시지 표시 --%>
         <% String error = (String) request.getAttribute("error");
            if (error != null) { %>
         <div class="message error-message"><%= error %></div>
         <% } %>
 
         <%
-            // ★ 세션에서 로그인 관리자 정보 추출 (본인 정보 수정)
+            // 세션에서 로그인 관리자 정보 확인
             ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
 
-            // 보안: 최고 관리자(ADMIN)는 이 페이지 접근 불가 → 전용 수정 페이지로 이동
+            // 최고관리자는 전용 수정 페이지로 이동
             if (manager != null && "ADMIN".equals(manager.getRole())) {
                 response.sendRedirect(request.getContextPath() + "/mgr/modify");
                 return;
@@ -101,9 +101,10 @@
 
             if (manager != null) {
         %>
+        <%-- 본인 수정 정보 전송 --%>
         <form id="modifyForm" action="${pageContext.request.contextPath}/mgr/my_modify" method="post">
 
-            <%-- ★ 아이디: 읽기 전용 표시 + hidden으로 실제 값 전송 (세션/DB 불일치 방지) --%>
+            <%-- 아이디는 읽기 전용으로 표시하고 hidden 값으로 전송 --%>
             <div class="form-group">
                 <label for="managerIdDisplay">아이디</label>
                 <input type="text" id="managerIdDisplay" value="<%= manager.getManagerId() %>" readonly>
@@ -111,7 +112,7 @@
                 <div class="field-hint">아이디는 변경할 수 없습니다.</div>
             </div>
 
-            <%-- 이름 --%>
+            <%-- 이름 입력 영역 --%>
             <div class="form-group">
                 <label for="name">이름 <span class="required">*</span></label>
                 <input type="text" id="name" name="name"
@@ -120,7 +121,7 @@
                 <div class="field-error" id="nameError"></div>
             </div>
 
-            <%-- 새 비밀번호 (선택) --%>
+            <%-- 새 비밀번호 입력 영역 --%>
             <div class="form-group">
                 <label for="pw">새 비밀번호</label>
                 <input type="password" id="pw" name="pw">
@@ -129,14 +130,14 @@
                 <div class="field-error" id="pwError"></div>
             </div>
 
-            <%-- 비밀번호 확인 --%>
+            <%-- 새 비밀번호 확인 영역 --%>
             <div class="form-group">
                 <label for="passwordConfirm">새 비밀번호 확인</label>
                 <input type="password" id="passwordConfirm" name="passwordConfirm">
                 <div class="field-error" id="passwordConfirmError"></div>
             </div>
 
-            <%-- 이메일 --%>
+            <%-- 이메일 인증 영역 --%>
             <div class="form-group">
                 <label for="email">이메일 <span class="required">*</span></label>
                 <div style="display: flex; gap: 8px;">
@@ -164,7 +165,7 @@
                 </div>
             </div>
 
-            <%-- 버튼 --%>
+            <%-- 처리 버튼 영역 --%>
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary"
                         onclick="location.href='${pageContext.request.contextPath}/dashboard'">
@@ -191,10 +192,11 @@
 </div>
 
 <script>
-    // ★ 항상 인증 필요 (false로 시작)
+    // 인증 상태와 기존 이메일 저장
     let isEmailVerified = false;
     const originalEmail = '<%= manager != null ? manager.getEmail() : "" %>';
 
+    // 수정 폼 요소 가져오기
     const form                 = document.getElementById('modifyForm');
     const nameInput            = document.getElementById('name');
     const pwInput              = document.getElementById('pw');
@@ -202,11 +204,12 @@
     const emailInput           = document.getElementById('email');
     const submitBtn            = document.getElementById('submitBtn');
 
+    // 인증번호 타이머 상태 저장
     let authTimerInterval = null;
     const authTimerDiv    = document.getElementById('authTimer');
     const authTimeLeft    = document.getElementById('authTimeLeft');
 
-    /* 타이머 시작 (5분) */
+    // 인증번호 유효 시간 시작
     function startAuthTimer() {
         if (authTimerInterval) clearInterval(authTimerInterval);
         let timeLeft = 300;
@@ -252,7 +255,7 @@
         if (i) i.classList.remove('error');
     }
 
-    /* 비밀번호 강도 */
+    // 비밀번호 강도 표시
     pwInput.addEventListener('input', function () {
         const v = this.value;
         const bar = document.getElementById('passwordStrength');
@@ -265,7 +268,7 @@
         bar.className = 'password-strength ' + (s <= 2 ? 'weak' : s === 3 ? 'medium' : 'strong');
     });
 
-    /* 유효성 검사 */
+    // 입력값 유효성 검사
     nameInput.addEventListener('blur', function () {
         if (this.value.trim().length === 0) showError('name', '이름을 입력해주세요.'); else hideError('name');
     });
@@ -291,7 +294,7 @@
         i.addEventListener('input', function () { hideError(this.id); });
     });
 
-    /* 이메일 변경 시 인증 상태 초기화 */
+    // 이메일 변경 시 인증 상태 초기화
     emailInput.addEventListener('input', function () {
         const cur = this.value.trim();
         if (cur !== originalEmail) {
@@ -302,11 +305,11 @@
             document.getElementById('authCode').value = '';
             stopAuthTimer();
         }
-        // 이메일이 어떤 값이든 항상 인증 필요 (수정 의사 확인 목적)
+        // 이메일 값과 관계없이 수정 전 인증 필요
         hideError(this.id);
     });
 
-    /* 인증 요청 */
+    // 이메일 인증번호 발송 처리
     document.getElementById('sendEmailBtn').addEventListener('click', function () {
         const email = emailInput.value;
         const btn = this;
@@ -341,7 +344,7 @@
         });
     });
 
-    /* 인증번호 확인 */
+    // 인증번호 확인 처리
     document.getElementById('verifyBtn').addEventListener('click', function () {
         const code = document.getElementById('authCode').value;
         const email = emailInput.value;
@@ -380,7 +383,7 @@
         });
     });
 
-    /* 폼 제출 */
+    // 폼 제출 전 입력값 전체 검사
     form.addEventListener('submit', function (e) {
         let ok = true;
 
@@ -396,7 +399,7 @@
             showError('email', '올바른 이메일 형식이 아닙니다.'); ok = false;
         }
 
-        // ★ 핵심: 이메일 인증 필수
+        // 이메일 인증 필수
         if (!isEmailVerified) {
             showError('email', '이메일 인증을 완료해주세요.');
             alert('정보를 수정하려면 먼저 이메일 인증을 완료해주세요.');
