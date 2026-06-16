@@ -2,6 +2,8 @@ package org.example.smart_parking_260219.mail;
 
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
+import org.example.smart_parking_260219.util.AppConfig;
+
 import java.util.Properties;
 
 /**
@@ -15,16 +17,16 @@ import java.util.Properties;
 public class NaverEmailConfig {
 
     /** 네이버 SMTP SSL 포트 (smtp.port) */
-    private final String port = "465";
+    private static final String port = AppConfig.get("mail.port");
 
     /** 네이버 SMTP 서버 호스트 */
-    private static final String host = "smtp.naver.com";
+    private static final String host = AppConfig.get("mail.host");
 
     /** 발신자 이메일 계정입니다. */
-    private static final String username = "wndus6110@naver.com";
+    private static final String username = AppConfig.get("mail.username");
 
     /** SMTP 인증에 사용할 비밀번호 또는 애플리케이션 비밀번호입니다. */
-    private static final String password = "1EV12JZMHMGR";
+    private static final String password = AppConfig.get("mail.password");
 
     /**
      * SMTP 서버 인증 정보를 제공하는 인증 객체입니다.
@@ -61,12 +63,13 @@ public class NaverEmailConfig {
 
         props.put("mail.username", username);
         props.put("mail.host", host);
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.debug", "true");
         props.put("mail.smtp.ssl.trust", host);
         props.put("mail.smtp.ssl.enable", "true");
         props.put("mail.smtp.auth", true);
-        props.put("mail.smtp.starttls.enable", "true");
 
         return props;
     }

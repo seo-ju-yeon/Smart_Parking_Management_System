@@ -1,0 +1,12 @@
+db.url=jdbc:mariadb://localhost:3306/your_database
+db.username=your_db_user
+db.password=your_db_password
+
+mail.host=smtp.naver.com
+mail.port=465
+mail.username=your_email@naver.com
+mail.password=your_app_password
+
+super.id=super
+super.otp=change-me
+super.role=SUPER

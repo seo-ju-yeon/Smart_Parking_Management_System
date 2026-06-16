@@ -56,7 +56,7 @@ VALUES ('admin',
         '최고관리자',
 #     비밀번호 : admin1234
         '$2a$12$ZCQ/eJfwieyh19zSm8g15Os9hbtPS4.W6wgtWg2kycba/5x8o6JVS',
-        'wndus6110@naver.com',
+        'admin@example.com',
         TRUE,
         'ADMIN')
 ON DUPLICATE KEY UPDATE `role` = 'ADMIN';

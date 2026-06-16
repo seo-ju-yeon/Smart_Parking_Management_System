@@ -25,7 +25,7 @@ class MemberDAOTest {
                     .startDate(LocalDate.now())
                     .endDate(LocalDate.now().plusMonths(1))
                     .subscribedFee(100000)
-                    .createDate(LocalDateTime.now())
+                    .createDate(LocalDate.from(LocalDateTime.now()))
                     .build();
             memberDAO.insertMember(memberVO);
         } catch (SQLException e) {
@@ -46,7 +46,7 @@ class MemberDAOTest {
                     .startDate(LocalDate.now())
                     .endDate(LocalDate.now().plusMonths(1))
                     .subscribedFee(100000)
-                    .createDate(LocalDateTime.now().plusDays(i))
+                    .createDate(LocalDate.from(LocalDateTime.now().plusDays(i)))
                     .build();
             memberDAO.insertMember(memberVO);
         }

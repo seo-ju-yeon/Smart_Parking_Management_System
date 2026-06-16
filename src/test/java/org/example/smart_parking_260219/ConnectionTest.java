@@ -2,6 +2,7 @@ package org.example.smart_parking_260219;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.example.smart_parking_260219.util.AppConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +16,9 @@ public class ConnectionTest {
         try {
             Class.forName("org.mariadb.jdbc.Driver");
 
-            String url = "jdbc:mariadb://localhost:3306/smart_parking_team2";
-            String user = "admin";
-            String pass = "0219";
+            String url = AppConfig.get("db.url");
+            String user = AppConfig.get("db.username");
+            String pass = AppConfig.get("db.password");
 
             Connection connection = DriverManager.getConnection(url, user, pass);
             // 변수가 null이 아닌지 확인 -> null이 아니면 객체를 참조
@@ -32,9 +33,9 @@ public class ConnectionTest {
     public void testHikariCP() {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.mariadb.jdbc.Driver");
-        config.setJdbcUrl("jdbc:mariadb://localhost:3306/mini_project");
-        config.setUsername("root");
-        config.setPassword("7070");
+        config.setJdbcUrl(AppConfig.get("db.url"));
+        config.setUsername(AppConfig.get("db.username"));
+        config.setPassword(AppConfig.get("db.password"));
 
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");

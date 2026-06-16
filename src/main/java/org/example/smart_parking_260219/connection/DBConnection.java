@@ -2,6 +2,7 @@ package org.example.smart_parking_260219.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.example.smart_parking_260219.util.AppConfig;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,9 +31,9 @@ public enum DBConnection {
 
         // MariaDB 드라이버와 접속 정보를 설정
         config.setDriverClassName("org.mariadb.jdbc.Driver");
-        config.setJdbcUrl("jdbc:mariadb://localhost:3306/smart_parking_team2");
-        config.setUsername("admin");
-        config.setPassword("0219");
+        config.setJdbcUrl(AppConfig.get("db.url"));
+        config.setUsername(AppConfig.get("db.username"));
+        config.setPassword(AppConfig.get("db.password"));
 
         // PrepareStatement를 재사용하기 위한 캐시 설정
         config.addDataSourceProperty("cachePrepStmts", "true");

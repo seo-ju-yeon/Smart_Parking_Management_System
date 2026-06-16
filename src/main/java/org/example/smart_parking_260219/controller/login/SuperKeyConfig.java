@@ -1,5 +1,7 @@
 package org.example.smart_parking_260219.controller.login;
 
+import org.example.smart_parking_260219.util.AppConfig;
+
 /**
  * 포트폴리오 시연용 슈퍼 계정과 슈퍼패스 OTP 설정을 관리하는 클래스입니다.
  *
@@ -21,17 +23,17 @@ public class SuperKeyConfig {
     /**
      * 데이터베이스에 실제로 존재하는 슈퍼 계정 아이디입니다.
      */
-    public static final String SUPER_ID = "super";
+    public static final String SUPER_ID = AppConfig.get("super.id");
 
     /**
      * 이메일 인증번호 검증을 우회할 수 있는 시연용 OTP 값입니다.
      */
-    public static final String SUPER_OTP = "369369";
+    public static final String SUPER_OTP = AppConfig.get("super.otp");
 
     /**
      * 세션에 저장할 슈퍼 계정 역할값입니다.
      */
-    public static final String SUPER_ROLE = "SUPER";
+    public static final String SUPER_ROLE = AppConfig.get("super.role");
 
     /**
      * 전달받은 관리자 아이디가 슈퍼 계정인지 확인합니다.
