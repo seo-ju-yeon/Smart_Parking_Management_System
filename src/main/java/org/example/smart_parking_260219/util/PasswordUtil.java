@@ -15,6 +15,10 @@ public class PasswordUtil {
     /** BCrypt 해싱 강도입니다. */
     private static final int WORK_FACTOR = 12;
 
+    private PasswordUtil() {
+        // 유틸 클래스 인스턴스화 방지
+    }
+
     /**
      * 평문 비밀번호를 BCrypt 해시값으로 변환합니다.
      *
@@ -85,27 +89,5 @@ public class PasswordUtil {
             log.warn("Work factor 추출 실패", e);
         }
         return -1;
-    }
-
-    /**
-     * 비밀번호 해싱 동작을 확인하기 위한 간단한 테스트용 메서드입니다.
-     */
-    public static void main(String[] args) {
-        String password = "test1234";
-        String hashed = hashPassword(password);
-
-        System.out.println("평문 비밀번호: " + password);
-        System.out.println("해시된 비밀번호: " + hashed);
-        System.out.println("Work Factor: " + getWorkFactor(hashed));
-        System.out.println("검증 결과: " + checkPassword(password, hashed));
-
-        String hash1 = hashPassword("test123");
-        String hash2 = hashPassword("test123");
-
-        System.out.println("같은 비밀번호 해시 비교");
-        System.out.println("해시1: " + hash1);
-        System.out.println("해시2: " + hash2);
-        System.out.println("hash1 검증: " + checkPassword("test123", hash1));
-        System.out.println("hash2 검증: " + checkPassword("test123", hash2));
     }
 }
