@@ -2,7 +2,12 @@ CREATE DATABASE IF NOT EXISTS `smart_parking_team2`;
 
 USE `smart_parking_team2`;
 
-# member : 회원, 차량 정보 테이블
+-- =====================================================
+-- Smart Parking Management System 초기 스키마 및 샘플 데이터
+-- 포트폴리오 및 로컬 실행 환경에서 DB 구조와 기본 데이터를 재현하기 위한 SQL입니다.
+-- =====================================================
+
+-- [테이블] member: 회원 차량 및 월정액 구독 정보
 CREATE TABLE IF NOT EXISTS `member`
 (
     `member_id`      INT AUTO_INCREMENT PRIMARY KEY COMMENT '회원 고유 식별자',
@@ -18,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `member`
     INDEX idx_car_num (car_num)
 );
 
--- member dummy -> DAO TEST 3회 실행
+-- [샘플 데이터] member: 월정액 회원 및 할인 대상 차량 예시
 INSERT INTO `member` (`car_num`, `car_type`, `name`, `phone`, `start_date`, `end_date`, `subscribed`, `subscribed_fee`)
 VALUES ('11가1111', 2, '홍길동', '010-1111-2222', '2026-02-01', '2026-03-01', TRUE, 100000),
        ('22나2222', 2, '김철수', '010-2222-3333', '2026-02-02', '2026-03-02', TRUE, 100000),
@@ -38,7 +43,7 @@ VALUES ('11가1111', 2, '홍길동', '010-1111-2222', '2026-02-01', '2026-03-01'
        ('16네1616', 2, '테스터12', '010-1616-1717', '2026-02-16', '2026-03-16', TRUE, 100000);
 
 
-# manager : 관리자 정보 테이블
+-- [테이블] manager: 관리자 계정, 권한, 활성 상태 관리
 CREATE TABLE IF NOT EXISTS `manager`
 (
     `manager_no`   INT AUTO_INCREMENT PRIMARY KEY COMMENT '관리자 시스템 내부 번호',
@@ -50,56 +55,57 @@ CREATE TABLE IF NOT EXISTS `manager`
     `role`         VARCHAR(20)  NOT NULL DEFAULT 'NORMAL'
         COMMENT '관리자 권한: ADMIN(최고관리자), NORMAL(일반관리자)'
 );
--- 최고 관리자(ADMIN) 초기 데이터 삽입
+
+-- [시연 계정] 최고 관리자 계정
+-- ID: admin / PW: admin1234
 INSERT INTO `manager` (`manager_id`, `manager_name`, `password`, `email`, `active`, `role`)
 VALUES ('admin',
         '최고관리자',
-#     비밀번호 : admin1234
         '$2a$12$ZCQ/eJfwieyh19zSm8g15Os9hbtPS4.W6wgtWg2kycba/5x8o6JVS',
         'admin@example.com',
         TRUE,
         'ADMIN')
 ON DUPLICATE KEY UPDATE `role` = 'ADMIN';
 
--- 슈퍼 관리자(SUPER) 초기 데이터 삽입
+-- [시연 계정] 슈퍼 관리자 계정
+-- ID: super / PW: super1234
 INSERT INTO `manager` (`manager_id`, `manager_name`, `password`, `email`, `active`, `role`)
 VALUES ('super',
         '슈퍼관리자',
-#     비밀번호 : super1234
         '$2a$12$12q5tYhznZe7E6Pt73SpAubFpKJjD/y24xAAFU6W4ghGyXXUacZO6',
         'example@naver.com',
         TRUE,
         'SUPER')
 ON DUPLICATE KEY UPDATE `role` = 'SUPER';
 
--- manager dummy
-
--- id - test01, password - 1111
+-- [샘플 데이터] manager: 일반 관리자 테스트 계정
+-- ID: test01 / PW: 1111
 insert into manager (manager_id, manager_name, password, email, active, role)
 VALUES ('test01', 'tester1', '$2a$12$4ReuaFjNvpNJlf/ZzjTC1u59qKSvH0kZcg0jS1tlPP/K8ubssv8Jq', 'example@naver.com', true,
         'NORMAL');
 
--- id - test02, password - 2222
+-- ID: test02 / PW: 2222
 insert into manager (manager_id, manager_name, password, email, active, role)
 VALUES ('test02', 'tester2', '$2a$12$fH1QjEr/cAZvm87TyiOqluVV04tHx88ojnUbjH6z5HLnoSEJjLeOm', 'example@naver.com', true,
         'NORMAL');
 
--- id - test03, password - 3333
+-- ID: test03 / PW: 3333
 insert into manager (manager_id, manager_name, password, email, active, role)
 VALUES ('test03', 'tester3', '$2a$12$FBBPtsVf4wkRTdlGo64pV.PLDGeJTRBLzrPRl766Z2xLJxudQ/Su6', 'example@naver.com', true,
         'NORMAL');
 
--- id - test04, password - 4444
+-- ID: test04 / PW: 4444
 insert into manager (manager_id, manager_name, password, email, active, role)
 VALUES ('test04', 'tester4', '$2a$12$ikBOSKCvmiQVjG8fi3flwu853ctVAWsFRmym.FlZQS1w2O73Yrhd2', 'example@naver.com', true,
         'NORMAL');
 
--- id - test05, password - 5555
+-- ID: test05 / PW: 5555
 insert into manager (manager_id, manager_name, password, email, active, role)
 VALUES ('test05', 'tester5', '$2a$12$UunwhxzJhMdX6yMaoA7uFOl0CaV/Xaxa08WTmZyAYffwPZRAbSuzi', 'example@naver.com', true,
         'NORMAL');
 
 
+-- [테이블] validation: 이메일 인증번호 및 만료 시간 관리
 CREATE TABLE IF NOT EXISTS `validation`
 (
     `no`          int auto_increment primary key,
@@ -108,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `validation`
     `expiry_time` datetime     not null comment '만료시간'
 );
 
-# parking_spot : 주차 공간 상태 테이블
+-- [테이블] parking_spot: 주차 공간 상태 관리
 CREATE TABLE IF NOT EXISTS `parking_spot`
 (
     `space_id`    VARCHAR(5) PRIMARY KEY COMMENT '주차 공간 번호(A1, A2...)',
@@ -117,6 +123,7 @@ CREATE TABLE IF NOT EXISTS `parking_spot`
     `last_update` DATETIME         DEFAULT CURRENT_TIMESTAMP COMMENT '상태 변경일'
 );
 
+-- [샘플 데이터] parking_spot: 기본 주차 공간 A1~A20 생성
 insert into parking_spot (space_id)
 values ('A1'),
        ('A2'),
@@ -139,8 +146,7 @@ values ('A1'),
        ('A19'),
        ('A20');
 
--- parking spot dummy
--- 회원
+-- [샘플 데이터] parking_spot: 현재 주차 중인 회원 차량 상태
 update `parking_spot`
 set `empty`     = false,
     car_num     = '11가1111',
@@ -156,7 +162,8 @@ set `empty`     = false,
     car_num     = '33다3333',
     last_update = now()
 where space_id = 'A14';
--- 비회원
+
+-- [샘플 데이터] parking_spot: 현재 주차 중인 비회원 차량 상태
 update `parking_spot`
 set `empty`     = false,
     car_num     = '13다1234',
@@ -173,7 +180,7 @@ set `empty`     = false,
     last_update = now()
 where space_id = 'A9';
 
-# parking : 입차, 출차, 요금 정보 테이블
+-- [테이블] parking: 차량 입차, 출차, 정산 상태 기록
 CREATE TABLE IF NOT EXISTS `parking`
 (
     `parking_id` INT AUTO_INCREMENT PRIMARY KEY COMMENT '주차 기록 ID',
@@ -192,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `parking`
         REFERENCES `parking_spot` (`space_id`) ON UPDATE CASCADE
 );
 
-# fee_policy : 요금 부과 정책 테이블
+-- [테이블] fee_policy: 주차 요금 및 할인 정책 관리
 CREATE TABLE IF NOT EXISTS `fee_policy`
 (
     `policy_id`         INT AUTO_INCREMENT PRIMARY KEY COMMENT '요금 정책 고유 ID',
@@ -209,13 +216,13 @@ CREATE TABLE IF NOT EXISTS `fee_policy`
     `modify_date`       DATETIME         DEFAULT CURRENT_TIMESTAMP COMMENT '정책 수정일'
 );
 
--- fee_policy dummy
+-- [샘플 데이터] fee_policy: 기본 요금 정책
 insert into fee_policy
 (grace_period, default_time, default_fee, extra_time, extra_fee, light_discount, disabled_discount, subscribed_fee,
  max_daily_fee, is_active, modify_date)
 VALUES (10, 10, 2000, 30, 1000, 0.3, 0.5, 100000, 15000, true, now());
 
-# payment : 결제, 매출 정보 테이블
+-- [테이블] payment: 결제 내역 및 매출 데이터 관리
 CREATE TABLE IF NOT EXISTS `payment`
 (
     `payment_id`      INT AUTO_INCREMENT PRIMARY KEY COMMENT '결제 ID',
@@ -233,8 +240,8 @@ CREATE TABLE IF NOT EXISTS `payment`
         REFERENCES `fee_policy` (`policy_id`)
 );
 
--- 통계용 payment, parking dummy
--- 2월 11일 데이터 (매출이 높은 날)
+-- [샘플 데이터] parking/payment: 통계 화면 확인용 정산 완료 데이터
+-- [샘플 데이터] 2026-02-11 정산 완료 데이터
 INSERT INTO `parking` (`member_id`, `space_id`, `car_num`, `car_type`, `entry_time`, `exit_time`, `total_time`, `paid`)
 VALUES (1, 'A1', '11가1111', 2, '2026-02-11 09:00:00', '2026-02-11 18:00:00', 540, TRUE),
        (2, 'A2', '22나2222', 1, '2026-02-11 10:30:00', '2026-02-11 12:30:00', 120, TRUE),
@@ -246,7 +253,7 @@ VALUES (1, 1, 3, 15000, 15000, 0, '2026-02-11 18:05:00'),
        (2, 1, 1, 4000, 0, 4000, '2026-02-11 12:35:00'),
        (3, 1, 1, 4000, 0, 4000, '2026-02-11 16:05:00');
 
--- 2월 12일 데이터
+-- [샘플 데이터] 2026-02-12 정산 완료 데이터
 INSERT INTO `parking` (`member_id`, `space_id`, `car_num`, `car_type`, `entry_time`, `exit_time`, `total_time`, `paid`)
 VALUES (3, 'A4', '33다3333', 3, '2026-02-12 08:00:00', '2026-02-12 10:00:00', 120, TRUE),
        (NULL, 'A5', '88호8888', 1, '2026-02-12 13:00:00', '2026-02-12 15:30:00', 150, TRUE);
@@ -256,7 +263,7 @@ INSERT INTO `payment` (`parking_id`, `policy_id`, `payment_type`, `calculated_fe
 VALUES (4, 1, 1, 4000, 1200, 2800, '2026-02-12 10:05:00'),
        (5, 1, 2, 5000, 0, 5000, '2026-02-12 15:35:00');
 
--- 2월 19일 데이터 (조회 기준일 테스트용)
+-- [샘플 데이터] 2026-02-19 정산 완료 데이터
 INSERT INTO `parking` (`member_id`, `space_id`, `car_num`, `car_type`, `entry_time`, `exit_time`, `total_time`, `paid`)
 VALUES (4, 'A6', '44라4444', 4, '2026-02-19 09:30:00', '2026-02-19 11:30:00', 120, TRUE),
        (NULL, 'A7', '77가7777', 1, '2026-02-19 10:00:00', '2026-02-19 10:40:00', 40, TRUE),
@@ -268,8 +275,7 @@ VALUES (6, 1, 1, 4000, 2000, 2000, '2026-02-19 11:35:00'),
        (7, 1, 1, 2000, 0, 2000, '2026-02-19 10:45:00'),
        (8, 1, 1, 4000, 0, 4000, '2026-02-19 12:20:00');
 
--- 현재 주차 중인 더미 (통계용 데이터 이후에 INSERT → parking_id 9~14)
--- 회원 (car_type은 member 테이블의 car_type 스냅샷)
+-- [샘플 데이터] 현재 주차 중인 회원 차량
 insert into parking (member_id, space_id, car_num, car_type, entry_time)
 VALUES (1, 'A2', '11가1111', 2, now());
 insert into parking (member_id, space_id, car_num, car_type, entry_time)
@@ -277,7 +283,7 @@ VALUES (2, 'A17', '22나2222', 2, '2026-02-18');
 insert into parking (member_id, space_id, car_num, car_type, entry_time)
 VALUES (3, 'A14', '33다3333', 2, now());
 
--- 비회원 (car_type = 1: 일반)
+-- [샘플 데이터] 현재 주차 중인 비회원 차량
 insert into parking (space_id, car_num, car_type, entry_time)
 VALUES ('A5', '13다1234', 1, now());
 insert into parking (space_id, car_num, car_type, entry_time)
@@ -285,8 +291,8 @@ VALUES ('A16', '23다1234', 1, now());
 insert into parking (space_id, car_num, car_type, entry_time)
 VALUES ('A9', '33다1234', 1, now());
 
--- 전용 사용자 생성
+-- [로컬 실행 계정] 애플리케이션 DB 접속용 사용자 생성
 CREATE USER `admin`@`localhost` IDENTIFIED BY '0219';
 
--- 사용자에게 DB 권한 부여
+-- [로컬 실행 계정] smart_parking_team2 데이터베이스 접근 권한 부여
 GRANT ALL PRIVILEGES ON `smart_parking_team2`.* TO `admin`@`localhost`;
