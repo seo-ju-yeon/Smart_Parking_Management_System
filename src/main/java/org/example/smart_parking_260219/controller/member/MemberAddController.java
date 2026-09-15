@@ -55,7 +55,7 @@ public class MemberAddController extends HttpServlet {
                 req.setAttribute("newStart", newStart);
                 req.setAttribute("newEnd", newEnd);
                 req.setAttribute("step", "renew");
-                req.getRequestDispatcher("/WEB-INF/member/member_add.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/member/member_add.jsp").forward(req, resp);
             } catch (Exception e) {
                 log.error("member_add renew GET 오류", e);
                 resp.sendRedirect("/member/member_list?error=fail");
@@ -65,7 +65,7 @@ public class MemberAddController extends HttpServlet {
 
         // STEP1: 차량번호 없음 → 조회 폼
         if (carNum == null || carNum.trim().isEmpty()) {
-            req.getRequestDispatcher("/WEB-INF/member/member_add.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_add.jsp").forward(req, resp);
             return;
         }
 
@@ -86,12 +86,12 @@ public class MemberAddController extends HttpServlet {
                 req.setAttribute("matchedMembers", matchedMembers);
                 req.setAttribute("step", "select");
             }
-            req.getRequestDispatcher("/WEB-INF/member/member_add.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_add.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("member_add GET 오류", e);
             req.setAttribute("error", "fail");
-            req.getRequestDispatcher("/WEB-INF/member/member_add.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_add.jsp").forward(req, resp);
         }
     }
 

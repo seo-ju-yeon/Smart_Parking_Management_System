@@ -26,7 +26,7 @@ public class MemberSearchController extends HttpServlet {
 
         // 검색어 없으면 검색 폼만 표시
         if (carNum == null || carNum.trim().isEmpty()) {
-            req.getRequestDispatcher("/WEB-INF/member/member_search.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_search.jsp").forward(req, resp);
             return;
         }
 
@@ -41,7 +41,7 @@ public class MemberSearchController extends HttpServlet {
                 log.warn("검색 결과 없음: {}", carNum);
                 req.setAttribute("error", "notFound");
                 req.setAttribute("searchCarNum", carNum);
-                req.getRequestDispatcher("/WEB-INF/member/member_search.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/member/member_search.jsp").forward(req, resp);
                 return;
             }
 
@@ -56,12 +56,12 @@ public class MemberSearchController extends HttpServlet {
             log.info("검색 결과 {}건 - 선택 페이지로 이동", matchedMembers.size());
             req.setAttribute("matchedMembers", matchedMembers);
             req.setAttribute("searchCarNum", carNum);
-            req.getRequestDispatcher("/WEB-INF/member/member_select.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_select.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("회원 검색 중 오류", e);
             req.setAttribute("error", "fail");
-            req.getRequestDispatcher("/WEB-INF/member/member_search.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_search.jsp").forward(req, resp);
         }
     }
 }

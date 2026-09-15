@@ -53,7 +53,7 @@ public class MemberDetailController extends HttpServlet {
 
             req.setAttribute("member", member);
             req.setAttribute("page", page);
-            req.getRequestDispatcher("/WEB-INF/member/member_detail.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_detail.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("회원 조회 오류: {}", e.getMessage(), e);

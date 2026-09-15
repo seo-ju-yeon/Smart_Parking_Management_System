@@ -50,7 +50,7 @@ public class MemberModifyController extends HttpServlet {
             req.setAttribute("newStart", newStart);
             req.setAttribute("newEnd", newEnd);
             req.setAttribute("page", page);
-            req.getRequestDispatcher("/WEB-INF/member/member_modify.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_modify.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("수정 페이지 오류", e);

@@ -75,7 +75,7 @@ public class MemberListController extends HttpServlet {
         req.setAttribute("sortColumn", sortColumn);
         req.setAttribute("sortOrder", sortOrder);
 
-        req.getRequestDispatcher("/WEB-INF/member/member_list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/member/member_list.jsp").forward(req, resp);
     }
 
     /* 회원 목록 정렬 */

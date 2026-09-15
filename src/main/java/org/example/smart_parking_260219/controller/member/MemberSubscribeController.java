@@ -27,7 +27,7 @@ public class MemberSubscribeController extends HttpServlet {
 
         // carNum 없으면 조회 폼 표시
         if (carNum == null || carNum.trim().isEmpty()) {
-            req.getRequestDispatcher("/WEB-INF/member/member_subscribe.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_subscribe.jsp").forward(req, resp);
             return;
         }
 
@@ -46,7 +46,7 @@ public class MemberSubscribeController extends HttpServlet {
             // 차량번호 있음 → 월정액 등록 폼 표시
             log.info("차량번호 있음 → 월정액 등록: {}", carNum);
             req.setAttribute("member", member);
-            req.getRequestDispatcher("/WEB-INF/member/member_subscribe.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/member/member_subscribe.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("월정액 조회 오류", e);
