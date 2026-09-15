@@ -64,7 +64,7 @@ public class StatisticsController extends HttpServlet {
 
             // 5. 결과를 보여줄 JSP로 포워딩
             log.info(req.getRequestURI());
-            req.getRequestDispatcher("/WEB-INF/view/statistics/statistics.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/statistics/statistics.jsp").forward(req, resp);
 
         } catch (Exception e) {
             log.error("StatisticsController failed: " + e.getMessage());

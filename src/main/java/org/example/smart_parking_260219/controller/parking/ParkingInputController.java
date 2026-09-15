@@ -34,7 +34,7 @@ public class ParkingInputController extends HttpServlet {
         req.setAttribute("id", spaceId);
         req.setAttribute("carNum", carNum);
 
-        req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
     }
 
     @Override
@@ -47,13 +47,13 @@ public class ParkingInputController extends HttpServlet {
         if (carNum == null || carNum.isEmpty() || carNum.length() > 8) {
             req.setAttribute("id", req.getParameter("spaceId"));
             req.setAttribute("fail", "over");
-            req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
         if (spaceId == null || spaceId.isEmpty() || spaceId.length() > 4) {
             req.setAttribute("id", req.getParameter("spaceId"));
             req.setAttribute("fail", "nullId");
-            req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
 
@@ -62,7 +62,7 @@ public class ParkingInputController extends HttpServlet {
         if (spotDTO == null) {
             req.setAttribute("id", spaceId);
             req.setAttribute("fail", "nullId");
-            req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
         log.info("spaceId: {}, empty: {}", spaceId, Objects.requireNonNull(spotDTO).getEmpty());
@@ -70,14 +70,14 @@ public class ParkingInputController extends HttpServlet {
         if (!spotDTO.getEmpty()) {
             req.setAttribute("id", spaceId);
             req.setAttribute("fail", "false");
-            req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
         ParkingDTO existingParking = parkingService.getParkingByCarNum(carNum);
         if (existingParking != null && !existingParking.isPaid()) {
             req.setAttribute("id", spaceId);
             // req.setAttribute("fail", "already");
-            req.getRequestDispatcher("/WEB-INF/view/entry/entry.jsp?fail=already").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp?fail=already").forward(req, resp);
             return;
         }
         MemberDTO memberDTO;

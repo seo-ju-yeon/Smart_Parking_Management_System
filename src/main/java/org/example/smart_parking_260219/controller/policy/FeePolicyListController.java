@@ -53,6 +53,6 @@ public class FeePolicyListController extends HttpServlet {
         req.setAttribute("pageResponseDto", pageResponseDto);
 
         //  목록 JSP로 포워딩
-        req.getRequestDispatcher("/WEB-INF/view/policy/list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/policy/list.jsp").forward(req, resp);
     }
 }

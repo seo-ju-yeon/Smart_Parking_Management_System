@@ -35,7 +35,7 @@ public class FeePolicyViewController extends HttpServlet {
 
         }
 
-        req.getRequestDispatcher("/WEB-INF/view/policy/view.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/policy/view.jsp").forward(req, resp);
     }
 
 }

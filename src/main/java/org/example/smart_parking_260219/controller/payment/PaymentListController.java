@@ -78,7 +78,7 @@ public class PaymentListController extends HttpServlet {
         req.setAttribute("totalPages", totalPages);
         req.setAttribute("startNo", startNo);
 
-        req.getRequestDispatcher("/WEB-INF/view/payment/payment_list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/payment/payment_list.jsp").forward(req, resp);
     }
 
 }

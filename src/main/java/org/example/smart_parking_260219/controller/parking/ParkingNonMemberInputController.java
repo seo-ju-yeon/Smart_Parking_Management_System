@@ -21,9 +21,9 @@ public class ParkingNonMemberInputController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        log.info("/WEB-INF/view/entry/non_member_entry.jsp");
+        log.info("/WEB-INF/views/entry/add_non_member.jsp");
 
-        req.getRequestDispatcher("/WEB-INF/view/entry/add_non_member.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/entry/add_non_member.jsp").forward(req, resp);
     }
 
     @Override
@@ -56,6 +56,6 @@ public class ParkingNonMemberInputController extends HttpServlet {
         parkingService.addParking(parkingDTO);
 
         // 비회원 입차 정상 처리
-        req.getRequestDispatcher("/WEB-INF/view/dashboard/dashboard.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/dashboard/dashboard.jsp").forward(req, resp);
     }
 }

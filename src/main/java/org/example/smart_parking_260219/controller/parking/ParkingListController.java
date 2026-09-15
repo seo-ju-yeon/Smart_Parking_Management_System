@@ -50,7 +50,7 @@ public class  ParkingListController extends HttpServlet {
 
         req.setAttribute("carNum", carNum);
         req.setAttribute("parkingDTO", parkingDTO);
-        req.getRequestDispatcher("/WEB-INF/view/exit/exit_serch_list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/exit/exit_search_list.jsp").forward(req, resp);
     }
 
     @Override
@@ -65,6 +65,6 @@ public class  ParkingListController extends HttpServlet {
 
 
 
-        req.getRequestDispatcher("/WEB-INF/view/payment/payment.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/payment/payment.jsp").forward(req, resp);
     }
 }

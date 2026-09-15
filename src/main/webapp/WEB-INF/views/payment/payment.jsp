@@ -36,7 +36,7 @@
 
         // DB에서 차량을 못 찾았을 경우의 처리
         if (parkingDTO == null) {
-            out.println("<script>alert('현재 주차 중인 차량이 아닙니다.'); location.href='../dashboard/dashboard.jsp';</script>");
+            out.println("<script>alert('현재 주차 중인 차량이 아닙니다.'); location.href='" + request.getContextPath() + "/dashboard';</script>");
             return;
         }
         calculatedFee = PaymentService.INSTANCE.calculateFeeLogic(parkingDTO);

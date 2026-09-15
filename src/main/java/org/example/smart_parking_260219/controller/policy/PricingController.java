@@ -24,6 +24,6 @@ public class PricingController extends HttpServlet {
         req.setAttribute("policy", dto);
 
         // 3. pricing.jsp로 이동 (WEB-INF 안에 있다면 경로 확인)
-        req.getRequestDispatcher("/WEB-INF/policy/pricing.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/policy/pricing.jsp").forward(req, resp);
     }
 }

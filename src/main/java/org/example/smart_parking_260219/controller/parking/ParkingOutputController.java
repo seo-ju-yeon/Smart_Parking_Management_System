@@ -30,7 +30,7 @@ public class ParkingOutputController extends HttpServlet {
 
         // 단순 출차 페이지 접근 (carNum 없음)
         if (carNum == null || carNum.isEmpty()) {
-            req.getRequestDispatcher("/WEB-INF/view/exit/exit.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/exit/exit.jsp").forward(req, resp);
             return;
         }
 
@@ -38,7 +38,7 @@ public class ParkingOutputController extends HttpServlet {
         if (parkingService.getParkingByCarNum(carNum) != null) {
             req.setAttribute("id", spaceId);
             req.setAttribute("carNum", carNum);
-            req.getRequestDispatcher("/WEB-INF/view/exit/exit_serch_list.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/exit/exit_search_list.jsp").forward(req, resp);
         } else {
             resp.sendRedirect(req.getContextPath() + "/output?fail=false");
         }
@@ -57,7 +57,7 @@ public class ParkingOutputController extends HttpServlet {
         if (parkingService.getParkingByCarNum(carNum) != null) {
             req.setAttribute("id", spaceId);
             req.setAttribute("carNum", carNum);
-            req.getRequestDispatcher("/WEB-INF/view/exit/exit_serch_list.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/exit/exit_search_list.jsp").forward(req, resp);
         } else {
             resp.sendRedirect(req.getContextPath() + "/output?fail=false");
         }

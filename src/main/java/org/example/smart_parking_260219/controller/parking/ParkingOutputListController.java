@@ -37,7 +37,7 @@ public class ParkingOutputListController extends HttpServlet {
         req.setAttribute("sort", sort);
         req.setAttribute("order", order);
 
-        req.getRequestDispatcher("/WEB-INF/view/exit/exit_list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/exit/exit_list.jsp").forward(req, resp);
     }
 
     // 정렬 기능 (오름차순 기본)

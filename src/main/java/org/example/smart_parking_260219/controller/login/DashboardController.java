@@ -61,6 +61,6 @@ public class DashboardController extends HttpServlet {
 
         // 인증된 사용자는 대시보드 화면으로 이동
         log.info("대시보드 페이지로 포워딩");
-        request.getRequestDispatcher("/WEB-INF/view/dashboard/dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/dashboard/dashboard.jsp").forward(request, response);
     }
 }

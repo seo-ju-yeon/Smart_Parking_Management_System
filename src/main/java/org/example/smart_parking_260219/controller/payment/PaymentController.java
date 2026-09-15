@@ -30,7 +30,7 @@ public class PaymentController extends HttpServlet {
         log.info("/payment get...");
 
         // /WEB-INF -> jsp 파일 위치 옮긴 다음 추가
-        req.getRequestDispatcher("/WEB-INF/view/payment/payment.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/payment/payment.jsp").forward(req, resp);
     }
 
     @Override

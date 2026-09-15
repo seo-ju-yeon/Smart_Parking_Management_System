@@ -22,7 +22,7 @@ public class FeePolicyAddController extends HttpServlet {
     // 등록 폼
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/WEB-INF/view/policy/add.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/policy/add.jsp").forward(req, resp);
 
     }
 
