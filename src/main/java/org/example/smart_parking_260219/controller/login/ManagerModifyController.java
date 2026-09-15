@@ -162,7 +162,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "수정할 관리자 정보를 특정할 수 없습니다.");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
     }
 
     /**
@@ -206,7 +206,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "데이터 조회 중 오류가 발생했습니다.");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
     }
 
     /**
@@ -244,7 +244,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "데이터 조회 중 오류 발생");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/mgr_modify_normal.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
     }
 
     /**
@@ -287,7 +287,7 @@ public class ManagerModifyController extends HttpServlet {
             } catch (Exception e) {
                 log.error("관리자 정보 재조회 실패", e);
             }
-            request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
             return;
         }
 
@@ -306,7 +306,7 @@ public class ManagerModifyController extends HttpServlet {
                     log.error("관리자 정보 재조회 실패", e);
                 }
 
-                request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
                 return;
             }
 
@@ -322,7 +322,7 @@ public class ManagerModifyController extends HttpServlet {
                 } catch (Exception e) {
                     log.error("관리자 정보 재조회 실패", e);
                 }
-                request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
                 return;
             }
         }
@@ -340,7 +340,7 @@ public class ManagerModifyController extends HttpServlet {
                 log.error("관리자 정보 재조회 실패", e);
             }
 
-            request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
             return;
         }
 
@@ -383,7 +383,7 @@ public class ManagerModifyController extends HttpServlet {
                 log.error("관리자 정보 재조회 실패", ex);
             }
 
-            request.getRequestDispatcher("/WEB-INF/views/mgr_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
         }
     }
 
@@ -410,7 +410,7 @@ public class ManagerModifyController extends HttpServlet {
             ManagerVO existing = managerDAO.selectOne(managerId);
             if (existing == null) {
                 request.setAttribute("error", "존재하지 않는 관리자입니다.");
-                request.getRequestDispatcher("/WEB-INF/views/mgr_modify_normal.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
                 return;
             }
 
@@ -468,7 +468,7 @@ public class ManagerModifyController extends HttpServlet {
         } catch (Exception e) {
             log.error("수정 중 오류 발생", e);
             request.setAttribute("error", "오류가 발생했습니다: " + e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/views/mgr_modify_normal.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
         }
     }
 
@@ -529,7 +529,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "이름과 이메일은 필수 입력값입니다.");
             ManagerVO fresh = managerDAO.selectOne(sessionId);
             request.setAttribute("manager", fresh);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
             return;
         }
 
@@ -540,7 +540,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "비밀번호는 최소 4자 이상이어야 합니다.");
             ManagerVO fresh = managerDAO.selectOne(sessionId);
             request.setAttribute("manager", fresh);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
             return;
         }
 
@@ -551,7 +551,7 @@ public class ManagerModifyController extends HttpServlet {
             request.setAttribute("error", "올바른 이메일 형식이 아닙니다.");
             ManagerVO fresh = managerDAO.selectOne(sessionId);
             request.setAttribute("manager", fresh);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
             return;
         }
 
@@ -560,7 +560,7 @@ public class ManagerModifyController extends HttpServlet {
             ManagerVO existing = managerDAO.selectOne(sessionId);
             if (existing == null) {
                 request.setAttribute("error", "존재하지 않는 계정입니다.");
-                request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
                 return;
             }
 
@@ -606,7 +606,7 @@ public class ManagerModifyController extends HttpServlet {
             } catch (Exception ex) {
                 log.error("재조회 실패", ex);
             }
-            request.getRequestDispatcher("/WEB-INF/views/mgr_my_modify.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_my_modify.jsp").forward(request, response);
         }
     }
 

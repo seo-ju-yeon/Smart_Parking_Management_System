@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
 </head>
 <body>
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
     <div id="entry" class="page">
         <h2> <%=targetDate%> 정산 목록 </h2>

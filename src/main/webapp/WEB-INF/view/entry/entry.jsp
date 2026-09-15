@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
 </head>
 <body>
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <%
     String space = (String) request.getAttribute("id");
     // [버그수정] forward 시에는 fail도 getAttribute로 받아야 함

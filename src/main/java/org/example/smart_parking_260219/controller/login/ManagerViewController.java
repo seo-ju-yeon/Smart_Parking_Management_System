@@ -113,7 +113,7 @@ public class ManagerViewController extends HttpServlet {
             request.setAttribute("error", "목록을 불러오는 중 오류가 발생했습니다.");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/mgr_list.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_list.jsp").forward(request, response);
     }
 
     /**
@@ -171,7 +171,7 @@ public class ManagerViewController extends HttpServlet {
             request.setAttribute("error", "조회할 관리자 정보를 특정할 수 없습니다.");
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/mgr_view.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_view.jsp").forward(request, response);
     }
 
     /**

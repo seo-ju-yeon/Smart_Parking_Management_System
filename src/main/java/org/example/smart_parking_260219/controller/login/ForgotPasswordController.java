@@ -59,7 +59,7 @@ public class ForgotPasswordController extends HttpServlet {
             return;
         }
 
-        req.getRequestDispatcher("/WEB-INF/views/find_password.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/auth/find_password.jsp").forward(req, resp);
     }
 
     /**

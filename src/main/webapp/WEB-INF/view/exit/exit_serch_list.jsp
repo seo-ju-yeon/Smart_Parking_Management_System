@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/payment_style.css">
 </head>
 <body>
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <%
     // [버그수정] Controller에서 setAttribute("parkingDTO")로 넘긴 경우 우선 사용
     // 없으면 carNum으로 직접 DB 조회 (다양한 진입 경로 대응)

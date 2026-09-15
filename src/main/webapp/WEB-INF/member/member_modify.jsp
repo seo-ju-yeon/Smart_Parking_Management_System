@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
-<%@ include file="../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
     <div class="container mt-4" style="max-width: 600px;">
         <h2 class="mb-4">회원 수정</h2>

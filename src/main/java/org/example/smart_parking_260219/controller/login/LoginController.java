@@ -60,9 +60,9 @@ public class LoginController extends HttpServlet {
             log.info("2차 인증 페이지로 이동");
 
             if ("/login/verifyEmail".equals(servletPath)) {
-                request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             } else {
-                request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             }
             return;
         }
@@ -79,7 +79,7 @@ public class LoginController extends HttpServlet {
             }
         }
         // 로그인하지 않은 사용자는 로그인 페이지로 이동
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
     }
 
     /**
@@ -130,7 +130,7 @@ public class LoginController extends HttpServlet {
         if (managerId == null || managerId.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
             request.setAttribute("error", "아이디와 비밀번호를 입력해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
             return;
         }
 
@@ -142,7 +142,7 @@ public class LoginController extends HttpServlet {
             if (managerVO == null) {
                 log.warn("존재하지 않는 관리자 ID: {}", managerId);
                 request.setAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
-                request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 return;
             }
 
@@ -150,7 +150,7 @@ public class LoginController extends HttpServlet {
             if (!managerVO.isActive()) {
                 log.warn("비활성화된 계정 로그인 시도: {}", managerId);
                 request.setAttribute("error", "비활성화된 계정입니다.<br> 관리자에게 문의하세요.");
-                request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 return;
             }
 
@@ -160,7 +160,7 @@ public class LoginController extends HttpServlet {
             if (!passwordMatch) {
                 log.warn("비밀번호 불일치 - ID: {}", managerId);
                 request.setAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
-                request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
                 return;
             }
 
@@ -181,16 +181,16 @@ public class LoginController extends HttpServlet {
             // 이메일 입력 후 슈퍼패스 OTP를 입력하면 최고관리자 인증 단계 통과
             if ("ADMIN".equals(managerVO.getRole()) || SuperKeyConfig.isSuperAccount(managerId)) {
                 log.info("최고관리자/슈퍼 계정 2차 인증(이메일+OTP) 단계로 이동: {}", managerId);
-                request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             } else {
                 log.info("일반관리자 2차 인증(이메일) 단계로 이동");
-                request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             }
 
         } catch (Exception e) {
             log.error("로그인 처리 중 오류 발생", e);
             request.setAttribute("error", "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
         }
     }
 
@@ -212,7 +212,7 @@ public class LoginController extends HttpServlet {
         if (session == null) {
             log.warn("세션이 null입니다");
             request.setAttribute("error", "세션이 만료되었습니다. 다시 로그인해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
             return;
         }
 
@@ -222,7 +222,7 @@ public class LoginController extends HttpServlet {
         if (managerVO == null) {
             log.warn("세션에 loginManager 정보 없음");
             request.setAttribute("error", "세션 정보가 없습니다. 다시 로그인해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
             return;
         }
 
@@ -234,7 +234,7 @@ public class LoginController extends HttpServlet {
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
             log.warn("이메일 입력 없음");
             request.setAttribute("error", "이메일을 입력해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             return;
         }
 
@@ -245,7 +245,7 @@ public class LoginController extends HttpServlet {
         if (registeredEmail == null || registeredEmail.trim().isEmpty()) {
             log.error("DB에 등록된 이메일 없음 - ID: {}", managerVO.getManagerId());
             request.setAttribute("error", "등록된 이메일 정보가 없습니다. 관리자에게 문의하세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             return;
         }
 
@@ -254,7 +254,7 @@ public class LoginController extends HttpServlet {
             log.warn("이메일 불일치 - ID: {}, 입력: {}, 등록: {}",
                     managerVO.getManagerId(), inputEmail, registeredEmail);
             request.setAttribute("error", "등록된 이메일 주소와 일치하지 않습니다.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             return;
         }
 
@@ -359,7 +359,7 @@ public class LoginController extends HttpServlet {
         if (session == null || session.getAttribute("loginManager") == null) {
             log.warn("유효하지 않은 세션");
             request.setAttribute("error", "세션이 만료되었습니다. 다시 로그인해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
             return;
         }
 
@@ -373,13 +373,13 @@ public class LoginController extends HttpServlet {
         // 입력값 확인
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
             request.setAttribute("error", "이메일을 입력해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
 
         if (inputOtp == null || inputOtp.trim().isEmpty()) {
             request.setAttribute("error", "인증번호를 입력해주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
 
@@ -391,7 +391,7 @@ public class LoginController extends HttpServlet {
         if (sessionOtp == null || otpVerifiedEmail == null || otpGeneratedTime == null) {
             log.warn("OTP 정보 없음 - 먼저 인증번호를 발송받아야 함");
             request.setAttribute("error", "먼저 인증번호를 발송받아주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
 
@@ -407,7 +407,7 @@ public class LoginController extends HttpServlet {
             session.removeAttribute("otpVerifiedEmail");
 
             request.setAttribute("error", "인증번호가 만료되었습니다. 다시 발송받아주세요.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
 
@@ -415,7 +415,7 @@ public class LoginController extends HttpServlet {
         if (!inputEmail.trim().equalsIgnoreCase(otpVerifiedEmail)) {
             log.warn("이메일 불일치 - 입력: {}, OTP 발송: {}", inputEmail, otpVerifiedEmail);
             request.setAttribute("error", "인증번호를 발송받은 이메일과 일치하지 않습니다.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
 
@@ -426,7 +426,7 @@ public class LoginController extends HttpServlet {
         if (!superOtpBypass && !inputOtp.trim().equals(sessionOtp)) {
             log.warn("OTP 불일치 - 입력: {}, 저장: {}", inputOtp, sessionOtp);
             request.setAttribute("error", "인증번호가 일치하지 않습니다.");
-            request.getRequestDispatcher("/WEB-INF/views/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
         }
         if (superOtpBypass) {

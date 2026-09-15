@@ -40,7 +40,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 
 <div class="main-content">
     <div id="statistics" class="page">

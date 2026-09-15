@@ -99,7 +99,7 @@
 </head>
 <body>
 <!-- Navigation -->
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 
 <div class="main-content">
     <div class="detail-card">

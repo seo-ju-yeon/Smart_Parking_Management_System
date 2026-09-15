@@ -42,7 +42,7 @@ public class ManagerAddController extends HttpServlet {
         }
 
         log.info("관리자 추가 화면으로 이동");
-        request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ManagerAddController extends HttpServlet {
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);
 
-            request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
             return;
         }
 
@@ -113,7 +113,7 @@ public class ManagerAddController extends HttpServlet {
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
             return;
         }
 
@@ -124,7 +124,7 @@ public class ManagerAddController extends HttpServlet {
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
             return;
         }
 
@@ -135,7 +135,7 @@ public class ManagerAddController extends HttpServlet {
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
             return;
         }
 
@@ -148,7 +148,7 @@ public class ManagerAddController extends HttpServlet {
                 request.setAttribute("managerId", managerId);
                 request.setAttribute("managerName", managerName);
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
                 return;
             }
 
@@ -178,7 +178,7 @@ public class ManagerAddController extends HttpServlet {
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/mgr_add.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_add.jsp").forward(request, response);
         }
     }
 

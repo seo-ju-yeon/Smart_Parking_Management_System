@@ -23,7 +23,7 @@
 </head>
 <body>
 <!-- Navigation -->
-<%@ include file="../../main/menu.jsp" %>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
   <!-- 제목 -->
   <div id="entry" class="page">
