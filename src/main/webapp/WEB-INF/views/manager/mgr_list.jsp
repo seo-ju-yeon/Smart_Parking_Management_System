@@ -6,7 +6,7 @@
 <html>
 <head>
     <title>관리자 목록 - 스마트 파킹 시스템</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <style>
         /* 메인 컨텐츠 영역 */
         .main-content {
@@ -392,8 +392,8 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-<script src="${pageContext.request.contextPath}/JS/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script>
     // 최고관리자 접근 차단 모달 제어
     function openAdminModal() {

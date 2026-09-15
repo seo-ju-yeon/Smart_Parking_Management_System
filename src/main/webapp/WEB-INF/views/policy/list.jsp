@@ -24,7 +24,7 @@
     <title>요금 정책 변경 이력</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <style>
         .main-content {
             display: flex;
@@ -217,7 +217,7 @@
         </div>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-<script src="${pageContext.request.contextPath}/JS/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 </body>
 </html>

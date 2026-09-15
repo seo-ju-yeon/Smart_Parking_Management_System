@@ -4,7 +4,7 @@
     <title>요금 부과 정책 등록</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
 
     <style>
         .main-content {
@@ -200,7 +200,7 @@
         </div>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script>
     // 유효성 검사
     function registerMember() {

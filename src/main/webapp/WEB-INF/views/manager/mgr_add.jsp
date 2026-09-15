@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>관리자 추가</title>
-    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
 
     <style>
         * {

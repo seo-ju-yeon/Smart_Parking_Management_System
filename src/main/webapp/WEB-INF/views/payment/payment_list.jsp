@@ -9,7 +9,7 @@
 <html>
 <head>
     <title>정산 목록</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>

@@ -62,9 +62,9 @@
 <html>
 <head>
     <title>Payment</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/payment_style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/modal.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/payment_style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/modal.css">
 </head>
 <div id="customModal" class="modal-overlay" style="background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;">
     <div class="modal-content" style="background: none; border: none; box-shadow: none; padding: 0; width: auto; max-width: none;">
@@ -210,8 +210,8 @@
     </div>
     <!-- 영수증 -->
 </div>
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-<script src="${pageContext.request.contextPath}/JS/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 
 <script>
     const entryTime = "<%=(parkingDTO != null && parkingDTO.getEntryTime() != null) ? parkingDTO.getEntryTime() : ""%>";
@@ -227,6 +227,6 @@
     const exitTime = "<%=exitTimeStr%>";
 </script>
 
-<script src="${pageContext.request.contextPath}/JS/payment.js"></script>
+<script src="${pageContext.request.contextPath}/js/payment/payment.js"></script>
 </body>
 </html>

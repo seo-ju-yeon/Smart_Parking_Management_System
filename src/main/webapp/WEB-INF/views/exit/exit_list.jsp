@@ -14,7 +14,7 @@
 <html>
 <head>
     <title>Title</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <style>
         .click-row {
             cursor: pointer;
@@ -104,8 +104,8 @@
     </div>
   </div>
 </div>
-    <script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-    <script src="${pageContext.request.contextPath}/JS/function.js"></script>
+    <script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+    <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
     <script>
         // 행 전체를 클릭하면 해당 차량의 출차 메뉴로 이동
         document.addEventListener("click", function (e) {

@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>내 정보 수정</title>
-    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }

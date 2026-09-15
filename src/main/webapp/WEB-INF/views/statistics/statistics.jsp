@@ -34,8 +34,8 @@
 <html>
 <head>
     <title>매출 통계 - 주차장 관리 시스템</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/statistics_style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/statistics/statistics_style.css">
     <%-- chart.js CDN --%>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -91,7 +91,7 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script>
     // 1. 서버에서 넘어온 데이터를 JS 배열로 변환
     <%

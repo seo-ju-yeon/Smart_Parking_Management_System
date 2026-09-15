@@ -26,8 +26,8 @@
 <html>
 <head>
     <title>주차 현황</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/dashboard.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard/dashboard.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
@@ -89,7 +89,7 @@
     </div>
 </div>
 <script>const contextPath = "${pageContext.request.contextPath}";</script>
-<script src="${pageContext.request.contextPath}/JS/dashboard.js"></script>
-<script src="${pageContext.request.contextPath}/JS/parkingList.js"></script>
+<script src="${pageContext.request.contextPath}/js/dashboard/dashboard.js"></script>
+<script src="${pageContext.request.contextPath}/js/dashboard/parking-list.js"></script>
 </body>
 </html>

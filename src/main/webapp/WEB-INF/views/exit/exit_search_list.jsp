@@ -8,8 +8,8 @@
 <html>
 <head>
     <title>출차</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/payment_style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/payment_style.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
@@ -82,8 +82,8 @@
         </form>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-<script src="${pageContext.request.contextPath}/JS/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script>
     function formatDateTime(dtStr) {
         if(!dtStr || dtStr === "null" || dtStr === "") return "-";

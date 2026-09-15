@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>로그인 - 주차장 관리 시스템</title>
-    <link rel="stylesheet" href="/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <style>
         * {
             margin: 0;

@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Title</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
 </head>
 <body>
 <!-- Navigation -->
@@ -17,7 +17,7 @@
     </div>
   </div>
 </div>
-    <script src="${pageContext.request.contextPath}/JS/menu.js"></script>
-    <script src="${pageContext.request.contextPath}/JS/function.js"></script>
+    <script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
+    <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 </body>
 </html>

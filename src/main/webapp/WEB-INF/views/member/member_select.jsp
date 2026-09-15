@@ -14,7 +14,7 @@
 <%-- 회원 조회시 차량번호 뒷 4자리 동일시 선택 화면--%>
 <head>
   <title>회원 선택</title>
-  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
@@ -57,6 +57,6 @@
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<script src="../JS/menu.js"></script>
+<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 </body>
 </html>
