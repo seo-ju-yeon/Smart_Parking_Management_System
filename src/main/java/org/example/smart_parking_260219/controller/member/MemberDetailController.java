@@ -29,7 +29,7 @@ public class MemberDetailController extends HttpServlet {
             // 파라미터 검증
             if (carNum == null || carNum.trim().isEmpty()) {
                 log.error("차량번호 파라미터 누락");
-                resp.sendRedirect("/member/member_search.jsp?error=missing");
+                resp.sendRedirect(req.getContextPath() + "/member/member_search?error=missing");
                 return;
             }
             MemberDTO member = memberService.getOneMember(carNum.trim());

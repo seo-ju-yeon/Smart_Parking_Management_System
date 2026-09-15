@@ -7,28 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('mouseleave', function() { this.style.backgroundColor = ''; });
     });
 
-    // 2. 차량번호 중복 확인 AJAX (요소가 있을 때만 실행)
-    const carNumInput = document.getElementById('carNum');
-    if (carNumInput) {
-        carNumInput.addEventListener('blur', function() {
-            const carNum = this.value.trim();
-            const msg = document.getElementById('carNumMsg');
-            if (!carNum || !msg) return;
-
-            fetch('/member/check_carnum?carNum=' + encodeURIComponent(carNum))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        msg.textContent = '이미 등록된 차량번호입니다.';
-                        msg.style.color = 'red';
-                    } else {
-                        msg.textContent = '등록 가능한 차량번호입니다.';
-                        msg.style.color = 'green';
-                    }
-                })
-                .catch(err => console.error("Check Error:", err));
-        });
-    }
 });
 
 // STEP 1 검증 함수

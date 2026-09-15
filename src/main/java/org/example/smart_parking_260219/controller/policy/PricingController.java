@@ -23,7 +23,7 @@ public class PricingController extends HttpServlet {
         // 2. 데이터를 request에 담기
         req.setAttribute("policy", dto);
 
-        // 3. pricing.jsp로 이동 (WEB-INF 안에 있다면 경로 확인)
-        req.getRequestDispatcher("/WEB-INF/views/policy/pricing.jsp").forward(req, resp);
+        // 별도 pricing.jsp 대신 기존 정책 상세 화면을 재사용
+        req.getRequestDispatcher("/WEB-INF/views/policy/view.jsp").forward(req, resp);
     }
 }
