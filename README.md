@@ -183,10 +183,6 @@ mail.host=smtp.naver.com
 mail.port=465
 mail.username=your_email@naver.com
 mail.password=your_app_password
-
-super.id=super
-super.otp=change-me
-super.role=SUPER
 ```
 
 DB 초기 스키마와 샘플 데이터는 `src/main/resources/sql/init.sql`을 참고합니다.

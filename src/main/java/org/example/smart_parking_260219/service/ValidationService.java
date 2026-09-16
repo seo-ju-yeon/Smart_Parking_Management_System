@@ -2,7 +2,6 @@ package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ValidationDAO;
-import org.example.smart_parking_260219.controller.login.SuperKeyConfig;
 import org.example.smart_parking_260219.mail.MailService;
 import org.example.smart_parking_260219.vo.ValidationVO;
 
@@ -73,17 +72,6 @@ public class ValidationService {
                 .build();
         validationDAO.insert(validationVO);
 
-        // ★ [포트폴리오 시연용] 슈퍼패스 OTP를 세션에 저장하여 실제 이메일 발송을 대체.
-        // 슈퍼 계정은 LoginController에서 이미 대시보드로 이동하지만,
-        // 다른 경로(정보 수정 이메일 인증 등)에서 호출될 경우를 위해 이중 차단.
-        // authCode를 그냥 반환하되 실제 메일은 보내지 않음.
-
-        // 포트폴리오 시연용 슈퍼 계정은 실제 메일 발송 생략
-        if (SuperKeyConfig.isSuperAccount(email)) {
-            log.info("슈퍼 계정 이메일 발송 차단 - 실제 이메일 미발송: {}", email);
-            return authCode;
-        }
-
         // 인증 목적에 따라 제목과 HTML 본문 생성
         String title = buildTitle(purpose);
         String body = buildBody(purpose, authCode);
@@ -91,6 +79,7 @@ public class ValidationService {
         mailService.sendMailWithHtml(title, body, email);
 
         log.info("인증코드 발송 완료 - Email: {}, Purpose: {}", email, purpose);
+
         return authCode;
     }
 
@@ -108,12 +97,7 @@ public class ValidationService {
     public boolean verifyAuthCode(String email, String inputCode) {
         log.info("인증코드 검증 시작 - Email: {}, Input: {}", email, inputCode);
 
-        // 포트폴리오 시연용 슈퍼 OTP는 바로 인증 성공 처리
-        if (SuperKeyConfig.isSuperOtp(inputCode)) {
-            log.info("슈퍼패스 OTP 감지 - 인증 통과: {}", email);
-            return true;
-        }
-
+        // DB에서 발급된 인증정보를 조회하게 함
         ValidationVO validationVO = validationDAO.select(email);
 
         if (validationVO == null) {

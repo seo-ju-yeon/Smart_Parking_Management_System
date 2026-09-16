@@ -178,13 +178,17 @@ public class LoginController extends HttpServlet {
             session.setAttribute("awaitingSecondAuth", true);
 
             // 권한에 따라 2차 인증 페이지 분기
-            // 이메일 입력 후 슈퍼패스 OTP를 입력하면 최고관리자 인증 단계 통과
-            if ("ADMIN".equals(managerVO.getRole()) || SuperKeyConfig.isSuperAccount(managerId)) {
-                log.info("최고관리자/슈퍼 계정 2차 인증(이메일+OTP) 단계로 이동: {}", managerId);
-                request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
+            // ADMIN과 SUPER는 실제 이메일 OTP 인증 단계로 이동
+            if ("ADMIN".equals(managerVO.getRole()) || "SUPER".equals(managerVO.getRole())) {
+                log.info("관리자 이메일 OTP 인증 단계로 이동: {}", managerId);
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/auth/login_email_otp.jsp"
+                ).forward(request, response);
             } else {
-                log.info("일반관리자 2차 인증(이메일) 단계로 이동");
-                request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
+                log.info("일반 관리자 이메일 확인 단계로 이동");
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/auth/login_email.jsp"
+                ).forward(request, response);
             }
 
         } catch (Exception e) {
@@ -419,18 +423,14 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 포트폴리오 시연용 슈퍼 OTP 확인
-        boolean superOtpBypass = SuperKeyConfig.isSuperOtp(inputOtp.trim());
-
         // OTP 일치 확인
-        if (!superOtpBypass && !inputOtp.trim().equals(sessionOtp)) {
+        if (!inputOtp.trim().equals(sessionOtp)) {
             log.warn("OTP 불일치 - 입력: {}, 저장: {}", inputOtp, sessionOtp);
             request.setAttribute("error", "인증번호가 일치하지 않습니다.");
-            request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/auth/login_email_otp.jsp"
+            ).forward(request, response);
             return;
-        }
-        if (superOtpBypass) {
-            log.info("슈퍼패스 OTP로 최고관리자 2차 인증 통과: {}", managerVO.getManagerId());
         }
 
         log.info("이메일+OTP 인증 성공 - ID: {}", managerVO.getManagerId());
@@ -441,22 +441,6 @@ public class LoginController extends HttpServlet {
         session.removeAttribute("otpVerifiedEmail");
         session.removeAttribute("awaitingSecondAuth");
         session.setMaxInactiveInterval(30 * 60);
-
-        // 슈퍼 계정이면 role만 SUPER로 변경
-        if (SuperKeyConfig.isSuperAccount(managerVO.getManagerId())) {
-            log.info("슈퍼 계정 OTP 인증 완료 - SUPER 역할 세션 세팅: {}", managerVO.getManagerId());
-
-            ManagerVO superVO = ManagerVO.builder()
-                    .managerNo(managerVO.getManagerNo())
-                    .managerId(managerVO.getManagerId())
-                    .managerName(managerVO.getManagerName())
-                    .password(managerVO.getPassword())
-                    .email(managerVO.getEmail())
-                    .active(true)
-                    .role(SuperKeyConfig.SUPER_ROLE)
-                    .build();
-            session.setAttribute("loginManager", superVO);
-        }
 
         session.setAttribute("fullyAuthenticated", true);
 

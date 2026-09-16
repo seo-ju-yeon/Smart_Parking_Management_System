@@ -183,8 +183,8 @@ public class ManagerModifyController extends HttpServlet {
             return;
         }
 
-        // 순수 ADMIN 계정은 전용 수정 화면을 사용하고, SUPER 계정은 본인 수정도 허용
-        if ("ADMIN".equals(myManager.getRole()) && !SuperKeyConfig.SUPER_ROLE.equals(myManager.getRole())) {
+        // ADMIN은 관리자 전용 수정 화면을 사용
+        if ("ADMIN".equals(myManager.getRole())) {
             log.warn("ADMIN 계정의 /my_modify 접근 차단 → /mgr/modify 로 리다이렉트");
             response.sendRedirect(request.getContextPath() + "/mgr/modify");
             return;
@@ -362,8 +362,11 @@ public class ManagerModifyController extends HttpServlet {
             if (loginManager != null && managerId.equals(loginManager.getManagerId())) {
                 log.info("최고 관리자 정보 수정 - 재로그인 필요");
 
-                session.setAttribute("logoutMessage", "관리자 정보가 변경되었으니 다시 로그인해주세요.");
-                session.invalidate();  // 모든 세션 정보 삭제 (로그아웃)
+                invalidateSessionWithMessage(
+                        request,
+                        session,
+                        "관리자 정보가 변경되었으니 다시 로그인해주세요."
+                );
                 response.sendRedirect(request.getContextPath() + "/login");
             } else {
                 // 다른 관리자의 정보를 수정한 경우 상세 조회 화면으로 이동
@@ -455,8 +458,11 @@ public class ManagerModifyController extends HttpServlet {
                 // 일반 관리자가 본인 정보를 수정한 경우 세션 무효화 후 재로그인 유도
                 log.info("일반 관리자 본인 수정 완료 - 세션 무효화 후 로그인 페이지로 이동");
 
-                sess.setAttribute("logoutMessage", "정보가 수정되었습니다. 변경된 정보로 다시 로그인해주세요.");
-                sess.invalidate();
+                invalidateSessionWithMessage(
+                        request,
+                        sess,
+                        "정보가 수정되었습니다. 변경된 정보로 다시 로그인해주세요."
+                );
                 response.sendRedirect(request.getContextPath() + "/login");
             } else {
                 // ADMIN이 타 관리자 수정한 경우 경우 관리자 목록으로 이동
@@ -477,7 +483,7 @@ public class ManagerModifyController extends HttpServlet {
      *
      * <p>
      * 아이디는 수정할 수 없으며, 세션 ID와 요청 ID가 일치하는 경우에만 이름, 비밀번호, 이메일을 수정한다.
-     * 수정 완료 후 일반 관리자는 재로그인을 유도하고, SUPER 계정은 세션을 유지한다.
+     * 수정 완료 후 변경된 정보로 다시 로그인하도록 세션을 종료한다.
      * </p>
      */
     private void modifyMyInfo(HttpServletRequest request, HttpServletResponse response)
@@ -496,8 +502,8 @@ public class ManagerModifyController extends HttpServlet {
             return;
         }
 
-        // 순수 ADMIN 계정은 전용 수정 화면을 사용하고, SUPER 계정은 본인 수정도 허용
-        if ("ADMIN".equals(loginManager.getRole()) && !SuperKeyConfig.SUPER_ROLE.equals(loginManager.getRole())) {
+        // ADMIN은 관리자 전용 수정 화면을 사용
+        if ("ADMIN".equals(loginManager.getRole())) {
             log.warn("ADMIN이 /my_modify POST 시도 - 차단");
             response.sendRedirect(request.getContextPath() + "/mgr/modify");
             return;
@@ -585,16 +591,12 @@ public class ManagerModifyController extends HttpServlet {
             managerDAO.updateManager(builder.build());
             log.info("본인 정보 수정 완료 - ID: {}", sessionId);
 
-            // SUPER 계정은 시연 흐름을 위해 재로그인 없이 세션을 유지
-            if (SuperKeyConfig.SUPER_ROLE.equals(loginManager.getRole())) {
-                session.setAttribute("successMessage", "정보가 수정되었습니다.");
-                response.sendRedirect(request.getContextPath() + "/dashboard");
-                return;
-            }
-
-            // 일반 관리자는 정보 수정 후 변경된 정보로 다시 로그인하도록 세션을 종료
-            session.setAttribute("logoutMessage", "정보가 수정되었습니다. 변경된 정보로 다시 로그인해주세요.");
-            session.invalidate();
+            // 변경된 정보로 다시 로그인하도록 기존 인증 세션을 종료
+            invalidateSessionWithMessage(
+                    request,
+                    session,
+                    "정보가 수정되었습니다. 변경된 정보로 다시 로그인해주세요."
+            );
             response.sendRedirect(request.getContextPath() + "/login");
 
         } catch (Exception e) {
@@ -704,5 +706,21 @@ public class ManagerModifyController extends HttpServlet {
         log.info("Context Path: {}", request.getContextPath());
         log.info("Servlet Path: {}", request.getServletPath());
         log.info("Path Info: {}", request.getPathInfo());
+    }
+
+
+    /**
+     * 기존 로그인 세션을 종료하고 로그인 화면에 표시할 메시지를
+     * 새로운 비인증 세션에 저장한다.
+     */
+    private void invalidateSessionWithMessage(
+            HttpServletRequest request,
+            HttpSession session,
+            String message
+    ) {
+        session.invalidate();
+
+        HttpSession messageSession = request.getSession(true);
+        messageSession.setAttribute("logoutMessage", message);
     }
 }
