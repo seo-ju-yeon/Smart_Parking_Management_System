@@ -36,8 +36,8 @@ public class LoginCheckFilter implements Filter {
             "/login/verifyEmail", "/login/sendLoginOtp", "/login/verifyEmailOtp",  // 로그인 2차 인증
             "/logout",
             "/resources",
-            "/CSS",
-            "/JS",
+            "/css/",
+            "/js/",
             "/forgot-password"  // 비밀번호 찾기
     );
 
@@ -81,19 +81,36 @@ public class LoginCheckFilter implements Filter {
             return;
         }
 
-        // 세션 확인 (로그인 여부 판단)
+        // 인증 검사 과정에서 불필요한 세션이 생성되지 않도록 기존 세션만 조회
         HttpSession session = req.getSession(false);
-        boolean isLoggedIn = (session != null && session.getAttribute("loginManager") != null);
 
-        if (isLoggedIn) {
-            // 로그인 된 상태라면 요청한 페이지로 보내줌
-            log.info("인증됨 - 요청 통과: {}", path);
+        // loginManager는 아이디, 비밀번호를 이용한 1차 인증 성공 여부를 의미
+        boolean hasLoginManager =
+                session != null
+                        && session.getAttribute("loginManager") != null;
+
+        // 보호된 경로는 이메일 또는 OTP를 포함한 2차 인증까지 완료한 경우에만 허용
+        // Boolean.TRUE.equals()를 사용하여 속성이 없거나 false인 경우 안전하게 차단
+        boolean isFullyAuthenticated =
+                hasLoginManager
+                        && Boolean.TRUE.equals(
+                        session.getAttribute("fullyAuthenticated")
+                );
+
+        if (isFullyAuthenticated) {
+            log.info("전체 인증 완료 - 요청 통과: {}", path);
             chain.doFilter(request, response);
             return;
         }
 
-        // 로그인 X + 예외 경로 아님 = 로그인 페이지로 쫓아냄
-        log.warn("미인증 요청 차단: {}", path);
+        // 1차 인증만 완료한 요청과 로그인하지 않은 요청을 구분하여 기록
+        if (hasLoginManager) {
+            log.warn("2차 인증 미완료 요청 차단: {}", path);
+        } else {
+            log.warn("미인증 요청 차단: {}", path);
+        }
+
+        // 인증이 완료되지 않은 사용자는 로그인 페이지에서 인증 절차를 다시 시작
         resp.sendRedirect(contextPath + "/login");
     }
 

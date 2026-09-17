@@ -166,14 +166,18 @@ public class LoginController extends HttpServlet {
 
             log.info("1차 인증 성공: {}, 권한: {}", managerId, managerVO.getRole());
 
-            // 1차 인증 성공 후 세션 생성
+            // 1차 인증 성공 후 기존 세션을 조회하고, 없으면 새 세션을 생성
             HttpSession session = request.getSession();
+
+            // 새 로그인 시 2차 인증을 다시 거치도록 이전 인증 완료 상태를 초기화
+            session.removeAttribute("fullyAuthenticated");
+
             session.setAttribute("managerId", managerVO.getManagerId());
             session.setAttribute("managerName", managerVO.getManagerName());
             session.setAttribute("managerRole", managerVO.getRole());
             session.setMaxInactiveInterval(30 * 60);
 
-            // 2차 인증 전까지 사용할 관리자 정보 저장
+            // 1차 인증 완료 상태를 저장하고 2차 인증 대기 상태로 전환
             session.setAttribute("loginManager", managerVO);
             session.setAttribute("awaitingSecondAuth", true);
 
