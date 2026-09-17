@@ -139,6 +139,35 @@ public class ManagerAddController extends HttpServlet {
             return;
         }
 
+        // 서버 세션에 저장된 관리자 등록 인증 완료 이메일 조회
+        HttpSession session = request.getSession(false);
+        String managerAddVerifiedEmail =
+                session == null
+                        ? null
+                        : (String) session.getAttribute("managerAddVerifiedEmail");
+
+        // 인증 완료 이메일과 실제 등록 요청 이메일이 같은지 서버에서 최종 확인
+        boolean isEmailVerified =
+                managerAddVerifiedEmail != null
+                        && managerAddVerifiedEmail.equalsIgnoreCase(email.trim());
+
+        if (!isEmailVerified) {
+            log.warn("관리자 등록 차단 - 이메일 인증 미완료 또는 인증 이메일 불일치");
+
+            request.setAttribute(
+                    "error",
+                    "이메일 인증 정보가 확인되지 않습니다. 다시 인증해주세요."
+            );
+            request.setAttribute("managerId", managerId);
+            request.setAttribute("managerName", managerName);
+            request.setAttribute("email", email);
+
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/manager/mgr_add.jsp"
+            ).forward(request, response);
+            return;
+        }
+
         try {
             // 중복 ID 체크 (신규 관리자 ID가 이미 존재하는지 확인)
             ManagerVO existingManager = managerDAO.selectOne(managerId);
@@ -165,8 +194,11 @@ public class ManagerAddController extends HttpServlet {
             managerDAO.insertManager(newManager);
             log.info("관리자 추가 성공 - ID: {}", managerId);
 
+            // 사용이 끝난 관리자 등록 이메일 인증 상태 삭제
+            session.removeAttribute("managerAddPendingEmail");
+            session.removeAttribute("managerAddVerifiedEmail");
+
             // 성공 메시지와 함께 대시보드로 리다이렉트
-            HttpSession session = request.getSession();
             session.setAttribute("successMessage", "관리자가 성공적으로 추가되었습니다.");
 
             log.info("대시보드로 리다이렉트: {}/dashboard", request.getContextPath());

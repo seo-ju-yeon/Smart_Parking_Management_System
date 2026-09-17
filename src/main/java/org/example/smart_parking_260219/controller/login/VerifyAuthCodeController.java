@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.ValidationService;
 
@@ -43,9 +44,14 @@ public class VerifyAuthCodeController extends HttpServlet {
 
         req.setCharacterEncoding("UTF-8");  // 한글 깨짐 방지
 
-        // 인증 검증에 필요한 요청 파라미터 추출 (클라이언트가 보낸 데이터)
+        // 인증 검증에 필요한 요청 파라미터 추출
         String email = req.getParameter("email");
         String code = req.getParameter("code");
+
+        // 현재 세션에서 관리자 등록 목적으로 인증번호를 발송한 이메일 조회
+        HttpSession session = req.getSession(false);
+        String managerAddPendingEmail =
+                session == null ? null : (String) session.getAttribute("managerAddPendingEmail");
 
         log.info("인증 검증 요청");
 
@@ -59,6 +65,26 @@ public class VerifyAuthCodeController extends HttpServlet {
         PrintWriter out = resp.getWriter();
 
         if (isValid) {
+            // 인증번호를 발송한 이메일과 현재 검증한 이메일이 같은지 확인
+            boolean isManagerAddEmailMatched =
+                    session != null
+                    && managerAddPendingEmail != null
+                    && email != null
+                    && managerAddPendingEmail.equalsIgnoreCase(email.trim());
+
+            if (isManagerAddEmailMatched) {
+                // 관리자 등록 POST에서 다시 검사할 인증 완료 이메일 저장
+                session.setAttribute(
+                        "managerAddVerifiedEmail",
+                        managerAddPendingEmail
+                );
+
+                // 발송 대기 상태는 인증 완료 상태로 전환되었으므로 삭제
+                session.removeAttribute("managerAddPendingEmail");
+
+                log.info("관리자 등록 이메일 인증 완료 상태 저장");
+            }
+
             log.info("인증 성공");
             out.write("{\"success\": true, \"message\": \"인증 성공\"}");
         } else {

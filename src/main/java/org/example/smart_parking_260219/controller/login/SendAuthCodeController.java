@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.ValidationService;
 
@@ -37,8 +38,16 @@ public class SendAuthCodeController extends HttpServlet {
         String email = req.getParameter("email");
         String purposeParam = req.getParameter("purpose");
 
+        // 관리자 등록을 위한 이메일 인증 요청인지 확인
+        boolean isManagerAddPurpose =
+                ValidationService.Purpose.ADD_MANAGER.name().equals(purposeParam);
+
+        // 로그인 필터에서 확인된 기존 세션 조회
+        HttpSession session = req.getSession(false);
+
         // 요청받은 인증 목적을 enum으로 변환하고, 값이 없거나 잘못된 경우 기본 목적을 사용
         ValidationService.Purpose purpose;
+
         try {
             purpose = ValidationService.Purpose.valueOf(purposeParam);
         } catch (Exception e) {
@@ -47,8 +56,24 @@ public class SendAuthCodeController extends HttpServlet {
         }
 
         try {
-            // 이메일과 인증 목적에 맞는 인증번호를 생성하고 발송한다.
+            // 다른 목적의 이메일 인증을 새로 시작했는데 과거 관리자 등록 인증 상태가 남아있으면 안되므로
+            // 목적과 관계없이 먼저 제거함
+            if (session != null) {
+                // 새로운 이메일 인증 요청이 시작되면 이전 관리자 등록 인증 상태를 초기화
+                session.removeAttribute("managerAddPendingEmail");
+                session.removeAttribute("managerAddVerifiedEmail");
+            }
+
+            // 이메일과 인증 목적에 맞는 인증번호를 생성하고 발송
             validationService.sendAuthCode(email, purpose);
+
+            if (isManagerAddPurpose && session != null) {
+                // 관리자 등록을 위해 인증번호를 발송한 이메일을 서버 세션에 저장
+                session.setAttribute(
+                        "managerAddPendingEmail",
+                        email.trim()
+                );
+            }
 
             // JSON 응답 인코딩은 getWriter() 호출 전에 설정
             resp.setContentType("application/json; charset=UTF-8");
