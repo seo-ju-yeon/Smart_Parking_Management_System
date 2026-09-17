@@ -83,7 +83,10 @@ public enum ManagerService {
      * @param managerDTO 추가할 관리자 정보
      */
     public void addManager(ManagerDTO managerDTO) {
-        log.info("추가할 관리자 DTO: {}", managerDTO);
+        log.info(
+                "관리자 추가 요청 - ID: {}",
+                managerDTO.getManagerId()
+        );
 
         // 화면에서 전달받은 DTO를 DB 저장용 VO로 변환
         ManagerVO managerVO = modelMapper.map(managerDTO, ManagerVO.class);

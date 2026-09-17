@@ -44,7 +44,7 @@ public class ValidationDAO {
 
             preparedStatement.executeUpdate();
 
-            log.info("인증 정보 DB 저장 완료: " + validationVO.getEmail());
+            log.info("인증 정보 DB 저장 완료");
         } catch (SQLException e) {
             log.error("인증 정보 DB 저장 실패", e);
             throw new RuntimeException(e);
@@ -80,11 +80,11 @@ public class ValidationDAO {
                         .expiryTime(expiryTime)
                         .build();
 
-                log.info("인증 정보 조회 완료: {}, 만료시간: {}", email, expiryTime);
+                log.info("인증 정보 조회 완료 - 만료시간: {}", expiryTime);
                 return validationVO;
             }
 
-            log.warn("인증 정보 없음: {}", email);
+            log.warn("인증 정보 없음");
             return null;
         } catch (SQLException e) {
             log.error("인증 정보 조회 실패", e);
@@ -113,7 +113,7 @@ public class ValidationDAO {
             // 재발송 전에 기존 인증번호 삭제
             int deleted = preparedStatement.executeUpdate();
 
-            log.info("기존 인증 정보 삭제: {} ({}건)", email, deleted);
+            log.info("기존 인증 정보 삭제 - 삭제 건수: {}", deleted);
         } catch (SQLException e) {
             log.error("인증 정보 삭제 실패", e);
             throw new RuntimeException(e);

@@ -19,8 +19,13 @@ public class ManagerVO {
     private int managerNo;  // 관리자 내부 번호
     private String managerId;  // 로그인 아이디
     private String managerName;  // 관리자 이름
+
+    @ToString.Exclude
     private String password;  // 관리자 비밀번호
+
+    @ToString.Exclude
     private String email;  // 이메일 인증에 사용할 주소
+
     private boolean active;  // 계정 활성화 여부
     private String role;  // 관리자 권한 (ADMIN / NORMAL)
 }

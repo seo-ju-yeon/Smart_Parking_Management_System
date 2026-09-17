@@ -232,7 +232,6 @@ public class LoginController extends HttpServlet {
 
         // 사용자가 입력한 이메일
         String inputEmail = request.getParameter("email");
-        log.info("입력된 이메일: {}", inputEmail);
 
         // 입력값 검증
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
@@ -244,7 +243,6 @@ public class LoginController extends HttpServlet {
 
         // DB에 등록된 이메일 확인
         String registeredEmail = managerVO.getEmail();
-        log.info("등록된 이메일: {}", registeredEmail);
 
         if (registeredEmail == null || registeredEmail.trim().isEmpty()) {
             log.error("DB에 등록된 이메일 없음 - ID: {}", managerVO.getManagerId());
@@ -255,14 +253,13 @@ public class LoginController extends HttpServlet {
 
         // 입력 이메일과 등록 이메일 비교
         if (!inputEmail.trim().equalsIgnoreCase(registeredEmail.trim())) {
-            log.warn("이메일 불일치 - ID: {}, 입력: {}, 등록: {}",
-                    managerVO.getManagerId(), inputEmail, registeredEmail);
+            log.warn("이메일 불일치 - ID: {}", managerVO.getManagerId());
             request.setAttribute("error", "등록된 이메일 주소와 일치하지 않습니다.");
             request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
             return;
         }
 
-        log.info("2차 인증 성공 - ID: {}, 이메일: {}", managerVO.getManagerId(), inputEmail);
+        log.info("2차 인증 성공 - ID: {}", managerVO.getManagerId());
 
         // 2차 인증 완료 처리
         session.removeAttribute("awaitingSecondAuth");
@@ -297,7 +294,7 @@ public class LoginController extends HttpServlet {
             ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
             String inputEmail = request.getParameter("email");
 
-            log.info("OTP 발송 요청 - ID: {}, 입력 이메일: {}", manager.getManagerId(), inputEmail);
+            log.info("OTP 발송 요청 - ID: {}", manager.getManagerId());
 
             if (inputEmail == null || inputEmail.trim().isEmpty()) {
                 out.print("{\"success\":false,\"message\":\"이메일을 입력해주세요.\"}");
@@ -314,14 +311,17 @@ public class LoginController extends HttpServlet {
             }
 
             if (!inputEmail.trim().equalsIgnoreCase(registeredEmail.trim())) {
-                log.warn("이메일 불일치 - 입력: {}, 등록: {}", inputEmail, registeredEmail);
+                log.warn("이메일 불일치 - ID: {}", manager.getManagerId());
                 out.print("{\"success\":false,\"message\":\"등록된 이메일 주소와 일치하지 않습니다.\"}");
                 return;
             }
 
             // 6자리 OTP 생성
             String otp = generateOTP();
-            log.info("OTP 생성 완료 - ID: {}, OTP: {}", manager.getManagerId(), otp);
+            log.info(
+                    "OTP 생성 완료 - ID: {}",
+                    manager.getManagerId()
+            );
 
             // OTP 발송 정보를 세션에 저장 (5분 유효)
             session.setAttribute("loginOtp", otp); // 생성 OTP를 세션에 임시 보관
@@ -335,7 +335,6 @@ public class LoginController extends HttpServlet {
                 mailService.sendMailWithHtml(emailTitle, emailBody, inputEmail);
 
                 log.info("OTP 이메일 발송 성공 - ID: {}", manager.getManagerId());
-//                log.info("수신 이메일: {}, OTP 코드: {}", inputEmail, otp);
                 out.print("{\"success\":true,\"message\":\"인증번호가 이메일로 발송되었습니다.\"}");
 
             } catch (Exception emailError) {
@@ -372,7 +371,6 @@ public class LoginController extends HttpServlet {
         // 사용자가 입력한 이메일과 OTP
         String inputEmail = request.getParameter("email");
         String inputOtp = request.getParameter("otp");
-//        log.info("입력 - 이메일: {}, OTP: {}", inputEmail, inputOtp);
 
         // 입력값 확인
         if (inputEmail == null || inputEmail.trim().isEmpty()) {
@@ -417,7 +415,8 @@ public class LoginController extends HttpServlet {
 
         // OTP를 발송받은 이메일과 입력 이메일 비교
         if (!inputEmail.trim().equalsIgnoreCase(otpVerifiedEmail)) {
-            log.warn("이메일 불일치 - 입력: {}, OTP 발송: {}", inputEmail, otpVerifiedEmail);
+            log.warn("OTP 발송 이메일과 입력 이메일 불일치 - ID: {}",
+                    managerVO.getManagerId());
             request.setAttribute("error", "인증번호를 발송받은 이메일과 일치하지 않습니다.");
             request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
             return;
@@ -425,7 +424,10 @@ public class LoginController extends HttpServlet {
 
         // OTP 일치 확인
         if (!inputOtp.trim().equals(sessionOtp)) {
-            log.warn("OTP 불일치 - 입력: {}, 저장: {}", inputOtp, sessionOtp);
+            log.warn(
+                    "OTP 불일치 - ID: {}",
+                    managerVO.getManagerId()
+            );
             request.setAttribute("error", "인증번호가 일치하지 않습니다.");
             request.getRequestDispatcher(
                     "/WEB-INF/views/auth/login_email_otp.jsp"

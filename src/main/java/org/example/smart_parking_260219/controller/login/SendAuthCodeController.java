@@ -59,9 +59,9 @@ public class SendAuthCodeController extends HttpServlet {
             out.write("{\"success\": true, \"message\": \"인증코드가 발송되었습니다.\"}");
             out.flush();
 
-            log.info("인증코드 발송 완료: " + email);
+            log.info("인증코드 발송 완료");
         } catch (Exception e) {
-            log.error("인증코드 발송 실패: " + email, e);
+            log.error("인증코드 발송 실패", e);
 
             // 발송 실패 시HTTP 상태 코드를 500(서버 에러)와 실패 메시지를 JSON으로 반환
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -70,7 +70,7 @@ public class SendAuthCodeController extends HttpServlet {
 
             // 클라이언트에게 에러 원인 메시지 전송
             PrintWriter out = resp.getWriter();
-            out.write("{\"success\": false, \"message\": \"발송 실패: " + e.getMessage() + "\"}");
+            out.write("{\"success\": false, \"message\": \"인증코드 발송에 실패했습니다.\"}");
             out.flush();
         }
     }

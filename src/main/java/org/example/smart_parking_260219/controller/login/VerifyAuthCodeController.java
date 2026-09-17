@@ -47,7 +47,7 @@ public class VerifyAuthCodeController extends HttpServlet {
         String email = req.getParameter("email");
         String code = req.getParameter("code");
 
-        log.info("인증 검증 요청 - Email: " + email + ", Code: " + code);
+        log.info("인증 검증 요청");
 
         // 일반 인증번호는 서비스 계층에서 발급 여부와 만료 여부를 검증
         boolean isValid = validationService.verifyAuthCode(email, code);
@@ -59,10 +59,10 @@ public class VerifyAuthCodeController extends HttpServlet {
         PrintWriter out = resp.getWriter();
 
         if (isValid) {
-            log.info("인증 성공: " + email);
+            log.info("인증 성공");
             out.write("{\"success\": true, \"message\": \"인증 성공\"}");
         } else {
-            log.warn("인증 실패: " + email);
+            log.warn("인증 실패");
             out.write("{\"success\": false, \"message\": \"인증 실패 또는 만료\"}");
         }
 

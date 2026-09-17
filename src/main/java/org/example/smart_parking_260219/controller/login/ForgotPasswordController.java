@@ -136,7 +136,7 @@ public class ForgotPasswordController extends HttpServlet {
         String managerId = req.getParameter("managerId");
         String inputEmail = req.getParameter("email");
 
-        log.info("비밀번호 찾기 - OTP 발송 요청 - ID: {}, Email: {}", managerId, inputEmail);
+        log.info("비밀번호 찾기 - OTP 발송 요청 - ID: {}", managerId);
 
         // 필수 입력값 확인
         if (managerId == null || managerId.trim().isEmpty()) {
@@ -165,8 +165,7 @@ public class ForgotPasswordController extends HttpServlet {
 
         // 입력한 이메일과 DB 이메일 비교
         if (!inputEmail.trim().equalsIgnoreCase(registeredEmail.trim())) {
-            log.warn("비밀번호 찾기 - 이메일 불일치 - ID: {}, 입력: {}, 등록: {}",
-                    managerId, inputEmail, registeredEmail);
+            log.warn("비밀번호 찾기 - 이메일 불일치 - ID: {}", managerId);
             sendJson(resp, false, "등록된 이메일 주소와 일치하지 않습니다.");
             return;
         }

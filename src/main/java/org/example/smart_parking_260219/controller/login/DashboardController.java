@@ -40,13 +40,7 @@ public class DashboardController extends HttpServlet {
 
         // 세션과 로그인 정보를 확인하여 미인증 사용자의 접근 차단
         if (session != null) {
-            log.info("세션 존재: {}", session.getId());
-
             Object loginManager = session.getAttribute("loginManager");
-            Object managerId = session.getAttribute("managerId");
-
-            log.info("loginManager: {}", loginManager);
-            log.info("managerId: {}", managerId);
 
             if (loginManager == null) {
                 log.info("미인증 대시보드 접근 요청 - 로그인 페이지로 리다이렉트");

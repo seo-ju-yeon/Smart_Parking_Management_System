@@ -78,7 +78,7 @@ public class ValidationService {
 
         mailService.sendMailWithHtml(title, body, email);
 
-        log.info("인증코드 발송 완료 - Email: {}, Purpose: {}", email, purpose);
+        log.info("인증코드 발송 완료 - 목적: {}", purpose);
 
         return authCode;
     }
@@ -95,28 +95,28 @@ public class ValidationService {
      * @return 인증 성공 여부
      */
     public boolean verifyAuthCode(String email, String inputCode) {
-        log.info("인증코드 검증 시작 - Email: {}, Input: {}", email, inputCode);
+        log.info("인증코드 검증 시작");
 
         // DB에서 발급된 인증정보를 조회하게 함
         ValidationVO validationVO = validationDAO.select(email);
 
         if (validationVO == null) {
-            log.warn("인증 정보 없음: {}", email);
+            log.warn("인증 정보 없음");
             return false;
         }
-        log.info("인증번호 조회 완료 - Email: {}", email);
+        log.info("인증번호 조회 완료");
 
         // 인증번호 만료 여부 확인
         LocalDateTime now = LocalDateTime.now();
         if (now.isAfter(validationVO.getExpiryTime())) {
-            log.warn("인증코드 만료 - Email: {}, 현재: {}, 만료: {}",
-                    email, now, validationVO.getExpiryTime());
+            log.warn("인증코드 만료 - 현재: {}, 만료: {}",
+                    now, validationVO.getExpiryTime());
             return false;
         }
 
         // 사용자가 입력한 인증번호와 DB 인증번호 비교
         boolean isValid = validationVO.getStringOTP().equals(inputCode);
-        log.info("인증코드 검증 결과: {} - {}", email, isValid ? "성공" : "실패");
+        log.info("인증코드 검증 결과: {}", isValid ? "성공" : "실패");
 
         return isValid;
     }
@@ -155,7 +155,7 @@ public class ValidationService {
 
     // 일반 관리자 추가 인증 메일 본문
     private String buildAddManagerBody(String authCode) {
-        log.info("일반 관리자 신규 추가 OTP : {}", authCode);
+        log.info("관리자 등록 인증 메일 본문 생성");
 
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
@@ -206,7 +206,7 @@ public class ValidationService {
 
     // 관리자 정보 수정 인증 메일 본문
     private String buildModifyManagerBody(String authCode) {
-        log.info("관리자 정보 수정 OTP : {}", authCode);
+        log.info("관리자 정보 수정 인증 메일 본문 생성");
 
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
@@ -258,7 +258,7 @@ public class ValidationService {
 
     // 비밀번호 찾기 인증 메일 본문
     private String buildForgotPasswordBody(String authCode) {
-        log.info("비밀번호 찾기 : {}", authCode);
+        log.info("비밀번호 찾기 인증 메일 본문 생성");
 
         return "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'>" +
@@ -316,7 +316,6 @@ public class ValidationService {
      * @return 임시 비밀번호 안내 HTML 본문
      */
     public String buildTempPasswordBody(String tempPassword) {
-//        log.info("임시 비밀번호 발급 이메일 : {}", tempPassword);
         log.info("임시 비밀번호 이메일 본문 생성 완료");
 
         return "<!DOCTYPE html>" +
@@ -366,7 +365,7 @@ public class ValidationService {
 
     // 기본 인증 메일 본문
     private String buildDefaultBody(String authCode) {
-        log.info("기본 템플릿 OTP : {}", authCode);
+        log.info("기본 인증 메일 본문 생성");
 
         return String.format("<h1>인증번호 안내</h1>" +
                 "<p>인증번호: <strong>%s</strong></p>" +

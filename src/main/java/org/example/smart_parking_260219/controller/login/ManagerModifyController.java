@@ -148,7 +148,7 @@ public class ManagerModifyController extends HttpServlet {
 
                 if (manager != null) {
                     request.setAttribute("manager", manager);
-                    log.info("관리자 데이터 조회 성공: {}", manager.getManagerName());
+                    log.info("관리자 데이터 조회 성공 - ID: {}", modifyId);
                 } else {
                     log.warn("ID가 {}인 관리자를 찾을 수 없음", modifyId);
                     request.setAttribute("error", "존재하지 않는 관리자입니다.");
@@ -234,7 +234,7 @@ public class ManagerModifyController extends HttpServlet {
 
             if (targetManager != null) {
                 request.setAttribute("manager", targetManager);
-                log.info("수정 대상 조회 성공: {}", targetManager.getManagerName());
+                log.info("수정 대상 조회 성공 - ID: {}", targetId);
             } else {
                 log.warn("ID가 {}인 관리자를 찾을 수 없음", targetId);
                 request.setAttribute("error", "존재하지 않는 관리자입니다.");
@@ -267,7 +267,7 @@ public class ManagerModifyController extends HttpServlet {
         String passwordConfirm = request.getParameter("passwordConfirm");  // 확인용 비밀번호
         String email = request.getParameter("email");
 
-        log.info("관리자 정보 수정 요청 - ID: {}, 이름: {}, 이메일: {}", managerId, managerName, email);
+        log.info("관리자 정보 수정 요청 - ID: {}", managerId);
         log.info("비밀번호 변경 여부: {}", (password != null && !password.trim().isEmpty() ? "Yes" : "No"));
         log.info("관리자 수정 입력값 확인 - passwordConfirm 입력여부: {}",
                 passwordConfirm != null && !passwordConfirm.trim().isEmpty());
@@ -329,7 +329,7 @@ public class ManagerModifyController extends HttpServlet {
 
         // 이메일 형식 검증
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            log.warn("잘못된 이메일 형식: {}", email);
+            log.warn("잘못된 이메일 형식 - ID: {}", managerId);
             request.setAttribute("error", "올바른 이메일 형식이 아닙니다.");
 
             try {
@@ -406,8 +406,8 @@ public class ManagerModifyController extends HttpServlet {
         String password = request.getParameter("pw");
         String email = request.getParameter("email");
 
-        log.info("수정 요청 수신 - ID: {}, Name: {}, PW입력여부: {}, Email: {}",
-                managerId, managerName, (password != null && !password.isEmpty()), email);
+        log.info("수정 요청 수신 - ID: {}, 비밀번호 입력 여부: {}",
+                managerId, password != null && !password.isEmpty());
 
         try {
             ManagerVO existing = managerDAO.selectOne(managerId);
@@ -523,9 +523,8 @@ public class ManagerModifyController extends HttpServlet {
         String password = request.getParameter("pw");
         String email = request.getParameter("email");
 
-        log.info("본인 정보 수정 요청 - ID: {}, 이름: {}, 이메일: {}, 비밀번호 변경: {}",
-                sessionId, managerName, email,
-                (password != null && !password.trim().isEmpty() ? "Yes" : "No"));
+        log.info("본인 정보 수정 요청 - ID: {}, 비밀번호 변경: {}",
+                sessionId, password != null && !password.trim().isEmpty());
 
         // 필수값 검증
         if (managerName == null || managerName.trim().isEmpty() ||
@@ -552,7 +551,7 @@ public class ManagerModifyController extends HttpServlet {
 
         // 이메일 형식 검증
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            log.warn("잘못된 이메일 형식: {}", email);
+            log.warn("잘못된 이메일 형식 - ID: {}", sessionId);
 
             request.setAttribute("error", "올바른 이메일 형식이 아닙니다.");
             ManagerVO fresh = managerDAO.selectOne(sessionId);
@@ -681,17 +680,13 @@ public class ManagerModifyController extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        if (session != null) {
-            log.info("세션 ID: {}", session.getId());
-            Object loginManager = session.getAttribute("loginManager");
-            log.info("loginManager: {}", loginManager);
-        } else {
-            log.warn("세션이 없음");
-        }
+        if (session == null
+                || session.getAttribute("loginManager") == null) {
 
-        if (session == null || session.getAttribute("loginManager") == null) {
             log.warn("미인증 요청 - 로그인 페이지로 리다이렉트");
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
             return null;
         }
 

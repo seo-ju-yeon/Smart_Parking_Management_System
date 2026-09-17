@@ -84,7 +84,7 @@ public class ManagerAddController extends HttpServlet {
         String passwordConfirm = request.getParameter("passwordConfirm");
         String email = request.getParameter("email");
 
-        log.info("관리자 추가 요청 - ID: {}, 이름: {}, 이메일: {}", managerId, managerName, email);
+        log.info("관리자 추가 요청 - ID: {}", managerId);
         log.info("관리자 추가 입력값 확인 - password 입력여부: {}, passwordConfirm 입력여부: {}",
                 password != null && !password.trim().isEmpty(),
                 passwordConfirm != null && !passwordConfirm.trim().isEmpty());
@@ -130,7 +130,7 @@ public class ManagerAddController extends HttpServlet {
 
         // 이메일 형식 검증
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            log.warn("잘못된 이메일 형식: {}", email);
+            log.warn("잘못된 이메일 형식 - ID: {}", managerId);
             request.setAttribute("error", "올바른 이메일 형식이 아닙니다.");
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
@@ -163,7 +163,7 @@ public class ManagerAddController extends HttpServlet {
 
             // DB에 저장
             managerDAO.insertManager(newManager);
-            log.info("관리자 추가 성공 - ID: {}, 이름: {}", managerId, managerName);
+            log.info("관리자 추가 성공 - ID: {}", managerId);
 
             // 성공 메시지와 함께 대시보드로 리다이렉트
             HttpSession session = request.getSession();
@@ -192,17 +192,13 @@ public class ManagerAddController extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        if (session != null) {
-            log.info("세션 ID: {}", session.getId());
-            Object loginManager = session.getAttribute("loginManager");
-            log.info("loginManager: {}", loginManager);
-        } else {
-            log.warn("세션이 없음");
-        }
+        if (session == null
+                || session.getAttribute("loginManager") == null) {
 
-        if (session == null || session.getAttribute("loginManager") == null) {
             log.warn("미인증 요청 - 로그인 페이지로 리다이렉트");
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
             return null;
         }
 

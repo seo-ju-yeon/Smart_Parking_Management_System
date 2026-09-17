@@ -66,8 +66,8 @@ public class ManagerDAO {
             preparedStatement.setString(4, managerVO.getEmail());
             preparedStatement.executeUpdate();  //INSERT 실행
 
-            log.info("관리자 계정 등록 완료 - ID: {}, 이름: {}",
-                    managerVO.getManagerId(), managerVO.getManagerName());
+            log.info("관리자 계정 등록 완료 - ID: {}",
+                    managerVO.getManagerId());
         } catch (SQLException e) {
             log.error("관리자 계정 등록 중 오류 발생", e);
             throw new RuntimeException(e);
@@ -224,8 +224,8 @@ public class ManagerDAO {
             preparedStatement.close();
 
             if (affectedRows > 0) {
-                log.info("관리자 정보 업데이트 성공 - ID: {}, 이름: {}, 비밀번호 변경: {}",
-                        managerVO.getManagerId(), managerVO.getManagerName(), updatePassword);
+                log.info("관리자 정보 업데이트 성공 - ID: {}, 비밀번호 변경: {}",
+                        managerVO.getManagerId(), updatePassword);
             } else {
                 log.warn("업데이트된 행이 없음 - ID: {}", managerVO.getManagerId());
             }

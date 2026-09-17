@@ -157,7 +157,7 @@ public class ManagerViewController extends HttpServlet {
 
                     // 조회 결과를 상세 JSP에서 사용할 수 있도록 전달
                     request.setAttribute("manager", manager);
-                    log.info("관리자 데이터 조회 성공: {}", manager.getManagerName());
+                    log.info("관리자 데이터 조회 성공 - ID: {}", manager.getManagerId());
                 } else {
                     log.warn("ID가 {}인 관리자를 찾을 수 없음", viewId);
                     request.setAttribute("error", "존재하지 않는 관리자입니다.");
@@ -184,17 +184,13 @@ public class ManagerViewController extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        if (session != null) {
-            log.info("세션 ID: {}", session.getId());
-            Object loginManager = session.getAttribute("loginManager");
-            log.info("loginManager: {}", loginManager);
-        } else {
-            log.warn("세션이 없음");
-        }
+        if (session == null
+                 || session.getAttribute("loginManager") == null) {
 
-        if (session == null || session.getAttribute("loginManager") == null) {
             log.warn("미인증 요청 - 로그인 페이지로 리다이렉트");
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
             return null;
         }
 
