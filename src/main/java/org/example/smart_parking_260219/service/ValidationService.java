@@ -5,6 +5,7 @@ import org.example.smart_parking_260219.dao.ValidationDAO;
 import org.example.smart_parking_260219.mail.MailService;
 import org.example.smart_parking_260219.vo.ValidationVO;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +17,8 @@ import java.time.LocalDateTime;
  */
 @Log4j2
 public class ValidationService {
-    private static final int AUTH_CODE_LENGTH = 6;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ValidationDAO validationDAO = new ValidationDAO();
     private final MailService mailService = new MailService();
@@ -378,12 +380,7 @@ public class ValidationService {
      * @return 생성된 인증번호
      */
     private String generateAuthCode() {
-        StringBuilder authCode = new StringBuilder();
-
-        for (int i = 0; i < AUTH_CODE_LENGTH; i++) {
-            int digit = (int) (Math.random() * 10);
-            authCode.append(digit);
-        }
-        return authCode.toString();
+        int number = SECURE_RANDOM.nextInt(1_000_000);
+        return String.format("%06d", number);
     }
 }
