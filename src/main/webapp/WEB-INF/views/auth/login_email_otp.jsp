@@ -1,4 +1,25 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<%
+    Boolean loginOtpActiveAttribute =
+            // loginOtpActive: 현재 다시 입력할 수 있는 OTP가 있는지
+            (Boolean) request.getAttribute("loginOtpActive");
+
+    boolean loginOtpActive =
+            Boolean.TRUE.equals(loginOtpActiveAttribute);
+
+    Integer remainingSecondsAttribute =
+            (Integer) request.getAttribute(
+                    "loginOtpRemainingSeconds"
+            );
+
+    // initialRemainingSeconds: 서버가 계산한 실제 OTP 남은 시간
+    int initialRemainingSeconds =
+            remainingSecondsAttribute == null
+                    ? 0
+                    : remainingSecondsAttribute;
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -233,7 +254,8 @@
         </div>
 
         <!-- 인증번호 발송 후 표시되는 입력 영역 -->
-        <div id="otpGroup">
+        <div id="otpGroup"
+             style="display: <%= loginOtpActive ? "block" : "none" %>;">
             <div class="form-group">
                 <label for="otp">인증번호</label>
                 <input type="text" id="otp" name="otp" maxlength="6" placeholder="6자리 인증번호" autocomplete="off">
@@ -261,26 +283,39 @@
     const timerDiv = document.getElementById('timer');
     const timeLeftSpan = document.getElementById('timeLeft');
 
-    // 인증 상태와 타이머 저장
-    let isEmailVerified = false;
+    // 인증 상태 초기값 변경 (true or false)
+    let isEmailVerified = <%= loginOtpActive %>;
+    // 타이머 저장
     let timerInterval = null;
 
-    // 인증번호 유효 시간 시작
-    function startTimer() {
-        let timeLeft = 300;
+    // 서버가 계산한 OTP 남은 시간부터 타이머 시작
+    function startTimer(initialSeconds = 300) {
+        clearInterval(timerInterval);
+
+        let timeLeft = initialSeconds;
         timerDiv.style.display = 'block';
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+
+            timeLeftSpan.textContent =
+                String(minutes).padStart(2, '0')
+                + ":"
+                + String(seconds).padStart(2, '0');
+        }
+
+        updateTimerDisplay();
 
         timerInterval = setInterval(function () {
             timeLeft--;
-
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timeLeftSpan.textContent =
-                String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+            updateTimerDisplay();
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                alert('인증 시간이 만료되었습니다. 다시 인증번호를 요청해주세요.');
+                alert(
+                    '인증 시간이 만료되었습니다. 다시 인증번호를 요청해주세요.'
+                );
                 resetForm();
             }
         }, 1000);
@@ -295,6 +330,29 @@
         otpInput.value = '';
         isEmailVerified = false;
         sendOtpBtn.textContent = '인증요청';
+
+        // 이메일 임시값 삭제
+        sessionStorage.removeItem('loginOtpEmail');
+    }
+
+    // PRG 이후 서버에 유효한 OTP가 있으면 입력 화면과 타이머 복원
+    if (isEmailVerified) {
+        // 상태 복원
+        const savedEmail =
+            sessionStorage.getItem('loginOtpEmail');
+
+        if (savedEmail) {
+            emailInput.value = savedEmail;
+            emailInput.readOnly = true;
+        }
+
+        otpGroup.style.display = 'block';
+        sendOtpBtn.textContent = '재발송';
+
+        startTimer(<%= initialRemainingSeconds %>);
+    } else {
+        // 임시 이메일 삭제
+        sessionStorage.removeItem('loginOtpEmail');
     }
 
     // 이메일 형식 검사
@@ -371,6 +429,9 @@
                         otpForm.insertBefore(successDiv, otpForm.firstChild);
                     }
 
+                    // 리다이렉트 후 이메일 입력값을 복원하기 위해 현재 탭에 임시 저장
+                    // sessionStorage는 현재 브라우저 탭을 닫으면 제거됨
+                    sessionStorage.setItem('loginOtpEmail', email);
                     emailInput.readOnly = true;
                     otpGroup.style.display = 'block';
                     otpInput.focus();
@@ -379,14 +440,28 @@
                     // 인증번호 유효 시간 시작
                     startTimer();
 
-                    alert('✅ 이메일로 인증번호가 발송되었습니다!\n\n' + email + '\n\n이메일함을 확인하고 6자리 인증번호를 입력해주세요.\n(스팸함도 확인해주세요)');
+                    alert(
+                        '✅ 이메일로 인증번호가 발송되었습니다!\n\n'
+                        + email
+                        + '\n\n이메일함을 확인하고 6자리 인증번호를 입력해주세요.\n(스팸함도 확인해주세요)');
                 } else {
-                    alert('인증번호 발송 실패: ' + (data.message || '알 수 없는 오류'));
+                    // OTP 발송 실패 시 화면 상태 초기화
+                    resetForm();
+
+                    alert(
+                        '인증번호 발송 실패: '
+                        + (data.message || '알 수 없는 오류')
+                    );
                 }
             })
             .catch(error => {
+                // OTP 발송 실패 시 화면 상태 초기화
+                resetForm();
+
                 console.error('오류:', error);
-                alert('인증번호 발송 중 오류가 발생했습니다.\n\n오류: ' + error.message);
+                alert(
+                    '인증번호 발송 중 오류가 발생했습니다.\n\n오류: '
+                    + error.message);
             })
             .finally(() => {
                 sendOtpBtn.disabled = false;
@@ -431,11 +506,21 @@
         return true;
     });
 
-    // 인증 취소 시 로그인 화면으로 이동
+    // 인증 취소 시 브라우저와 서버의 로그인 상태를 모두 초기화
     cancelBtn.addEventListener('click', function () {
         if (confirm('로그인을 취소하시겠습니까?')) {
             clearInterval(timerInterval);
-            window.location.href = '${pageContext.request.contextPath}/login';
+            sessionStorage.removeItem('loginOtpEmail');
+
+            window.location.href
+                = '${pageContext.request.contextPath}/logout';
+        }
+    });
+
+    // 뒤로가기로 BFCache의 인증 화면이 복원되면 서버에 현재 인증 상태를 다시 확인
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload();
         }
     });
 </script>

@@ -33,6 +33,11 @@ import java.security.SecureRandom;
 @WebServlet(name = "loginController", value = {"/login", "/login/verifyEmail", "/login/sendLoginOtp", "/login/verifyEmailOtp"})
 public class LoginController extends HttpServlet {
 
+    // OTP 횟수
+    private static final int MAX_LOGIN_OTP_ATTEMPTS = 5;
+    // OTP 유효시간
+    private static final long LOGIN_OTP_VALIDITY_MILLIS = 5 * 60 * 1000L;
+
     private final ManagerDAO managerDAO = ManagerDAO.getInstance();
     private final MailService mailService = new MailService();
 
@@ -42,6 +47,11 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // 로그인·2차 인증 화면이 브라우저 캐시에 남아 뒤로가기로 다시 노출되지 않도록 방지
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
 
         // 요청 경로 확인
         String servletPath = request.getServletPath();
@@ -56,13 +66,88 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
+            // 이미 2차 인증까지 끝난 사용자가 인증 화면에 다시 접근하면 대시보드로 이동
+            if (Boolean.TRUE.equals(session.getAttribute("fullyAuthenticated"))) {
+                log.info("인증 완료 사용자의 2차 인증 페이지 재접근 - 대시보드로 이동");
+                response.sendRedirect(request.getContextPath() + "/dashboard");
+                return;
+            }
+
             // 세션이 있으면 요청한 2차 인증 페이지로 이동
             log.info("2차 인증 페이지로 이동");
 
+            // 일반 관리자 이메일 확인 화면은 별도의 Flash Message 없이 출력
             if ("/login/verifyEmail".equals(servletPath)) {
-                request.getRequestDispatcher("/WEB-INF/views/auth/login_email.jsp").forward(request, response);
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/auth/login_email.jsp"
+                ).forward(request, response);
             } else {
-                request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
+                // POST에서 임시 저장한 OTP 오류 메시지를 이번 GET 요청으로 전달
+                String flashError =
+                        (String) session.getAttribute("loginOtpFlashError");
+
+                if (flashError != null) {
+                    request.setAttribute("error", flashError);
+
+                    // 새로고침할 때 다시 표시되지 않도록 사용 직후 세션에서 삭제
+                    session.removeAttribute("loginOtpFlashError");
+                }
+
+                String loginOtp =
+                        (String) session.getAttribute("loginOtp");
+
+                String verifiedEmail =
+                        (String) session.getAttribute("otpVerifiedEmail");
+
+                Long generatedTime =
+                        (Long) session.getAttribute("otpGeneratedTime");
+
+                boolean loginOtpActive =
+                        loginOtp != null
+                                && verifiedEmail != null
+                                && generatedTime != null;
+
+                int remainingSeconds = 0;
+
+                if (loginOtpActive) {
+                    long elapsedTime =
+                            System.currentTimeMillis() - generatedTime;
+
+                    long remainingMillis =
+                            LOGIN_OTP_VALIDITY_MILLIS - elapsedTime;
+
+                    if (remainingMillis <= 0) {
+                        clearLoginOtpState(session);
+                        loginOtpActive = false;
+
+                        // 앞에서 전달받은 Flash Message가 없을 때만 만료 메시지 사용
+                        if (request.getAttribute("error") == null) {
+                            request.setAttribute(
+                                    "error",
+                                    "인증번호가 만료되었습니다. 다시 발급받아주세요."
+                            );
+                        }
+                    } else {
+                        // 남은 시간이 1초 미만이어도 1초로 표시되도록 밀리초를 초 단위로 올림
+                        remainingSeconds =
+                                (int) ((remainingMillis + 999) / 1000);
+                    }
+                }
+
+                // JSP가 OTP 입력 영역과 타이머를 복원할 수 있도록 전달
+                request.setAttribute(
+                        "loginOtpActive",
+                        loginOtpActive
+                );
+
+                request.setAttribute(
+                        "loginOtpRemainingSeconds",
+                        remainingSeconds
+                );
+
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/auth/login_email_otp.jsp"
+                ).forward(request, response);
             }
             return;
         }
@@ -169,6 +254,10 @@ public class LoginController extends HttpServlet {
             // 1차 인증 성공 후 기존 세션을 조회하고, 없으면 새 세션을 생성
             HttpSession session = request.getSession();
 
+            // 새로운 로그인에서는 이전 OTP와 오류 메시지를 재사용하지 않도록 초기화
+            clearLoginOtpState(session);
+            session.removeAttribute("loginOtpFlashError");
+
             // 새 로그인 시 2차 인증을 다시 거치도록 이전 인증 완료 상태를 초기화
             session.removeAttribute("fullyAuthenticated");
 
@@ -185,14 +274,16 @@ public class LoginController extends HttpServlet {
             // ADMIN과 SUPER는 실제 이메일 OTP 인증 단계로 이동
             if ("ADMIN".equals(managerVO.getRole()) || "SUPER".equals(managerVO.getRole())) {
                 log.info("관리자 이메일 OTP 인증 단계로 이동: {}", managerId);
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/auth/login_email_otp.jsp"
-                ).forward(request, response);
+                response.sendRedirect(
+                        request.getContextPath() + "/login/verifyEmailOtp"
+                );
+                return;
             } else {
                 log.info("일반 관리자 이메일 확인 단계로 이동");
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/auth/login_email.jsp"
-                ).forward(request, response);
+                response.sendRedirect(
+                        request.getContextPath() + "/login/verifyEmail"
+                );
+                return;
             }
 
         } catch (Exception e) {
@@ -331,6 +422,8 @@ public class LoginController extends HttpServlet {
             session.setAttribute("loginOtp", otp); // 생성 OTP를 세션에 임시 보관
             session.setAttribute("otpGeneratedTime", System.currentTimeMillis()); // 생성 시간 설정
             session.setAttribute("otpVerifiedEmail", inputEmail.trim().toLowerCase()); // 인증된 이메일 주소 저장
+            // 새 OTP가 발급되면 이전 실패 횟수를 초기화
+            session.setAttribute("loginOtpAttemptCount", 0);
 
             try {
                 String emailTitle = "[보안인증] 로그인 인증번호";
@@ -342,6 +435,8 @@ public class LoginController extends HttpServlet {
                 out.print("{\"success\":true,\"message\":\"인증번호가 이메일로 발송되었습니다.\"}");
 
             } catch (Exception emailError) {
+                // 이메일을 보내지 못한 OTP는 사용할 수 없도록 세션에서 삭제
+                clearLoginOtpState(session);
                 log.error("이메일 발송 실패", emailError);
                 out.print("{\"success\":false,\"message\":\"이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.\"}");
             }
@@ -390,9 +485,19 @@ public class LoginController extends HttpServlet {
         }
 
         // 세션에 저장된 OTP 정보 확인
-        String sessionOtp = (String) session.getAttribute("loginOtp");
-        String otpVerifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
-        Long otpGeneratedTime = (Long) session.getAttribute("otpGeneratedTime");
+        String sessionOtp
+                = (String) session.getAttribute("loginOtp");
+        String otpVerifiedEmail
+                = (String) session.getAttribute("otpVerifiedEmail");
+        Long otpGeneratedTime
+                = (Long) session.getAttribute("otpGeneratedTime");
+
+        Integer attemptCount =
+                // 세션에서 가져온 원본 값이므로 Null일 수 있음
+                (Integer) session.getAttribute("loginOtpAttemptCount");
+
+        int failedAttempts =
+                attemptCount == null ? 0 : attemptCount;
 
         if (sessionOtp == null || otpVerifiedEmail == null || otpGeneratedTime == null) {
             log.warn("OTP 정보 없음 - 먼저 인증번호를 발송받아야 함");
@@ -404,13 +509,11 @@ public class LoginController extends HttpServlet {
         // OTP 유효 시간 확인
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - otpGeneratedTime;
-        if (elapsedTime > 5 * 60 * 1000) {
+        if (elapsedTime > LOGIN_OTP_VALIDITY_MILLIS) {
             log.warn("OTP 만료 - 경과 시간: {}ms", elapsedTime);
 
             // 유효시간 만료 후 정보 삭제
-            session.removeAttribute("loginOtp");
-            session.removeAttribute("otpGeneratedTime");
-            session.removeAttribute("otpVerifiedEmail");
+            clearLoginOtpState(session);
 
             request.setAttribute("error", "인증번호가 만료되었습니다. 다시 발송받아주세요.");
             request.getRequestDispatcher("/WEB-INF/views/auth/login_email_otp.jsp").forward(request, response);
@@ -428,23 +531,51 @@ public class LoginController extends HttpServlet {
 
         // OTP 일치 확인
         if (!inputOtp.trim().equals(sessionOtp)) {
+            int updatedAttempts = failedAttempts + 1;
+
             log.warn(
-                    "OTP 불일치 - ID: {}",
-                    managerVO.getManagerId()
+                    "OTP 불일치 - ID: {}, 실패 횟수: {}/{}",
+                    managerVO.getManagerId(),
+                    updatedAttempts,
+                    MAX_LOGIN_OTP_ATTEMPTS
             );
-            request.setAttribute("error", "인증번호가 일치하지 않습니다.");
-            request.getRequestDispatcher(
-                    "/WEB-INF/views/auth/login_email_otp.jsp"
-            ).forward(request, response);
+
+            // 최대 실패 횟수에 도달하면 현재 OTP를 폐기하고 재발송을 요구
+            if (updatedAttempts >= MAX_LOGIN_OTP_ATTEMPTS) {
+                clearLoginOtpState(session);
+
+                redirectToLoginOtpWithError(
+                        request,
+                        response,
+                        session,
+                        "인증번호 입력 가능 횟수를 초과했습니다. 새 인증번호를 발급받아주세요."
+                );
+                return;
+            }
+
+            // 제한에 도달하지 않았다면 증가한 실패 횟수를 세션에 저장
+            session.setAttribute(
+                    "loginOtpAttemptCount",
+                    updatedAttempts
+            );
+
+            int remainingAttempts
+                    = MAX_LOGIN_OTP_ATTEMPTS - updatedAttempts;
+
+            redirectToLoginOtpWithError(
+                    request,
+                    response,
+                    session,
+                    "인증번호가 일치하지 않습니다. 남은 입력 횟수: "
+                            + remainingAttempts + "회"
+            );
             return;
         }
 
         log.info("이메일+OTP 인증 성공 - ID: {}", managerVO.getManagerId());
 
         // 2차 인증 완료 후 OTP 정보 삭제
-        session.removeAttribute("loginOtp");
-        session.removeAttribute("otpGeneratedTime");
-        session.removeAttribute("otpVerifiedEmail");
+        clearLoginOtpState(session);
         session.removeAttribute("awaitingSecondAuth");
         session.setMaxInactiveInterval(30 * 60);
 
@@ -463,6 +594,33 @@ public class LoginController extends HttpServlet {
         SecureRandom random = new SecureRandom();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
+    }
+
+    /**
+     * 로그인 OTP와 관련된 세션 상태를 모두 삭제합니다.
+     */
+    private void clearLoginOtpState(HttpSession session) {
+        // 여러 위치에서 네 개의 속성을 반복해서 삭제하지 않기 위한 메서드
+        session.removeAttribute("loginOtp");
+        session.removeAttribute("otpGeneratedTime");
+        session.removeAttribute("otpVerifiedEmail");
+        session.removeAttribute("loginOtpAttemptCount");
+    }
+
+    /**
+     * OTP 오류 메시지를 세션에 임시 저장한 뒤 OTP 화면으로 이동합니다.
+     */
+    private void redirectToLoginOtpWithError(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpSession session,
+            String message
+    ) throws IOException {
+        session.setAttribute("loginOtpFlashError", message);
+
+        response.sendRedirect(
+                request.getContextPath() + "/login/verifyEmailOtp"
+        );
     }
 
     /**
