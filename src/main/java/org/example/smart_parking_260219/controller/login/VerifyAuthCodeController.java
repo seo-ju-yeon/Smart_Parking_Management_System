@@ -56,7 +56,8 @@ public class VerifyAuthCodeController extends HttpServlet {
         log.info("인증 검증 요청");
 
         // 일반 인증번호는 서비스 계층에서 발급 여부와 만료 여부를 검증
-        boolean isValid = validationService.verifyAuthCode(email, code);
+        ValidationService.VerificationResult verificationResult =
+                validationService.verifyAuthCode(email, code);
 
         // JSON 응답 인코딩은 getWriter() 호출 전에 설정
         resp.setContentType("application/json; charset=UTF-8");
@@ -64,13 +65,13 @@ public class VerifyAuthCodeController extends HttpServlet {
 
         PrintWriter out = resp.getWriter();
 
-        if (isValid) {
+        if (verificationResult == ValidationService.VerificationResult.SUCCESS) {
             // 인증번호를 발송한 이메일과 현재 검증한 이메일이 같은지 확인
             boolean isManagerAddEmailMatched =
                     session != null
-                    && managerAddPendingEmail != null
-                    && email != null
-                    && managerAddPendingEmail.equalsIgnoreCase(email.trim());
+                            && managerAddPendingEmail != null
+                            && email != null
+                            && managerAddPendingEmail.equalsIgnoreCase(email.trim());
 
             if (isManagerAddEmailMatched) {
                 // 관리자 등록 POST에서 다시 검사할 인증 완료 이메일 저장
@@ -87,9 +88,28 @@ public class VerifyAuthCodeController extends HttpServlet {
 
             log.info("인증 성공");
             out.write("{\"success\": true, \"message\": \"인증 성공\"}");
+
+        } else if (verificationResult
+                == ValidationService.VerificationResult.INVALID_CODE) {
+
+            log.warn("인증번호 불일치");
+            out.write(
+                    "{\"success\": false, \"message\": \"인증번호가 일치하지 않습니다.\"}"
+            );
+
+        } else if (verificationResult
+                == ValidationService.VerificationResult.EXPIRED) {
+
+            log.warn("인증번호 만료");
+            out.write(
+                    "{\"success\": false, \"message\": \"인증번호가 만료되었습니다. 다시 발급받아주세요.\"}"
+            );
+
         } else {
-            log.warn("인증 실패");
-            out.write("{\"success\": false, \"message\": \"인증 실패 또는 만료\"}");
+            log.warn("발급된 인증정보 없음");
+            out.write(
+                    "{\"success\": false, \"message\": \"발급된 인증번호가 없습니다. 인증번호를 먼저 발급받아주세요.\"}"
+            );
         }
 
         // 스트림 비우기 (데이터 즉시 전송)

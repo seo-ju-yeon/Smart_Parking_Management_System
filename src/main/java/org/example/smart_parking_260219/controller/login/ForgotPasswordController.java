@@ -222,8 +222,13 @@ public class ForgotPasswordController extends HttpServlet {
         }
 
         // 인증번호 일치 여부와 만료 시간 확인
-        boolean otpValid = validationService.verifyAuthCode(inputEmail.trim(), inputOtp.trim());
-        if (!otpValid) {
+        ValidationService.VerificationResult verificationResult =
+                validationService.verifyAuthCode(
+                        inputEmail.trim(),
+                        inputOtp.trim()
+                );
+
+        if (verificationResult != ValidationService.VerificationResult.SUCCESS) {
             log.warn("비밀번호 찾기 - OTP 불일치 또는 만료 - ID: {}", managerId);
             sendJson(resp, false, "인증번호가 일치하지 않거나 만료되었습니다.");
             return;

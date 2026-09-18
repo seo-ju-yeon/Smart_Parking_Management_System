@@ -34,6 +34,23 @@ public class ValidationService {
     }
 
     /**
+     * 인증번호 검증 결과를 구분합니다.
+     */
+    public enum VerificationResult {
+        // 인증번호 일치
+        SUCCESS,
+
+        // 인증번호 불일치
+        INVALID_CODE,
+
+        // 인증번호 유효시간 만료
+        EXPIRED,
+
+        // 해당 이메일로 발급된 인증정보 없음
+        NOT_FOUND
+    }
+
+    /**
      * 일반 관리자 추가용 인증번호를 발송한다.
      *
      * @param email 인증번호를 받을 이메일
@@ -92,33 +109,44 @@ public class ValidationService {
      *
      * @param email     인증번호를 받은 이메일
      * @param inputCode 사용자가 입력한 인증번호
-     * @return 인증 성공 여부
+     * @return 인증번호 검증 결과
      */
-    public boolean verifyAuthCode(String email, String inputCode) {
+    public VerificationResult verifyAuthCode(
+            String email,
+            String inputCode)
+    {
         log.info("인증코드 검증 시작");
 
-        // DB에서 발급된 인증정보를 조회하게 함
+        // 이메일로 발급된 인증정보 조회
         ValidationVO validationVO = validationDAO.select(email);
 
         if (validationVO == null) {
             log.warn("인증 정보 없음");
-            return false;
+            return VerificationResult.NOT_FOUND;
         }
+
         log.info("인증번호 조회 완료");
 
-        // 인증번호 만료 여부 확인
+        // 인증번호 유효시간 확인
         LocalDateTime now = LocalDateTime.now();
+
         if (now.isAfter(validationVO.getExpiryTime())) {
-            log.warn("인증코드 만료 - 현재: {}, 만료: {}",
-                    now, validationVO.getExpiryTime());
-            return false;
+            log.warn(
+                    "인증코드 만료 - 현재: {}, 만료: {}",
+                    now,
+                    validationVO.getExpiryTime()
+            );
+            return VerificationResult.EXPIRED;
         }
 
-        // 사용자가 입력한 인증번호와 DB 인증번호 비교
-        boolean isValid = validationVO.getStringOTP().equals(inputCode);
-        log.info("인증코드 검증 결과: {}", isValid ? "성공" : "실패");
+        // 입력한 인증정보화 DB에 저장된 인증정보 비교
+        if (!validationVO.getStringOTP().equals(inputCode)) {
+            log.warn("인증코드 불일치");
+            return VerificationResult.INVALID_CODE;
+        }
 
-        return isValid;
+        log.info("인증코드 검증 성공");
+        return VerificationResult.SUCCESS;
     }
 
     /**
