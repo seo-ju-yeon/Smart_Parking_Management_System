@@ -9,12 +9,12 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ManagerDAO;
 import org.example.smart_parking_260219.mail.MailService;
+import org.example.smart_parking_260219.util.OtpGenerator;
 import org.example.smart_parking_260219.util.PasswordUtil;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 
 /**
  * 관리자 로그인 요청을 처리하는 컨트롤러입니다.
@@ -412,7 +412,7 @@ public class LoginController extends HttpServlet {
             }
 
             // 6자리 OTP 생성
-            String otp = generateOTP();
+            String otp = OtpGenerator.generateSixDigitCode();
             log.info(
                     "OTP 생성 완료 - ID: {}",
                     manager.getManagerId()
@@ -583,17 +583,6 @@ public class LoginController extends HttpServlet {
 
         log.info("로그인 완료 - 대시보드로 리다이렉트: {}", managerVO.getManagerId());
         response.sendRedirect(request.getContextPath() + "/dashboard");
-    }
-
-    /**
-     * 6자리 숫자 OTP를 생성합니다.
-     *
-     * @return 생성된 OTP
-     */
-    private String generateOTP() {
-        SecureRandom random = new SecureRandom();
-        int otp = 100000 + random.nextInt(900000);
-        return String.valueOf(otp);
     }
 
     /**

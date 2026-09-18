@@ -3,8 +3,6 @@ package org.example.smart_parking_260219.mail;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @Log4j2
 class MailServiceTest {
     @Test
@@ -26,14 +24,5 @@ class MailServiceTest {
         String toEmail = "rkdtngus2201@naver.com";
         mailService.sendMailWithHtml(title,
                 content, toEmail);
-    }
-    @Test
-    void sendMailWithHtmlForAuthTest() {
-        MailService mailService = new
-                MailService();
-        String toEmail = "rkdtngus2201@naver.com";
-
-        mailService.sendMailWithHtmlForAuth(toEmail);
-
     }
 }

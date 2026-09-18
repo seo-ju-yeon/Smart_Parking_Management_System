@@ -3,9 +3,9 @@ package org.example.smart_parking_260219.service;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ValidationDAO;
 import org.example.smart_parking_260219.mail.MailService;
+import org.example.smart_parking_260219.util.OtpGenerator;
 import org.example.smart_parking_260219.vo.ValidationVO;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 /**
@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
  */
 @Log4j2
 public class ValidationService {
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ValidationDAO validationDAO = new ValidationDAO();
     private final MailService mailService = new MailService();
@@ -65,7 +63,7 @@ public class ValidationService {
         validationDAO.deleteByEmail(email);
 
         // 6자리 인증번호 생성
-        String authCode = generateAuthCode();
+        String authCode = OtpGenerator.generateSixDigitCode();
 
         // 생성한 인증번호 DB 저장
         ValidationVO validationVO = ValidationVO.builder()
@@ -374,13 +372,4 @@ public class ValidationService {
                 "<p>5분 내에 입력해주세요.</p>", authCode);
     }
 
-    /**
-     * 6자리 숫자 인증번호를 생성합니다.
-     *
-     * @return 생성된 인증번호
-     */
-    private String generateAuthCode() {
-        int number = SECURE_RANDOM.nextInt(1_000_000);
-        return String.format("%06d", number);
-    }
 }
