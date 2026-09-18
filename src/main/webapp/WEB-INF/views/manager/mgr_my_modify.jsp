@@ -322,7 +322,7 @@
         fetch('${pageContext.request.contextPath}/auth/sendCode', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'email=' + encodeURIComponent(email) + '&purpose=MY_MODIFY'
+            body: 'email=' + encodeURIComponent(email) + '&purpose=MODIFY_MANAGER'
         })
         .then(r => r.json())
         .then(data => {

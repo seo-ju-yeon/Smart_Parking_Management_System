@@ -38,22 +38,38 @@ public class SendAuthCodeController extends HttpServlet {
         String email = req.getParameter("email");
         String purposeParam = req.getParameter("purpose");
 
-        // 관리자 등록을 위한 이메일 인증 요청인지 확인
-        boolean isManagerAddPurpose =
-                ValidationService.Purpose.ADD_MANAGER.name().equals(purposeParam);
-
         // 로그인 필터에서 확인된 기존 세션 조회
         HttpSession session = req.getSession(false);
 
-        // 요청받은 인증 목적을 enum으로 변환하고, 값이 없거나 잘못된 경우 기본 목적을 사용
+        // 클라이언트가 전달한 인증 목적을 서버에 정의된 enum 값으로 변환
         ValidationService.Purpose purpose;
 
         try {
+            if (purposeParam == null || purposeParam.isBlank()) {
+                throw new IllegalArgumentException("인증 목적 누락");
+            }
+
             purpose = ValidationService.Purpose.valueOf(purposeParam);
-        } catch (Exception e) {
-            log.warn("purpose 파라미터 없음 또는 잘못된 값: '{}' → ADD_MANAGER 기본값 사용", purposeParam);
-            purpose = ValidationService.Purpose.ADD_MANAGER;
+        } catch (IllegalArgumentException e) {
+            // 정의되지 않은 목적을 관리자 등록으로 임의 처리하지 않고 잘못된 요청으로 거절
+            log.warn("유효하지 않은 이메일 인증 목적 요청");
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);  // 400
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = resp.getWriter();
+            out.write(
+                    "{\"success\": false, \"message\": \"유효하지 않은 인증 목적입니다.\"}"
+            );
+            out.flush();
+            return;
         }
+
+        // enum 변환이 성공한 뒤 관리자 등록 목적 여부를 판단
+        boolean isManagerAddPurpose =
+                purpose == ValidationService.Purpose.ADD_MANAGER;
+
 
         try {
             // 다른 목적의 이메일 인증을 새로 시작했는데 과거 관리자 등록 인증 상태가 남아있으면 안되므로
