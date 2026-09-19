@@ -513,6 +513,31 @@
         document.getElementById('authTimer').style.display = 'none';
     }
 
+    // 서버에서 OTP가 폐기된 경우 화면의 인증 상태도 다시 발급 가능한 상태로 초기화
+    function resetOtpInputState() {
+        stopAuthTimer();
+
+        otpSent = false;
+
+        const emailInput = document.getElementById('inputEmail');
+        const otpInput = document.getElementById('inputOtp');
+        const otpGroup = document.getElementById('otpGroup');
+        const sendBtn = document.getElementById('sendOtpBtn');
+        const verifyBtn = document.getElementById('verifyOtpBtn');
+
+        emailInput.readOnly = false;
+        otpInput.value = '';
+        otpGroup.style.display = 'none';
+
+        sendBtn.disabled = false;
+        sendBtn.textContent = '인증요청';
+
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = '확인';
+
+        hideFieldError('otp');
+    }
+
     // 아이디 존재 여부 확인
     function submitStep1() {
         const id = document.getElementById('inputId').value.trim();
@@ -632,9 +657,22 @@
                     stopAuthTimer();
                     goStep(3);
                 } else {
-                    showFieldError('otp', data.message || '인증번호가 일치하지 않습니다.');
-                    verifyBtn.disabled = false;
-                    verifyBtn.textContent = '확인';
+                    if (data.resetOtp) {
+                        // 서버에서 OTP를 폐기했다면 화면도 새 인증번호를 요청할 수 있게 초기화
+                        resetOtpInputState();
+                        showMsg(
+                            data.message || '새 인증번호를 발급받아주세요.',
+                            'error'
+                        );
+                    } else {
+                        // 단순 불일치는 OTP 입력 상태를 유지하여 남은 횟수 안에서 다시 입력
+                        showFieldError(
+                            'otp',
+                            data.message || '인증번호가 일치하지 않습니다.'
+                        );
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = '확인';
+                    }
                 }
             })
             .catch(() => {
