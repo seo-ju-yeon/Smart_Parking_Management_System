@@ -58,6 +58,18 @@
 - 다음 관리자 추가 화면에 이전 메시지가 남지 않는다.
 - 새로고침해도 동일한 성공 메시지가 다시 표시되지 않는다.
 
+## 검증 근거
+
+| 검증 항목 | 변경 전 | 변경 후 |
+| --- | ---: | ---: |
+| 대시보드에서 성공 메시지 표시 | 0회 | 1회 |
+| 다음 관리자 등록 화면에서 이전 메시지 표시 | 1회 | 0회 |
+| 메시지 표시 후 Session에 남은 `successMessage` | 1개 | 0개 |
+
+현재 `DashboardController`는 Session의 `successMessage`를 request로 한 번 옮긴 직후 `removeAttribute()`로 삭제한다. 대시보드 JSP는 request에 전달된 메시지만 표시하므로 새로고침하거나 다음 관리자 등록 화면으로 이동했을 때 이전 메시지가 다시 표시되지 않는다.
+
+검증 대상 구현: [`DashboardController`](../../src/main/java/org/example/smart_parking_260219/controller/login/DashboardController.java), [`dashboard.jsp`](../../src/main/webapp/WEB-INF/views/dashboard/dashboard.jsp)
+
 ## 배운 점
 
 세션에 저장하는 Flash Message는 단순히 저장하는 것뿐만 아니라 어느 화면에서 읽고 언제 삭제할지도 함께 설계해야 한다.
