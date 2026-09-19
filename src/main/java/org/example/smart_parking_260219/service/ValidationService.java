@@ -150,6 +150,16 @@ public class ValidationService {
     }
 
     /**
+     * 실패 횟수 초과 등으로 더 이상 사용할 수 없는 이메일 인증번호를 삭제합니다.
+     *
+     * @param email 인증번호를 발급받은 이메일
+     */
+    public void invalidateAuthCode(String email) {
+        validationDAO.deleteByEmail(email);
+        log.info("이메일 인증번호 폐기 완료");
+    }
+
+    /**
      * 인증 목적에 맞는 이메일 제목을 반환합니다.
      */
     private String buildTitle(Purpose purpose) {
