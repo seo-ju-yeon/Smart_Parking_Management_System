@@ -172,15 +172,6 @@
     <div class="container">
         <h2>관리자 추가</h2>
 
-        <%-- 성공 메시지 표시 --%>
-        <% String successMessage = (String) session.getAttribute("successMessage");
-            if (successMessage != null) {
-                session.removeAttribute("successMessage"); %>
-        <div class="message success-message">
-            <%= successMessage %>
-        </div>
-        <% } %>
-
         <%-- 관리자 추가 실패 메시지 표시 --%>
         <% String error = (String) request.getAttribute("error");
             if (error != null) { %>

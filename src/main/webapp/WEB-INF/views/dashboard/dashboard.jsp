@@ -34,6 +34,21 @@
 <div class="main-content">
     <div id = "dashboard" class="page">
         <h2>주차 현황</h2>
+
+        <%-- 관리자 등록 후 대시보드 요청으로 전달된 일회성 성공 메시지 --%>
+        <%
+            String successMessage =
+                    (String) request.getAttribute("successMessage");
+
+            if (successMessage != null) {
+        %>
+        <div class="flash-message success">
+            <%= successMessage %>
+        </div>
+        <%
+            }
+        %>
+
         <div class="parking-grid">
             <%
                 // A1 ~ A20까지 전체 주차 공간 출력

@@ -53,6 +53,20 @@ public class DashboardController extends HttpServlet {
             return;
         }
 
+        // 리다이렉트 전에 세션에 저장된 일회성 성공 메시지를 현재 요청으로 이동
+        String successMessage =
+                (String) session.getAttribute("successMessage");
+
+        if (successMessage != null) {
+            request.setAttribute(
+                    "successMessage",
+                    successMessage
+            );
+
+            // 대시보드에서 한 번 표시한 뒤 다른 화면에 다시 나타나지 않도록 세션에서 삭제
+            session.removeAttribute("successMessage");
+        }
+
         // 인증된 사용자는 대시보드 화면으로 이동
         log.info("대시보드 페이지로 포워딩");
         request.getRequestDispatcher("/WEB-INF/views/dashboard/dashboard.jsp").forward(request, response);
