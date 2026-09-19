@@ -324,7 +324,7 @@ public class ValidationService {
                 "    <p>안녕하세요.</p>" +
                 "    <p><strong>비밀번호 찾기</strong>를 요청하셨습니다.</p>" +
                 "    <p>본인 확인을 위해 아래 인증번호를 입력해주세요.<br>" +
-                "       인증 완료 후 임시 비밀번호가 발급됩니다.</p>" +
+                "       인증 완료 후 새 비밀번호를 직접 설정할 수 있습니다.</p>" +
                 "    <div class='code-box'>" +
                 "      <p style='margin:0;color:#666;font-size:14px;'>인증번호</p>" +
                 "      <div class='code'>" + authCode + "</div>" +
@@ -335,61 +335,7 @@ public class ValidationService {
                 "      • 본인이 요청하지 않은 경우 즉시 최고 관리자에게 문의하세요.<br>" +
                 "      • 인증번호는 타인에게 절대 알려주지 마세요.<br>" +
                 "      • 인증번호는 5분간 유효합니다.<br>" +
-                "      • 임시 비밀번호 발급 후 반드시 비밀번호를 변경해주세요." +
-                "    </div>" +
-                "    <p>감사합니다.<br><strong>Smart Parking 관리팀</strong></p>" +
-                "  </div>" +
-                "  <div class='footer'>" +
-                "    <p>본 메일은 발신 전용입니다.</p>" +
-                "    <p>© 2026 Smart Parking System. All rights reserved.</p>" +
-                "  </div>" +
-                "</div>" +
-                "</body></html>";
-    }
-
-    /**
-     * 임시 비밀번호 발급 메일 본문을 생성합니다.
-     *
-     * @param tempPassword 발급된 임시 비밀번호
-     * @return 임시 비밀번호 안내 HTML 본문
-     */
-    public String buildTempPasswordBody(String tempPassword) {
-        log.info("임시 비밀번호 이메일 본문 생성 완료");
-
-        return "<!DOCTYPE html>" +
-                "<html><head><meta charset='UTF-8'>" +
-                "<style>" +
-                "  body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;line-height:1.6;margin:0;padding:0;}" +
-                "  .wrap{max-width:600px;margin:0 auto;padding:20px;}" +
-                "  .header{background:linear-gradient(135deg,#17a2b8 0%,#138496 100%);" +
-                "          color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0;}" +
-                "  .content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px;}" +
-                "  .pw-box{background:white;border:2px solid #17a2b8;padding:20px;" +
-                "          margin:20px 0;text-align:center;border-radius:8px;}" +
-                "  .pw-code{font-size:28px;font-weight:bold;color:#17a2b8;" +
-                "           letter-spacing:4px;margin:15px 0;}" +
-                "  .notice{background:#f8d7da;border-left:4px solid #dc3545;" +
-                "          padding:15px;margin:20px 0;font-size:14px;}" +
-                "  .footer{text-align:center;color:#666;font-size:12px;" +
-                "          margin-top:20px;padding-top:20px;border-top:1px solid #ddd;}" +
-                "</style></head><body>" +
-                "<div class='wrap'>" +
-                "  <div class='header'>" +
-                "    <h1 style='margin:0;'>🔓 임시 비밀번호 발급</h1>" +
-                "    <p style='margin:10px 0 0 0;'>Smart Parking 관리자 시스템</p>" +
-                "  </div>" +
-                "  <div class='content'>" +
-                "    <p>안녕하세요.</p>" +
-                "    <p>요청하신 <strong>임시 비밀번호</strong>가 발급되었습니다.</p>" +
-                "    <div class='pw-box'>" +
-                "      <p style='margin:0;color:#666;font-size:14px;'>임시 비밀번호</p>" +
-                "      <div class='pw-code'>" + tempPassword + "</div>" +
-                "    </div>" +
-                "    <div class='notice'>" +
-                "      <strong>🚨 반드시 확인해주세요</strong><br>" +
-                "      • 로그인 후 즉시 비밀번호를 변경해주세요.<br>" +
-                "      • 임시 비밀번호는 보안에 취약합니다.<br>" +
-                "      • 본인이 요청하지 않은 경우 즉시 최고 관리자에게 문의하세요." +
+                "      • 인증 완료 후 화면에서 새 비밀번호를 설정해주세요." +
                 "    </div>" +
                 "    <p>감사합니다.<br><strong>Smart Parking 관리팀</strong></p>" +
                 "  </div>" +

@@ -8,19 +8,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ManagerDAO;
-import org.example.smart_parking_260219.mail.MailService;
 import org.example.smart_parking_260219.service.ValidationService;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 
 /**
  * 비밀번호 찾기 요청을 처리하는 컨트롤러입니다.
  *
  * <p>
- * 아이디 확인, 이메일 인증번호 발송, 인증번호 검증, 임시 비밀번호 발급 과정을 처리합니다.
+ * 아이디 확인, 이메일 인증번호 발송, 인증번호 검증, 새 비밀번호 설정 과정을 처리합니다.
  * </p>
  *
  * <p>
@@ -32,14 +30,26 @@ import java.security.SecureRandom;
         value = {"/forgot-password",
                 "/forgot-password/checkId",
                 "/forgot-password/sendOtp",
-                "/forgot-password/verify"})
+                "/forgot-password/verify",
+                "/forgot-password/reset"})
 public class ForgotPasswordController extends HttpServlet {
 
     private static final int MAX_FORGOT_PASSWORD_OTP_ATTEMPTS = 5;
 
+    // OTP 인증 완료 후 새 비밀번호를 설정할 수 있는 권한의 유효시간(5분)
+    private static final long PASSWORD_RESET_VALIDITY_MILLIS =
+            5 * 60 * 1000L;
+
+    // OTP 인증을 완료하여 비밀번호 변경이 허용된 관리자 아이디를 저장하는 세션 키
+    private static final String PASSWORD_RESET_MANAGER_ID_SESSION_KEY =
+            "forgotPasswordResetManagerId";
+
+    // 비밀번호 변경 권한이 발급된 시각을 저장하는 세션 키
+    private static final String PASSWORD_RESET_GRANTED_AT_SESSION_KEY =
+            "forgotPasswordResetGrantedAt";
+
     private final ManagerDAO managerDAO = ManagerDAO.getInstance();
     private final ValidationService validationService = new ValidationService();
-    private final MailService mailService = new MailService();
 
     /**
      * 비밀번호 찾기 페이지로 이동합니다.
@@ -49,13 +59,16 @@ public class ForgotPasswordController extends HttpServlet {
      * </p>
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doGet(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
 
         // 이미 로그인된 상태면 대시보드로 리다이렉트
         HttpSession session = req.getSession(false);
+
         if (session != null
                 && Boolean.TRUE.equals(session.getAttribute("fullyAuthenticated"))) {
             resp.sendRedirect(req.getContextPath() + "/dashboard");
@@ -64,6 +77,9 @@ public class ForgotPasswordController extends HttpServlet {
 
         // 새로고침 후 화면과 서버의 인증 상태가 달라지지 않도록 기존 OTP를 폐기
         invalidateForgotPasswordOtpState(session);
+
+        // 새로고침하면 진행 중이던 비밀번호 변경 권한도 폐기하고 처음부터 다시 시작
+        clearForgotPasswordResetState(session);
 
         req.getRequestDispatcher(
                 "/WEB-INF/views/auth/find_password.jsp"
@@ -74,16 +90,18 @@ public class ForgotPasswordController extends HttpServlet {
      * 비밀번호 찾기 관련 POST 요청을 경로별로 처리합니다.
      */
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json; charset=UTF-8");
         resp.setCharacterEncoding("UTF-8");
 
         // 요청 경로에 따라 처리할 기능 분기
-        String path = req.getServletPath() +
-                (req.getPathInfo() != null ? req.getPathInfo() : "");
+        String path =
+                req.getServletPath() + (req.getPathInfo() != null ? req.getPathInfo() : "");
 
         switch (path) {
             case "/forgot-password/checkId":  // 아이디 존재 여부 확인 (JSON)
@@ -92,8 +110,11 @@ public class ForgotPasswordController extends HttpServlet {
             case "/forgot-password/sendOtp":  // DB 이메일 일치 확인 + OTP 발송 (JSON)
                 sendOtp(req, resp);
                 break;
-            case "/forgot-password/verify":  // OTP 검증 + 임시 비밀번호 발급 (JSON)
-                verifyAndIssue(req, resp);
+            case "/forgot-password/verify":  // OTP 검증 + 비밀번호 변경 권한 발급 (JSON)
+                verifyOtpAndGrantReset(req, resp);
+                break;
+            case "/forgot-password/reset":  // 새 비밀번호 검증 및 변경 (JSON)
+                resetPassword(req, resp);
                 break;
             default:
                 sendJson(resp, false, "잘못된 요청입니다.");
@@ -103,8 +124,10 @@ public class ForgotPasswordController extends HttpServlet {
     /**
      * 입력한 관리자 아이디가 존재하는지 확인합니다.
      */
-    private void checkId(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    private void checkId(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws IOException {
 
         String managerId = req.getParameter("managerId");
         log.info("비밀번호 찾기 - 아이디 조회: {}", managerId);
@@ -138,8 +161,10 @@ public class ForgotPasswordController extends HttpServlet {
     /**
      * 등록된 이메일과 입력한 이메일을 비교한 뒤 인증번호를 발송합니다.
      */
-    private void sendOtp(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    private void sendOtp(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws IOException {
 
         String managerId = req.getParameter("managerId");
         String inputEmail = req.getParameter("email");
@@ -184,7 +209,10 @@ public class ForgotPasswordController extends HttpServlet {
 
         // 재발급 요청이면 이전 OTP와 세션의 발급 상태를 모두 폐기
         HttpSession existingSession = req.getSession(false);
+
         invalidateForgotPasswordOtpState(existingSession);
+        // 새로운 비밀번호 찾기를 시작하므로 이전 OTP 인증으로 받은 변경 권한도 제거
+        clearForgotPasswordResetState(existingSession);
 
         // 비밀번호 찾기용 인증번호 발송
         try {
@@ -250,10 +278,12 @@ public class ForgotPasswordController extends HttpServlet {
     }
 
     /**
-     * 인증번호를 검증한 뒤 임시 비밀번호를 발급합니다.
+     * 인증번호를 검증한 뒤 비밀번호 변경 권한을 세션에 발급합니다.
      */
-    private void verifyAndIssue(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    private void verifyOtpAndGrantReset(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws IOException {
 
         String managerId = req.getParameter("managerId");
         String inputEmail = req.getParameter("email");
@@ -460,64 +490,155 @@ public class ForgotPasswordController extends HttpServlet {
         // 인증에 성공한 OTP는 다시 사용할 수 없도록 즉시 폐기
         invalidateForgotPasswordOtpState(session);
 
-        // 임시 비밀번호 생성
-        String tempPassword = generateTempPassword();
-        log.info("비밀번호 찾기 - 임시 비밀번호 생성 완료 - ID: {}", managerId);
+        // 이전 비밀번호 변경 권한이 남아 있다면 제거하고 새 인증 결과만 저장
+        clearForgotPasswordResetState(session);
 
-        // 임시 비밀번호 DB 저장
-        try {
-            // OTP를 발급받은 서버 세션의 관리자 아이디를 기준으로 비밀번호를 변경
-            managerDAO.updatePassword(
-                    pendingManagerId,
-                    tempPassword
-            );
-            log.info("비밀번호 찾기 - 임시 비밀번호 DB 저장 완료 - ID: {}", managerId);
-        } catch (Exception e) {
-            log.error("비밀번호 찾기 - DB 저장 실패 - ID: {}", managerId, e);
+        // OTP 인증으로 세션 권한이 높아졌으므로 세션 고정 공격 방지를 위해 ID를 교체
+        req.changeSessionId();
+
+        // OTP 인증을 완료한 관리자 아이디를 서버 세션에 저장
+        // 이후 비밀번호 변경 요청에서는 클라이언트가 보낸 아이디 대신 이 값을 사용
+        session.setAttribute(
+                PASSWORD_RESET_MANAGER_ID_SESSION_KEY,
+                pendingManagerId
+        );
+
+        // 비밀번호 변경 권한이 발급된 시간을 저장
+        // 이후 /forgot-password/reset 요청에서 5분 만료 여부를 확인
+        session.setAttribute(
+                PASSWORD_RESET_GRANTED_AT_SESSION_KEY,
+                System.currentTimeMillis()
+        );
+
+        log.info(
+                "비밀번호 찾기 - OTP 인증 완료 및 비밀번호 변경 권한 발급 - ID: {}",
+                pendingManagerId
+        );
+
+        sendJson(
+                resp,
+                true,
+                "본인 인증이 완료되었습니다. 새 비밀번호를 설정해주세요."
+        );
+    }
+
+    /**
+     * OTP 인증으로 발급된 권한을 확인한 뒤 새 비밀번호로 변경합니다.
+     *
+     * <p>
+     * 관리자 아이디는 요청값으로 받지 않고 OTP 인증 완료 시 세션에 저장한 값을 사용합니다.
+     * 비밀번호 입력 오류는 다시 수정할 수 있도록 권한을 유지하고, 권한 만료나 계정 상태
+     * 오류가 발생한 경우에는 변경 권한을 삭제합니다.
+     * </p>
+     */
+    private void resetPassword(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws IOException {
+
+        // 비밀번호 변경 권한은 기존 세션에만 저장되므로 새 세션을 생성하지 않음
+        HttpSession session = req.getSession(false);
+
+        if (session == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             sendJson(
                     resp,
                     false,
-                    "임시 비밀번호 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
-                    true
+                    "비밀번호 변경 권한이 없습니다. 이메일 인증부터 다시 진행해주세요."
             );
             return;
         }
 
-        // 임시 비밀번호 이메일 발송
-        try {
-            String title = "[Smart Parking] 임시 비밀번호가 발급되었습니다.";
-            String body = validationService.buildTempPasswordBody(tempPassword);
-            // OTP를 발급받은 서버 세션의 이메일로 임시 비밀번호 발송
-            mailService.sendMailWithHtml(
-                    title,
-                    body,
-                    pendingEmail
+        // 클라이언트가 보낸 아이디가 아니라 OTP 인증 완료 시 서버가 저장한 값을 사용
+        String managerId =
+                (String) session.getAttribute(
+                        PASSWORD_RESET_MANAGER_ID_SESSION_KEY
+                );
+
+        Long grantedAt =
+                (Long) session.getAttribute(
+                        PASSWORD_RESET_GRANTED_AT_SESSION_KEY
+                );
+
+        if (managerId == null || grantedAt == null) {
+            clearForgotPasswordResetState(session);
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendJson(
+                    resp,
+                    false,
+                    "비밀번호 변경 권한이 없습니다. 이메일 인증부터 다시 진행해주세요."
             );
-            log.info("비밀번호 찾기 - 임시 비밀번호 이메일 발송 완료 - ID: {}", managerId);
+            return;
+        }
+
+        long elapsedTime = System.currentTimeMillis() - grantedAt;
+
+        // 서버 시간 변경으로 음수가 된 경우도 안전하게 만료로 처리
+        if (elapsedTime < 0 || elapsedTime >= PASSWORD_RESET_VALIDITY_MILLIS) {
+            clearForgotPasswordResetState(session);
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendJson(
+                    resp,
+                    false,
+                    "비밀번호 변경 시간이 만료되었습니다. 이메일 인증부터 다시 진행해주세요."
+            );
+            return;
+        }
+
+        String newPassword = req.getParameter("newPassword");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        // 입력 오류는 사용자가 바로 수정할 수 있도록 비밀번호 변경 권한을 유지함
+        if (newPassword == null || newPassword.isBlank()
+                || confirmPassword == null || confirmPassword.isBlank()) {
+            sendJson(resp, false, "새 비밀번호와 비밀번호 확인을 모두 입력해주세요.");
+            return;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            sendJson(resp, false, "새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+            return;
+        }
+
+        // 현재 관리자 등록·수정 기능과 동일한 최소 길이 정책을 서버에서도 검증
+        if (newPassword.length() < 4) {
+            sendJson(resp, false, "비밀번호는 최소 4자 이상이어야 합니다.");
+            return;
+        }
+
+        // 권한 발급 후 계정이 삭제되거나 비활성화되었는지 다시 확인
+        ManagerVO manager = managerDAO.selectOne(managerId);
+
+        if (manager == null || !manager.isActive()) {
+            clearForgotPasswordResetState(session);
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendJson(
+                    resp,
+                    false,
+                    "유효하지 않은 계정입니다. 이메일 인증부터 다시 진행해주세요."
+            );
+            return;
+        }
+
+        try {
+            // ManagerDAO에서 평문 비밀번호를 BCrypt로 해싱한 뒤 저장
+            managerDAO.updatePassword(managerId, newPassword);
         } catch (Exception e) {
-            // DB 저장은 완료된 상태이므로 이메일 실패만 로그로 기록
-            log.error("비밀번호 찾기 - 임시 비밀번호 이메일 발송 실패 - ID: {}", managerId, e);
+            // 일시적인 DB 오류라면 권한 유효시간 안에서 다시 시도할 수 있도록 상태를 유지
+            log.error("비밀번호 찾기 - 새 비밀번호 저장 실패 - ID: {}", managerId, e);
+            sendJson(
+                    resp,
+                    false,
+                    "비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해주세요."
+            );
+            return;
         }
 
-        sendJson(resp, true, "임시 비밀번호가 이메일로 발송되었습니다.");
-    }
+        // 성공한 변경 권한은 다시 사용할 수 없도록 즉시 삭제
+        clearForgotPasswordResetState(session);
 
-    /**
-     * 임시 비밀번호를 생성합니다.
-     *
-     * @return 영문 대소문자와 숫자로 구성된 10자리 임시 비밀번호
-     */
-    private String generateTempPassword() {
-        final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-
-        // 혼동하기 쉬운 문자(0, O, 1, I, l) 제외
-        SecureRandom random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(10);
-
-        for (int i = 0; i < 10; i++) {
-            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
-        }
-        return sb.toString();
+        log.info("비밀번호 찾기 - 새 비밀번호 변경 완료 - ID: {}", managerId);
+        sendJson(resp, true, "비밀번호가 성공적으로 변경되었습니다.");
     }
 
     /**
@@ -563,8 +684,26 @@ public class ForgotPasswordController extends HttpServlet {
     }
 
     /**
-     * 일반 JSON 응답을 전송합니다.
+     * OTP 인증 완료 후 발급된 비밀번호 변경 권한을 세션에서 삭제합니다.
      *
+     * <p>
+     * {@code forgotPasswordResetManagerId}는 OTP 인증을 완료한 관리자 아이디이고,
+     * {@code forgotPasswordResetGrantedAt}은 비밀번호 변경 권한을 받은 시각입니다.
+     * OTP 발급 대상과 실패 횟수를 관리하는 상태와는 별개의 정보입니다.
+     * </p>
+     */
+    private void clearForgotPasswordResetState(HttpSession session) {
+        if (session == null) {
+            return;
+        }
+
+        session.removeAttribute(PASSWORD_RESET_MANAGER_ID_SESSION_KEY);
+        session.removeAttribute(PASSWORD_RESET_GRANTED_AT_SESSION_KEY);
+    }
+
+    /**
+     * 일반 JSON 응답을 전송합니다.
+     * <p>
      * OTP 화면 초기화가 필요하지 않은 기존 응답에서 사용합니다.
      * resetOtp의 기본값을 false로 지정하여 아래의 실제 응답 생성 메서드에 전달합니다.
      */
@@ -578,7 +717,7 @@ public class ForgotPasswordController extends HttpServlet {
 
     /**
      * OTP 화면 초기화 여부를 포함한 JSON 응답을 전송합니다.
-     *
+     * <p>
      * resetOtp가 true이면 클라이언트는 기존 OTP 입력 화면을 초기화하고
      * 사용자가 새로운 인증번호를 요청할 수 있는 상태로 변경합니다.
      */
@@ -587,7 +726,7 @@ public class ForgotPasswordController extends HttpServlet {
             boolean success,
             String message,
             boolean resetOtp
-    ) throws IOException{
+    ) throws IOException {
         PrintWriter out = resp.getWriter();
 
         // 메시지에 큰따옴표가 포함되어도 JSON 형식이 깨지지 않도록 이스케이프 처리

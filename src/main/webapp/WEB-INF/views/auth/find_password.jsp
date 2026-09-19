@@ -326,7 +326,7 @@
         <div class="step-line" id="line2"></div>
         <div class="step">
             <div class="step-circle" id="circle3">3</div>
-            <div class="step-label" id="label3">임시 비밀번호</div>
+            <div class="step-label" id="label3">비밀번호 변경</div>
         </div>
     </div>
 
@@ -380,16 +380,61 @@
         <span class="back-link" onclick="goStep(1)">← 아이디 다시 입력</span>
     </div>
 
-    <!-- 임시 비밀번호 발급 완료 영역 -->
+    <!-- OTP 인증 후 새 비밀번호를 설정하는 영역 -->
     <div class="panel" id="step3">
-        <div class="msg msg-success show" style="font-size:15px; line-height:1.8;">
-            ✅ 인증이 완료되었습니다.<br>
-            등록된 이메일로 <strong>임시 비밀번호</strong>가 발송되었습니다.
+        <!-- 비밀번호 변경 전 입력 폼 -->
+        <div id="passwordResetForm">
+            <div class="form-group">
+                <label for="newPassword">
+                    새 비밀번호 <span style="color:#dc3545">*</span>
+                </label>
+                <input
+                        type="password"
+                        id="newPassword"
+                        autocomplete="new-password"
+                        placeholder="새 비밀번호를 입력하세요"
+                >
+                <div class="field-hint">최소 4자 이상 입력해주세요</div>
+                <div class="field-error" id="newPasswordError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">
+                    새 비밀번호 확인 <span style="color:#dc3545">*</span>
+                </label>
+                <input
+                        type="password"
+                        id="confirmPassword"
+                        autocomplete="new-password"
+                        placeholder="새 비밀번호를 다시 입력하세요"
+                >
+                <div class="field-error" id="confirmPasswordError"></div>
+            </div>
+
+            <button
+                    type="button"
+                    class="btn btn-primary btn-full"
+                    id="resetPasswordBtn"
+                    onclick="submitNewPassword()"
+            >
+                비밀번호 변경
+            </button>
         </div>
-        <div class="msg msg-info show" style="font-size:13px;">
-            🔒 로그인 후 반드시 비밀번호를 변경해주세요.
+
+        <!-- 비밀번호 변경 성공 후 표시할 결과 영역 -->
+        <div id="passwordResetSuccess" style="display:none;">
+            <div class="msg msg-success show" style="font-size:15px; line-height:1.8;">
+                ✅ 비밀번호가 변경되었습니다.<br>
+                새 비밀번호로 로그인해주세요.
+            </div>
+            <button
+                    type="button"
+                    class="btn btn-success btn-full"
+                    onclick="goLogin()"
+            >
+                로그인 페이지로 이동
+            </button>
         </div>
-        <button class="btn btn-success btn-full" onclick="goLogin()">로그인 페이지로 이동</button>
     </div>
 </div>
 
@@ -538,6 +583,53 @@
         hideFieldError('otp');
     }
 
+    // 비밀번호 변경 권한이 없거나 만료된 경우 모든 입력 상태를 지우고 첫 단계로 돌아감
+    function restartForgotPasswordFlow(message) {
+        stopAuthTimer();
+
+        // 브라우저가 보관하던 아이디와 OTP 진행 상태를 제거
+        foundManagerId = '';
+        otpSent = false;
+
+        document.getElementById('inputId').value = '';
+        document.getElementById('confirmedId').value = '';
+
+        const emailInput = document.getElementById('inputEmail');
+        emailInput.value = '';
+        emailInput.readOnly = false;
+
+        document.getElementById('inputOtp').value = '';
+        document.getElementById('otpGroup').style.display = 'none';
+
+        // 다시 OTP 인증을 마친 경우 새 비밀번호 입력 폼부터 시작할 수 있도록 복구
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('passwordResetForm').style.display = 'block';
+        document.getElementById('passwordResetSuccess').style.display = 'none';
+
+        const sendBtn = document.getElementById('sendOtpBtn');
+        sendBtn.disabled = false;
+        sendBtn.textContent = '인증요청';
+
+        const verifyBtn = document.getElementById('verifyOtpBtn');
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = '확인';
+
+        const resetBtn = document.getElementById('resetPasswordBtn');
+        resetBtn.disabled = false;
+        resetBtn.textContent = '비밀번호 변경';
+
+        hideFieldError('id');
+        hideFieldError('email');
+        hideFieldError('otp');
+        hideFieldError('newPassword');
+        hideFieldError('confirmPassword');
+
+        // goStep()이 이전 메시지를 지우므로 이동 후 권한 만료 안내를 표시
+        goStep(1);
+        showMsg(message, 'error');
+    }
+
     // 아이디 존재 여부 확인
     function submitStep1() {
         const id = document.getElementById('inputId').value.trim();
@@ -624,7 +716,7 @@
             });
     }
 
-    // 인증번호 검증 후 임시 비밀번호 발급
+    // 인증번호를 검증하고 성공하면 새 비밀번호 입력 단계로 이동
     function verifyOtp() {
         const otp = document.getElementById('inputOtp').value.trim();
         const email = document.getElementById('inputEmail').value.trim();
@@ -642,7 +734,7 @@
         verifyBtn.disabled = true;
         verifyBtn.textContent = '확인 중...';
 
-        // 서버에서 OTP를 검증하고, 성공 시 임시 비밀번호 발급까지 처리
+        // 서버에서 OTP를 검증하고, 성공 시 세션에 비밀번호 변경 권한을 발급
         fetch('${pageContext.request.contextPath}/forgot-password/verify', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -653,7 +745,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    // 인증이 끝났으므로 타이머를 멈추고 완료 화면으로 이동
+                    // OTP 입력 단계가 끝났으므로 타이머를 멈추고 새 비밀번호 입력 화면으로 이동
                     stopAuthTimer();
                     goStep(3);
                 } else {
@@ -683,6 +775,110 @@
             });
     }
 
+    // OTP 인증으로 발급된 세션 권한을 사용하여 새 비밀번호를 서버에 저장
+    function submitNewPassword() {
+        // 비밀번호는 공백을 임의로 제거하지 않고 입력된 값 그대로 서버에 전달
+        const newPassword =
+            document.getElementById('newPassword').value;
+        const confirmPassword =
+            document.getElementById('confirmPassword').value;
+        const resetBtn =
+            document.getElementById('resetPasswordBtn');
+
+        hideFieldError('newPassword');
+        hideFieldError('confirmPassword');
+        clearMsg();
+
+        // 클라이언트 검사는 사용자 편의를 위한 것이며 서버에서도 같은 조건을 다시 검사함
+        if (!newPassword.trim()) {
+            showFieldError(
+                'newPassword',
+                '새 비밀번호를 입력해주세요.'
+            );
+            return;
+        }
+
+        if (newPassword.length < 4) {
+            showFieldError(
+                'newPassword',
+                '비밀번호는 최소 4자 이상이어야 합니다.'
+            );
+            return;
+        }
+
+        if (!confirmPassword.trim()) {
+            showFieldError(
+                'confirmPassword',
+                '새 비밀번호 확인을 입력해주세요.'
+            );
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showFieldError(
+                'confirmPassword',
+                '새 비밀번호가 일치하지 않습니다.'
+            );
+            return;
+        }
+
+        // 중복 요청으로 비밀번호가 여러 번 변경되지 않도록 처리 중에는 버튼을 비활성화
+        resetBtn.disabled = true;
+        resetBtn.textContent = '변경 중...';
+
+        fetch('${pageContext.request.contextPath}/forgot-password/reset', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                newPassword: newPassword,
+                confirmPassword: confirmPassword
+            })
+        })
+            .then(async response => {
+                // fetch는 HTTP 401도 성공한 통신으로 처리하므로 상태 코드와 JSON을 함께 전달
+                return {
+                    status: response.status,
+                    data: await response.json()
+                };
+            })
+            .then(result => {
+                const status = result.status;
+                const data = result.data;
+
+                if (status === 401) {
+                    // 세션 권한이 없거나 만료됐으므로 OTP 인증부터 다시 시작
+                    restartForgotPasswordFlow(
+                        data.message
+                        || '이메일 인증부터 다시 진행해주세요.'
+                    );
+                    return;
+                }
+
+                if (data.success) {
+                    // 변경이 끝난 비밀번호를 화면에 남기지 않고 완료 안내로 전환
+                    clearMsg();
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    document.getElementById('passwordResetForm').style.display = 'none';
+                    document.getElementById('passwordResetSuccess').style.display = 'block';
+                } else {
+                    // 입력 오류나 일시적인 DB 오류는 현재 권한을 유지한 채 다시 시도하도록 함
+                    showMsg(
+                        data.message || '비밀번호 변경에 실패했습니다.',
+                        'error'
+                    );
+                    resetBtn.disabled = false;
+                    resetBtn.textContent = '비밀번호 변경';
+                }
+            })
+            .catch(() => {
+                // 네트워크 또는 JSON 처리 오류가 발생해도 버튼을 복구하여 다시 시도할 수 있게 함
+                showMsg('서버 통신 오류가 발생했습니다.', 'error');
+                resetBtn.disabled = false;
+                resetBtn.textContent = '비밀번호 변경';
+            });
+    }
+
     // 인증번호 발송 후 이메일을 수정하면 인증 상태를 초기화
     document.getElementById('inputEmail').addEventListener('input', function () {
         if (otpSent) {
@@ -702,6 +898,9 @@
     });
     document.getElementById('inputOtp').addEventListener('keydown', e => {
         if (e.key === 'Enter') verifyOtp();
+    });
+    document.getElementById('confirmPassword').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitNewPassword();
     });
     // 인증번호는 숫자만 입력할 수 있도록 제한
     document.getElementById('inputOtp').addEventListener('input', function () {
