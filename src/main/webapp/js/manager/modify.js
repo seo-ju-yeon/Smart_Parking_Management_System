@@ -349,3 +349,9 @@ form.addEventListener('submit', function(e) {
 
 // 초기 로드 시 기존 이메일은 인증 완료로 처리
 isEmailVerified = true;
+
+document.querySelectorAll('.navigation-button').forEach(button => {
+    button.addEventListener('click', function () {
+        window.location.href = this.dataset.url;
+    });
+});

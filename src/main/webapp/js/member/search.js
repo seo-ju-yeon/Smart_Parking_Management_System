@@ -11,3 +11,6 @@ function validateSearch() {
     return true;
 }
 
+document.getElementById('memberSearchForm').addEventListener('submit', function (event) {
+    if (!validateSearch()) event.preventDefault();
+});

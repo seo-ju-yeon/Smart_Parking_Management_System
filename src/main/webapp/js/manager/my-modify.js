@@ -1,12 +1,17 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
 
+const managerModifyForm = document.getElementById('modifyForm');
+
+// 로그인 정보가 없어 수정 폼이 출력되지 않은 경우에는 폼 전용 로직을 실행하지 않는다.
+if (managerModifyForm) {
+
 // 인증 상태와 기존 이메일 저장
 let isEmailVerified = false;
 const originalEmail = document.getElementById('email').value.trim();
 
 // 수정 폼 요소 가져오기
-const form                 = document.getElementById('modifyForm');
+const form                 = managerModifyForm;
 const nameInput            = document.getElementById('name');
 const pwInput              = document.getElementById('pw');
 const passwordConfirmInput = document.getElementById('passwordConfirm');
@@ -220,4 +225,12 @@ form.addEventListener('submit', function (e) {
     stopAuthTimer();
     submitBtn.disabled = true;
     submitBtn.textContent = '적용 중...';
+});
+}
+
+// JSP의 인라인 이동 코드를 대신해 data-url에 지정된 화면으로 이동한다.
+document.querySelectorAll('.navigation-button').forEach(button => {
+    button.addEventListener('click', function () {
+        window.location.href = this.dataset.url;
+    });
 });

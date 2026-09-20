@@ -1,1 +1,9 @@
 .gap-2 { gap: 10px; }
+
+.member-detail-container {
+    max-width: 600px;
+}
+
+.member-history-table {
+    font-size: 0.9rem;
+}

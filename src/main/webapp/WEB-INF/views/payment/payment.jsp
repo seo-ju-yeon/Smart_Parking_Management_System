@@ -36,7 +36,11 @@
 
         // DB에서 차량을 못 찾았을 경우의 처리
         if (parkingDTO == null) {
-            out.println("<script>alert('현재 주차 중인 차량이 아닙니다.'); location.href='" + request.getContextPath() + "/dashboard';</script>");
+            request.setAttribute("pageAlertMessage", "현재 주차 중인 차량이 아닙니다.");
+            request.setAttribute("pageAlertAction", "redirect");
+            request.setAttribute("pageAlertUrl", request.getContextPath() + "/dashboard");
+            request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                    .forward(request, response);
             return;
         }
         calculatedFee = PaymentService.INSTANCE.calculateFeeLogic(parkingDTO);
@@ -44,8 +48,10 @@
                 MapperUtil.INSTANCE.getInstance().map(FeePolicyService.getInstance().getPolicy(), FeePolicyVO.class));
         finalFee = calculatedFee - discountAmount;
     } else {
-        // 차 번호가 없으면 에러 페이지로 보내거나 메시지 출력
-        out.println("<script>alert('차량 정보가 없습니다.'); history.back();</script>");
+        request.setAttribute("pageAlertMessage", "차량 정보가 없습니다.");
+        request.setAttribute("pageAlertAction", "back");
+        request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                .forward(request, response);
         return;
     }
 
@@ -58,6 +64,12 @@
         );
         totalTime = duration.toMinutes();
     }
+
+    // 외부 JavaScript가 사용할 시간 값은 실행 코드가 아니라 data-* 속성으로 전달한다.
+    String entryTimeStr = (parkingDTO != null && parkingDTO.getEntryTime() != null)
+            ? parkingDTO.getEntryTime().toString() : "";
+    String exitTimeStr = (parkingDTO != null && parkingDTO.getExitTime() != null)
+            ? parkingDTO.getExitTime().toString() : java.time.LocalDateTime.now().toString();
 %>
 <html>
 <head>
@@ -66,14 +78,16 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/payment_style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/modal.css">
 </head>
-<div id="customModal" class="modal-overlay" style="background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: none; border: none; box-shadow: none; padding: 0; width: auto; max-width: none;">
-        <div id="modalBody" class="modal-body" style="padding: 0; background: none;">
+<body data-context-path="${pageContext.request.contextPath}"
+      data-entry-time="<%=entryTimeStr%>"
+      data-exit-time="<%=exitTimeStr%>">
+<div id="customModal" class="modal-overlay receipt-modal-overlay">
+    <div class="modal-content receipt-modal-content">
+        <div id="modalBody" class="modal-body receipt-modal-body">
         </div>
-        <div class="modal-footer" style="display: none;"></div>
+        <div class="modal-footer receipt-modal-footer"></div>
     </div>
 </div>
-<body>
 <!-- Navigation -->
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
@@ -120,112 +134,97 @@
                 <input type="checkbox" name="receipt" id="receipt"><label>영수증 출력</label>
             </div>
             <div>
-                <button type="button" class="btn btn-primary" onclick="showReceipt()">확인</button>
+                <button type="button" id="showReceiptButton" class="btn btn-primary">확인</button>
             </div>
 
         </form>
     </div>
     <!-- 영수증 -->
-    <div id="printArea" style="display: none; overflow: scroll;" >
-        <div style="width: 330px; padding: 12px; border: 2px solid #0000FF; color: #0000FF; font-family: 'Malgun Gothic', sans-serif; background-color: #fff; line-height: 1.1; box-sizing: border-box; margin: 0 auto;">
+    <div id="printArea" class="receipt-print-area">
+        <div class="receipt-paper">
 
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0000FF; padding: 0 0 3px 0; margin-bottom: 6px;">
-                <h1 style="margin: 0; font-size: 19px; letter-spacing: 4px;">영 수 증</h1>
-                <span style="font-size: 9px;">(공급받는자용)</span>
+            <div class="receipt-header">
+                <h1 class="receipt-title">영 수 증</h1>
+                <span class="receipt-copy-label">(공급받는자용)</span>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; border: 1px solid #0000FF;">
+            <table class="receipt-table supplier-table">
                 <tr>
-                    <td rowspan="4" style="width: 18px; border-right: 1px solid #0000FF; text-align: center; writing-mode: vertical-lr; font-size: 9px; padding: 2px 0;">공급자</td>
-                    <td style="width: 65px; border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF; text-align: center; padding: 3px 0;">사업자번호</td>
-                    <td colspan="3" style="border-bottom: 1px solid #0000FF; text-align: center; color: #000; font-weight: bold;">123-45-67890</td>
+                    <td rowspan="4" class="supplier-label">공급자</td>
+                    <td class="business-number-label">사업자번호</td>
+                    <td colspan="3" class="business-number-value">123-45-67890</td>
                 </tr>
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF; text-align: center;">상 호</td>
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF; padding-left: 4px; color: #000;">스마트 주차장</td>
-                    <td style="width: 30px; border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF; text-align: center;">성명</td>
-                    <td style="border-bottom: 1px solid #0000FF; padding-right: 4px; text-align: right; color: #000;">홍길동 (인)</td>
+                <tr class="receipt-row">
+                    <td class="receipt-label-cell">상 호</td>
+                    <td class="receipt-value-cell">스마트 주차장</td>
+                    <td class="receipt-label-cell name-label">성명</td>
+                    <td class="receipt-right-value">홍길동 (인)</td>
                 </tr>
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF; text-align: center;">주 소</td>
-                    <td colspan="3" style="border-bottom: 1px solid #0000FF; padding-left: 4px; color: #000; font-size: 9.5px;">대구광역시 중구 중앙대로 123</td>
+                <tr class="receipt-row">
+                    <td class="receipt-label-cell">주 소</td>
+                    <td colspan="3" class="receipt-address">대구광역시 중구 중앙대로 123</td>
                 </tr>
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; text-align: center;">업 태</td>
-                    <td style="border-right: 1px solid #0000FF; padding-left: 4px; color: #000;">서비스</td>
-                    <td style="border-right: 1px solid #0000FF; text-align: center;">종목</td>
-                    <td style="padding-left: 4px; color: #000;">주차장업</td>
-                </tr>
-            </table>
-
-            <table style="width: 100%; border-collapse: collapse; margin-top: 4px; border: 1px solid #0000FF; font-size: 11px;">
-                <tr style="height: 26px;">
-                    <td style="width: 55px; border-right: 1px solid #0000FF; background-color: #f0f4ff; text-align: center;">작성일</td>
-                    <td style="width: 90px; border-right: 1px solid #0000FF; text-align: center; color: #000;"><%=java.time.LocalDate.now()%></td>
-                    <td style="width: 55px; border-right: 1px solid #0000FF; background-color: #f0f4ff; text-align: center;">합계금액</td>
-                    <td style="text-align: right; padding-right: 4px; color: #000; font-weight: bold;"><span id="p-finalFee"></span></td>
+                <tr class="receipt-row">
+                    <td class="receipt-label-cell no-bottom-border">업 태</td>
+                    <td class="receipt-value-cell no-bottom-border">서비스</td>
+                    <td class="receipt-label-cell no-bottom-border">종목</td>
+                    <td class="receipt-value-last">주차장업</td>
                 </tr>
             </table>
 
-            <table style="width: 100%; border-collapse: collapse; margin-top: 4px; border: 1px solid #0000FF; font-size: 10.5px; text-align: center;">
-                <thead style="background-color: #f0f4ff;">
-                <tr style="height: 22px;">
-                    <th style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">항 목</th>
-                    <th style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">내 용</th>
-                    <th style="border-bottom: 1px solid #0000FF;">금 액</th>
+            <table class="receipt-table summary-table">
+                <tr class="summary-row">
+                    <td class="summary-label">작성일</td>
+                    <td class="summary-date"><%=java.time.LocalDate.now()%></td>
+                    <td class="summary-label">합계금액</td>
+                    <td class="summary-amount"><span id="p-finalFee"></span></td>
+                </tr>
+            </table>
+
+            <table class="receipt-table detail-table">
+                <thead class="detail-table-head">
+                <tr class="detail-header-row">
+                    <th class="detail-bordered-cell">항 목</th>
+                    <th class="detail-bordered-cell">내 용</th>
+                    <th class="detail-bottom-cell">금 액</th>
                 </tr>
                 </thead>
-                <tbody style="color: #000;">
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">차량번호</td>
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;"><span id="p-carNum"></span></td>
-                    <td style="border-bottom: 1px solid #0000FF;">-</td>
+                <tbody class="detail-table-body">
+                <tr class="detail-row">
+                    <td class="detail-bordered-cell">차량번호</td>
+                    <td class="detail-bordered-cell"><span id="p-carNum"></span></td>
+                    <td class="detail-bottom-cell">-</td>
                 </tr>
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">주차시간</td>
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;"><span id="p-totalTime"></span></td>
-                    <td style="border-bottom: 1px solid #0000FF;"><span id="p-calcFee"></span></td>
+                <tr class="detail-row">
+                    <td class="detail-bordered-cell">주차시간</td>
+                    <td class="detail-bordered-cell"><span id="p-totalTime"></span></td>
+                    <td class="detail-bottom-cell"><span id="p-calcFee"></span></td>
                 </tr>
-                <tr style="height: 20px;">
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">할인액</td>
-                    <td style="border-right: 1px solid #0000FF; border-bottom: 1px solid #0000FF;">-</td>
-                    <td style="border-bottom: 1px solid #0000FF;">-<span id="p-discount"></span></td>
+                <tr class="detail-row">
+                    <td class="detail-bordered-cell">할인액</td>
+                    <td class="detail-bordered-cell">-</td>
+                    <td class="detail-bottom-cell">-<span id="p-discount"></span></td>
                 </tr>
                 </tbody>
                 <tfoot>
-                <tr style="height: 26px; background-color: #f0f4ff; font-weight: bold;">
-                    <td colspan="2" style="border-right: 1px solid #0000FF; text-align: center;">합 계 (VAT포함)</td>
-                    <td style="text-align: right; padding-right: 4px; color: #000;"><span id="p-finalFee-total"></span></td>
+                <tr class="receipt-total-row">
+                    <td colspan="2" class="receipt-total-label">합 계 (VAT포함)</td>
+                    <td class="receipt-total-value"><span id="p-finalFee-total"></span></td>
                 </tr>
                 </tfoot>
             </table>
 
-            <div style="text-align: center; font-size: 9px; margin-top: 6px; color: #000; margin-bottom: 12px;">감사합니다. 또 이용해 주십시오.</div>
+            <div class="receipt-thanks">감사합니다. 또 이용해 주십시오.</div>
 
-            <div style="display: flex; justify-content: center; gap: 10px; padding-top: 10px; border-top: 1px dashed #0000FF;">
-                <button type="button" onclick="handleConfirm()" style="background-color: #2ecc71; color: white; border: none; padding: 6px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">확인</button>
-                <button type="button" onclick="closeModal()" style="background-color: #7f8c8d; color: white; border: none; padding: 6px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">취소</button>
+            <div class="receipt-actions">
+                <button type="button" class="receipt-action-button receipt-confirm-button">확인</button>
+                <button type="button" class="receipt-action-button receipt-cancel-button">취소</button>
             </div>
         </div>
     </div>
     <!-- 영수증 -->
 </div>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
-
-<script>
-    const entryTime = "<%=(parkingDTO != null && parkingDTO.getEntryTime() != null) ? parkingDTO.getEntryTime() : ""%>";
-
-    <%
-                String exitTimeStr = "";
-                if (parkingDTO != null && parkingDTO.getExitTime() != null) {
-                    exitTimeStr = parkingDTO.getExitTime().toString();
-                } else {
-                    exitTimeStr = java.time.LocalDateTime.now().toString();
-                }
-                %>
-    const exitTime = "<%=exitTimeStr%>";
-</script>
-
 <script src="${pageContext.request.contextPath}/js/payment/payment.js"></script>
 </body>
 </html>

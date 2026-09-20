@@ -176,6 +176,10 @@ input:read-only {
     margin-top: 20px;
 }
 
+#otpGroup.is-visible {
+    display: block;
+}
+
 .admin-badge {
     display: inline-block;
     background: #667eea;
@@ -187,6 +191,7 @@ input:read-only {
 }
 
 .timer {
+    display: none;
     font-size: 14px;
     color: #dc3545;
     font-weight: bold;

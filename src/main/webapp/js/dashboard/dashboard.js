@@ -1,3 +1,6 @@
+// JSP가 body의 data-* 속성으로 전달한 애플리케이션 경로를 사용한다.
+const contextPath = document.body.dataset.contextPath;
+
 document.addEventListener("click", e => {
     // 입출차 메뉴 이동 판단
     const slot = e.target.closest(".slot-item");

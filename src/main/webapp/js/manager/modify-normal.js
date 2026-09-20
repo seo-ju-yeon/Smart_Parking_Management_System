@@ -333,3 +333,9 @@ form.addEventListener('submit', function(e) {
 
 // 초기 로드 시 이메일 미인증 상태로 시작
 isEmailVerified = false;
+
+document.querySelectorAll('.navigation-button').forEach(button => {
+    button.addEventListener('click', function () {
+        window.location.href = this.dataset.url;
+    });
+});

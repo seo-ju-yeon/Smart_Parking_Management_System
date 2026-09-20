@@ -10,6 +10,10 @@ button:disabled:hover {
     background-color: #ddd;
 }
 
+.member-add-container {
+    max-width: 500px;
+}
+
 /* 조회 버튼 스타일 */
 .btn-detail {
     padding: 10px 20px;

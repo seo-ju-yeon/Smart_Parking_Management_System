@@ -7,7 +7,10 @@
 
     // 2. 에러 방지를 위한 null 체크 및 데이터 할당
     if (pageResponseDto == null) {
-        out.print("<script>alert('데이터가 없습니다.'); history.back();</script>");
+        request.setAttribute("pageAlertMessage", "데이터가 없습니다.");
+        request.setAttribute("pageAlertAction", "back");
+        request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                .forward(request, response);
         return;
     }
 
@@ -34,7 +37,7 @@
     <div class="list-card">
         <div class="list-header">
             <div>
-                <h2><i class="fas fa-history mr-2" style="color: #4e73df;"></i>요금 정책 변경 이력</h2>
+                <h2><i class="fas fa-history mr-2 history-icon"></i>요금 정책 변경 이력</h2>
                 <small class="text-muted">전체 <b class="text-primary"><%=pageResponseDto.getTotalCount()%></b>개의 정책 데이터가 있습니다.</small>
             </div>
             <a href="${pageContext.request.contextPath}/view/policy/add" class="btn btn-primary shadow-sm">
@@ -63,7 +66,7 @@
                             String activeClass = dto.isActive() ? "active-row" : "";
                             String detailUrl = request.getContextPath() + "/view/policy?id=" + dto.getPolicyId() + "&pageNum=" + pageNum;
                 %>
-                <tr class="<%= activeClass %>" onclick="location.href='<%= detailUrl %>'">
+                <tr class="policy-row <%= activeClass %>" data-url="<%= detailUrl %>">
                     <td>
                         <i class="far fa-clock mr-1"></i>
                         <%= dto.getDefaultTime() %>분 /
@@ -80,7 +83,7 @@
                     <td><b class="text-info"><%= (int)(dto.getDisabledDiscount() * 100) %>%</b></td>
 
                     <td><b class="text-danger"><%= String.format("%,d", dto.getMaxDailyFee()) %>원</b></td>
-                    <td class="text-muted" style="font-size: 0.85rem;">
+                    <td class="text-muted policy-date">
                         <%-- 안전한 날짜 출력 --%>
                         <%= (dto.getModifyDate() != null) ? dto.getModifyDate().toString().replace("T", " ") : "-" %>
                     </td>
@@ -104,7 +107,7 @@
             </table>
         </div>
 
-        <div class="pagination-container w-100 text-center" style="margin-top: 30px;">
+        <div class="pagination-container w-100 text-center policy-pagination">
             <%
                 int pagePerBlock = 5;
                 int thisBlock = (pageNum - 1) / pagePerBlock + 1;
@@ -134,5 +137,6 @@
     </div>
 </div>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/policy/list.js"></script>
 </body>
 </html>

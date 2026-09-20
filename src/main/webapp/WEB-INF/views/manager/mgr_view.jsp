@@ -83,27 +83,27 @@
 
         <!-- 처리 버튼 영역 -->
         <div class="btn-group">
-            <button type="button" class="btn btn-secondary"
-                    onclick="location.href='${pageContext.request.contextPath}/mgr/list'">
+            <button type="button" class="btn btn-secondary navigation-button"
+                    data-url="${pageContext.request.contextPath}/mgr/list">
                 돌아가기
             </button>
 
-            <button type="button" class="btn btn-primary" style="flex: 1;"
-                    onclick="location.href='${pageContext.request.contextPath}/mgr/modify_normal?id=<%= manager.getManagerId() %>'">
+            <button type="button" class="btn btn-primary flex-button navigation-button"
+                    data-url="${pageContext.request.contextPath}/mgr/modify_normal?id=<%= manager.getManagerId() %>">
                 정보 수정
             </button>
 
             <% if (manager.isActive()) { %>
             <%-- 관리자 계정 비활성화 요청 전송 --%>
-            <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" style="flex: 1;">
+            <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="false">
-                <button type="submit" class="btn btn-danger" style="width: 100%;"
+                <button type="submit" class="btn btn-danger full-width-button account-state-button"
                 <%-- 최고관리자 본인은 비활성화 제출 차단 --%>
                         <% if (blockDeactivate) { %>
-                        onclick="return alertAdminCannotDeactivate();"
+                        data-block-deactivate="true"
                         <% } else { %>
-                        onclick="return confirm('이 관리자 계정을 비활성화 하시겠습니까?');"
+                        data-confirm-message="이 관리자 계정을 비활성화 하시겠습니까?"
                         <% } %>
                 >
                     계정 비활성화
@@ -111,11 +111,11 @@
             </form>
             <% } else { %>
             <%-- 관리자 계정 활성화 요청 전송 --%>
-            <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" style="flex: 1;">
+            <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="true">
-                <button type="submit" class="btn btn-success" style="width: 100%;"
-                        onclick="return confirm('이 관리자 계정을 활성화 하시겠습니까?');">
+                <button type="submit" class="btn btn-success full-width-button account-state-button"
+                        data-confirm-message="이 관리자 계정을 활성화 하시겠습니까?">
                     계정 활성화
                 </button>
             </form>
@@ -127,8 +127,8 @@
         <div class="empty-state">
             <div class="empty-state-icon">👤</div>
             <div class="empty-state-text">조회할 관리자 정보가 없습니다.</div>
-            <button type="button" class="btn btn-primary"
-                    onclick="location.href='${pageContext.request.contextPath}/mgr/add'">
+            <button type="button" class="btn btn-primary navigation-button"
+                    data-url="${pageContext.request.contextPath}/mgr/add">
                 관리자 추가
             </button>
         </div>

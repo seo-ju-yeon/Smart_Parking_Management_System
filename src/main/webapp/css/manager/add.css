@@ -154,3 +154,31 @@ input.error {
 @keyframes blink {
     50% { opacity: 0.3; }
 }
+.email-input-row,
+.auth-code-row {
+    display: flex;
+    gap: 8px;
+}
+
+.email-input,
+.auth-code-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.send-email-button,
+.verify-code-button {
+    width: 100px;
+    height: 45px;
+    padding: 0;
+    font-size: 14px;
+}
+
+.email-auth-group {
+    display: none;
+    margin-top: 12px;
+}
+
+.initially-hidden {
+    display: none;
+}

@@ -43,12 +43,12 @@
     <!-- 아이디 확인 영역 -->
     <div class="panel active" id="step1">
         <div class="form-group">
-            <label for="inputId">아이디 <span style="color:#dc3545">*</span></label>
+            <label for="inputId">아이디 <span class="required-mark">*</span></label>
             <input type="text" id="inputId" placeholder="등록된 아이디를 입력하세요">
             <div class="field-error" id="idError"></div>
         </div>
-        <button class="btn btn-primary btn-full" onclick="submitStep1()">다음</button>
-        <span class="back-link" onclick="goLogin()">← 로그인으로 돌아가기</span>
+        <button type="button" class="btn btn-primary btn-full" id="submitStep1Btn">다음</button>
+        <span class="back-link" id="loginBackLink">← 로그인으로 돌아가기</span>
     </div>
 
     <!-- 이메일 인증 영역 -->
@@ -59,32 +59,32 @@
         </div>
 
         <div class="form-group">
-            <label for="inputEmail">이메일 <span style="color:#dc3545">*</span></label>
+            <label for="inputEmail">이메일 <span class="required-mark">*</span></label>
             <div class="input-row">
                 <input type="email" id="inputEmail" placeholder="등록된 이메일을 입력하세요">
-                <button class="btn btn-secondary" id="sendOtpBtn" onclick="sendOtp()">인증요청</button>
+                <button type="button" class="btn btn-secondary" id="sendOtpBtn">인증요청</button>
             </div>
             <div class="field-hint">데이터베이스에 등록된 이메일과 일치해야 합니다</div>
             <div class="field-error" id="emailError"></div>
             <!-- 인증번호 유효 시간 -->
-            <div id="authTimer" class="auth-timer" style="display:none;">
+            <div id="authTimer" class="auth-timer initial-hidden">
                 ⏱ 남은 시간: <span id="authTimeLeft">05:00</span>
             </div>
         </div>
 
         <!-- 인증번호 발송 후 표시되는 입력 영역 -->
-        <div id="otpGroup" style="display:none;">
+        <div id="otpGroup" class="initial-hidden">
             <div class="form-group">
-                <label for="inputOtp">인증번호 <span style="color:#dc3545">*</span></label>
+                <label for="inputOtp">인증번호 <span class="required-mark">*</span></label>
                 <div class="input-row">
                     <input type="text" id="inputOtp" maxlength="6" placeholder="6자리 인증번호">
-                    <button class="btn btn-primary" id="verifyOtpBtn" onclick="verifyOtp()">확인</button>
+                    <button type="button" class="btn btn-primary" id="verifyOtpBtn">확인</button>
                 </div>
                 <div class="field-error" id="otpError"></div>
             </div>
         </div>
 
-        <span class="back-link" onclick="goStep(1)">← 아이디 다시 입력</span>
+        <span class="back-link" id="restartIdLink">← 아이디 다시 입력</span>
     </div>
 
     <!-- OTP 인증 후 새 비밀번호를 설정하는 영역 -->
@@ -93,7 +93,7 @@
         <div id="passwordResetForm">
             <div class="form-group">
                 <label for="newPassword">
-                    새 비밀번호 <span style="color:#dc3545">*</span>
+                    새 비밀번호 <span class="required-mark">*</span>
                 </label>
                 <input
                         type="password"
@@ -107,7 +107,7 @@
 
             <div class="form-group">
                 <label for="confirmPassword">
-                    새 비밀번호 확인 <span style="color:#dc3545">*</span>
+                    새 비밀번호 확인 <span class="required-mark">*</span>
                 </label>
                 <input
                         type="password"
@@ -122,22 +122,21 @@
                     type="button"
                     class="btn btn-primary btn-full"
                     id="resetPasswordBtn"
-                    onclick="submitNewPassword()"
             >
                 비밀번호 변경
             </button>
         </div>
 
         <!-- 비밀번호 변경 성공 후 표시할 결과 영역 -->
-        <div id="passwordResetSuccess" style="display:none;">
-            <div class="msg msg-success show" style="font-size:15px; line-height:1.8;">
+        <div id="passwordResetSuccess" class="initial-hidden">
+            <div class="msg msg-success show password-reset-success-message">
                 ✅ 비밀번호가 변경되었습니다.<br>
                 새 비밀번호로 로그인해주세요.
             </div>
             <button
                     type="button"
                     class="btn btn-success btn-full"
-                    onclick="goLogin()"
+                    id="passwordResetLoginBtn"
             >
                 로그인 페이지로 이동
             </button>

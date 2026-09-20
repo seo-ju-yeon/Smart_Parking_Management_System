@@ -28,12 +28,13 @@
 <head>
     <title>회원 수정</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/member/modify.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-    <div class="container mt-4" style="max-width: 600px;">
+    <div class="container mt-4 member-modify-container">
         <h2 class="mb-4">회원 수정</h2>
 
         <% if ("modifyFail".equals(modifyError)) { %>
@@ -41,7 +42,7 @@
         <% } %>
 
         <!-- 회원 정보 수정 폼 -->
-        <form action="/member/member_modify" method="post" onsubmit="return validateForm()">
+        <form id="memberModifyForm" action="/member/member_modify" method="post">
             <input type="hidden" name="action"    value="modify">
             <input type="hidden" name="memberId"  value="<%= member.getMemberId() %>">
             <input type="hidden" name="carNum"    value="<%= member.getCarNum() %>">
@@ -134,8 +135,9 @@
                     <input type="hidden" name="action" value="renew">
                     <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
                     <input type="hidden" name="page"   value="<%= listPage %>">
-                    <button type="submit" class="btn btn-warning btn-block text-white"
-                            onclick="return confirm('<%= renewConfirmMsg %>')">
+                    <button type="submit" id="renewSubscriptionButton"
+                            class="btn btn-warning btn-block text-white"
+                            data-confirm-message="<%= renewConfirmMsg %>">
                         1개월 갱신
                     </button>
                 </form>

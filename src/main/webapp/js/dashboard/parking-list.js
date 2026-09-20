@@ -46,3 +46,6 @@ function cancelCarNum() {
         slot.style.display = "";
     });
 }
+
+document.getElementById('searchCarButton').addEventListener('click', selectCarNum);
+document.getElementById('cancelSearchButton').addEventListener('click', cancelCarNum);

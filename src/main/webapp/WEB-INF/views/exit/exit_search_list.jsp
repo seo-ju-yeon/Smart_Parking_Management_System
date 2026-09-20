@@ -5,17 +5,8 @@
 <%@ page import="org.example.smart_parking_260219.service.MemberService" %>
 <%@ page import="java.sql.SQLException" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
-<head>
-    <title>출차</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/payment_style.css">
-</head>
-<body>
-<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <%
-    // [버그수정] Controller에서 setAttribute("parkingDTO")로 넘긴 경우 우선 사용
-    // 없으면 carNum으로 직접 DB 조회 (다양한 진입 경로 대응)
+    // Controller가 전달한 주차 정보를 우선 사용하고, 없으면 차량번호로 조회한다.
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
     String carNum = request.getParameter("carNum");
     MemberDTO memberDTO;
@@ -34,12 +25,22 @@
         }
     }
 
-    // parkingDTO가 끝내 null이면 안전하게 뒤로 보냄
     if (parkingDTO == null) {
-        out.println("<script>alert('주차 중인 차량 정보를 찾을 수 없습니다.'); history.back();</script>");
+        request.setAttribute("pageAlertMessage", "주차 중인 차량 정보를 찾을 수 없습니다.");
+        request.setAttribute("pageAlertAction", "back");
+        request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                .forward(request, response);
         return;
     }
 %>
+<html>
+<head>
+    <title>출차</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/payment_style.css">
+</head>
+<body>
+<%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
     <div id="register" class="page">
         <h2>출차</h2>
@@ -78,7 +79,7 @@
                 <input type="text" class="time" id="entryTime" placeholder="입차 시간" name="entryTime"
                        value="<%=parkingDTO.getEntryTime()%>" readonly>
             </div>
-            <button type="submit" onclick="registerMember()">정산</button>
+            <button type="submit">정산</button>
         </form>
     </div>
 </div>

@@ -8,12 +8,13 @@
 <head>
   <title>회원 검색</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/member/search.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-  <div class="container mt-4" style="max-width: 500px;">
+  <div class="container mt-4 member-search-container">
     <h2 class="mb-4">회원 검색</h2>
 
     <% if ("notFound".equals(error)) { %>
@@ -29,8 +30,7 @@
         차량번호 뒤 4자리 검색
       </div>
       <div class="card-body">
-        <form action="/member/member_search" method="get"
-              onsubmit="return validateSearch()">
+        <form id="memberSearchForm" action="/member/member_search" method="get">
           <div class="form-group">
             <label>차량번호 뒤 4자리 <span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="carNum" id="carNum"

@@ -14,12 +14,13 @@
 <head>
   <title>회원 상세</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/member/detail.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-  <div class="container mt-4" style="max-width: 600px;">
+  <div class="container mt-4 member-detail-container">
     <h2 class="mb-4">월정액 회원 상세</h2>
 
     <!-- 회원 정보 -->
@@ -70,7 +71,7 @@
     <div class="card mb-3">
       <div class="card-header bg-dark text-white font-weight-bold">결제 및 갱신 이력</div>
       <div class="card-body p-0"> <%-- 패딩을 제거하여 테이블이 꽉 차게 설정 --%>
-        <table class="table table-hover mb-0" style="font-size: 0.9rem;">
+        <table class="table table-hover mb-0 member-history-table">
           <thead class="thead-light">
           <tr>
             <th>결제일</th>
@@ -113,8 +114,8 @@
          class="btn btn-warning flex-fill mr-2 text-white">수정</a>
       <a href="<%= listUrl %>"
          class="btn btn-secondary flex-fill mr-2">목록</a>
-      <button type="button" class="btn btn-danger flex-fill"
-              onclick="deleteMember('<%= member.getCarNum() %>')">삭제</button>
+      <button type="button" id="deleteMemberButton" class="btn btn-danger flex-fill"
+              data-car-num="<%= member.getCarNum() %>">삭제</button>
     </div>
 
     <!-- 삭제 확인 모달 -->

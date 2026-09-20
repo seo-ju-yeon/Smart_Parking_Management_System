@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard/dashboard.css">
 </head>
-<body>
+<body data-context-path="${pageContext.request.contextPath}">
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
     <div id = "dashboard" class="page">
@@ -96,14 +96,13 @@
             <form id="searchForm">
                 <div class="form-group">
                     <input name="keyword" type="text" class="search-input" placeholder="조회할 차량 번호 입력" value=""/>
-                    <button type="button" onclick="selectCarNum()">검색</button>
-                    <button type="button" onclick="cancelCarNum()">취소</button>
+                    <button type="button" id="searchCarButton">검색</button>
+                    <button type="button" id="cancelSearchButton">취소</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<script>const contextPath = "${pageContext.request.contextPath}";</script>
 <script src="${pageContext.request.contextPath}/js/dashboard/dashboard.js"></script>
 <script src="${pageContext.request.contextPath}/js/dashboard/parking-list.js"></script>
 </body>

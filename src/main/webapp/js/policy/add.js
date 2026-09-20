@@ -5,3 +5,7 @@ function registerMember() {
     }
     return false;
 }
+
+document.getElementById('cancelPolicyButton').addEventListener('click', function () {
+    window.location.href = this.dataset.url;
+});

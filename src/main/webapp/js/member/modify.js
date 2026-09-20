@@ -40,3 +40,13 @@ function toggleDateFields() {
         dateFields.style.display = (action === 'add' || action === 'extend') ? 'block' : 'none';
     }
 }
+
+document.getElementById('memberModifyForm').addEventListener('submit', function (event) {
+    if (!validateForm()) event.preventDefault();
+});
+
+document.getElementById('renewSubscriptionButton').addEventListener('click', function (event) {
+    if (!window.confirm(this.dataset.confirmMessage)) {
+        event.preventDefault();
+    }
+});

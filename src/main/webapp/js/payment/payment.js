@@ -1,3 +1,8 @@
+// JSP가 data-* 속성으로 전달한 서버 값을 외부 스크립트에서 읽는다.
+const contextPath = document.body.dataset.contextPath;
+const entryTime = document.body.dataset.entryTime;
+const exitTime = document.body.dataset.exitTime;
+
 // 날짜 포맷팅 함수
 function formatDateTime(dtStr) {
     if(!dtStr || dtStr === "null" || dtStr === "") return "-";
@@ -67,8 +72,8 @@ function closeModal() {
 function printReceipt() {
     const printWindow = window.open('', '_blank', 'width=450,height=700');
     printWindow.document.write('<html><head><title>영수증 인쇄</title>');
-    // 스타일을 유지하기 위해 폰트 설정 등 추가
-    printWindow.document.write('<style>body { font-family: "Malgun Gothic"; }</style>');
+    // 인쇄 창에서도 화면과 같은 영수증 스타일을 사용한다.
+    printWindow.document.write('<link rel="stylesheet" href="' + contextPath + '/css/payment/modal.css">');
     printWindow.document.write('</head><body>');
     printWindow.document.write(document.getElementById("printArea").innerHTML);
     printWindow.document.write('</body></html>');
@@ -81,3 +86,15 @@ function printReceipt() {
         printWindow.close();
     }, 500);
 }
+
+document.getElementById('showReceiptButton').addEventListener('click', showReceipt);
+
+// 영수증은 모달에 복제되므로 이벤트 위임으로 복제된 버튼까지 처리한다.
+document.addEventListener('click', function (event) {
+    if (event.target.closest('.receipt-confirm-button')) {
+        handleConfirm();
+    }
+    if (event.target.closest('.receipt-cancel-button')) {
+        closeModal();
+    }
+});

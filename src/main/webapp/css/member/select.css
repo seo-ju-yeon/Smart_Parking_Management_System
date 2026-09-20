@@ -3,6 +3,10 @@
     margin: 0 auto;
 }
 
+.member-select-container {
+    max-width: 600px;
+}
+
 .notice-box {
     background-color: #e8f4f8;
     border: 1px solid #b3d9e6;

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/auth/login.css">
 </head>
-<body>
+<body data-context-path="${pageContext.request.contextPath}">
 <div class="login-container">
     <h2>관리자 로그인</h2>
 
@@ -42,10 +42,10 @@
 
         <button type="submit" class="btn-login">로그인</button>
     </form>
-    <button type="button" class="btn-forgot"
-            onclick="location.href='${pageContext.request.contextPath}/forgot-password'">
+    <button type="button" class="btn-forgot" id="forgotPasswordBtn">
         🔑 비밀번호 찾기
     </button>
 </div>
+<script src="${pageContext.request.contextPath}/js/auth/login.js"></script>
 </body>
 </html>

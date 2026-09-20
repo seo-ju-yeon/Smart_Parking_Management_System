@@ -61,13 +61,12 @@
         </div>
 
         <!-- 인증번호 발송 후 표시되는 입력 영역 -->
-        <div id="otpGroup"
-             style="display: <%= loginOtpActive ? "block" : "none" %>;">
+        <div id="otpGroup" class="<%= loginOtpActive ? "is-visible" : "" %>">
             <div class="form-group">
                 <label for="otp">인증번호</label>
                 <input type="text" id="otp" name="otp" maxlength="6" placeholder="6자리 인증번호" autocomplete="off">
                 <div class="field-hint">이메일로 전송된 6자리 인증번호를 입력하세요</div>
-                <div class="timer" id="timer" style="display: none;">남은 시간: <span id="timeLeft">05:00</span></div>
+                <div class="timer" id="timer">남은 시간: <span id="timeLeft">05:00</span></div>
                 <div class="field-error" id="otpError"></div>
             </div>
 

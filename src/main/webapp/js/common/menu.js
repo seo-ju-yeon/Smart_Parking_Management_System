@@ -18,7 +18,7 @@ function updateClock() {
         `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-// JSP의 onclick 속성에서 호출하므로 전역 함수로 유지합니다.
+// 메뉴 이동 전에 사용자 확인이 필요한 동작을 공통 함수로 처리합니다.
 function confirmAddManager() {
     return window.confirm('관리자 추가 페이지로 이동하시겠습니까?');
 }
@@ -32,6 +32,28 @@ function toggleDropdown() {
     if (dropdown) {
         dropdown.classList.toggle('show');
     }
+}
+
+const dropdownButton = document.querySelector('.dropbtn');
+if (dropdownButton) {
+    dropdownButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        toggleDropdown();
+    });
+}
+
+const addManagerLink = document.querySelector('.confirm-add-manager');
+if (addManagerLink) {
+    addManagerLink.addEventListener('click', function (event) {
+        if (!confirmAddManager()) event.preventDefault();
+    });
+}
+
+const logoutLink = document.querySelector('.confirm-logout');
+if (logoutLink) {
+    logoutLink.addEventListener('click', function (event) {
+        if (!confirmLogout()) event.preventDefault();
+    });
 }
 
 // 기존 공통 기능에서 호출하는 화면 전환 함수는 호환성을 위해 유지합니다.

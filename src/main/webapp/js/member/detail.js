@@ -4,3 +4,7 @@ function deleteMember(carNum) {
         location.href = '/member/member_delete?carNum=' + encodeURIComponent(carNum);
     }
 }
+
+document.getElementById('deleteMemberButton').addEventListener('click', function () {
+    deleteMember(this.dataset.carNum);
+});

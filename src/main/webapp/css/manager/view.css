@@ -143,3 +143,12 @@ h2 {
     font-size: 18px;
     margin-bottom: 30px;
 }
+
+.flex-button,
+.flex-form {
+    flex: 1;
+}
+
+.full-width-button {
+    width: 100%;
+}

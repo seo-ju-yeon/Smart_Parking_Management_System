@@ -39,9 +39,9 @@
         <%-- ADMIN 또는 SUPER: 관리자 메뉴 토글 표시 --%>
         <% if ("ADMIN".equals(mRole) || "SUPER".equals(mRole)) { %>
         <li class="dropdown">
-            <a href="javascript:void(0);" class="dropbtn" onclick="toggleDropdown()">관리자 메뉴 ▼</a>
+            <a href="#" class="dropbtn">관리자 메뉴 ▼</a>
             <div id="adminSubMenu" class="dropdown-content">
-                <a href="${pageContext.request.contextPath}/mgr/add" onclick="return confirmAddManager();">일반 관리자 추가</a>
+                <a href="${pageContext.request.contextPath}/mgr/add" class="confirm-add-manager">일반 관리자 추가</a>
                 <a href="${pageContext.request.contextPath}/mgr/list">관리자 목록 & 수정</a>
                 <a href="${pageContext.request.contextPath}/mgr/modify">최고 관리자 정보 수정</a>
             </div>
@@ -60,7 +60,7 @@
         <li><a href="${pageContext.request.contextPath}/member/member_search">회원 조회</a></li>
         <li><a href="${pageContext.request.contextPath}/view/policy/list">요금 부과 정책</a></li>
         <li><a href="${pageContext.request.contextPath}/statistics/statistics">매출 통계</a></li>
-        <li><a href="${pageContext.request.contextPath}/logout" onclick="return confirmLogout();">로그아웃</a></li>
+        <li><a href="${pageContext.request.contextPath}/logout" class="confirm-logout">로그아웃</a></li>
     </ul>
 </nav>
 <script src="${pageContext.request.contextPath}/js/common/menu.js"></script>

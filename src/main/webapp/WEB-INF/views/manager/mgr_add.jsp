@@ -61,27 +61,25 @@
 
             <div class="form-group">
                 <label for="email">이메일 <span class="required">*</span></label>
-                <div style="display: flex; gap: 8px;">
+                <div class="email-input-row">
                     <input type="email" id="email" name="email"
                            value="<%= request.getAttribute("email") != null ? request.getAttribute("email") : "" %>"
                            maxlength="100"
-                           placeholder="example@email.com" required
-                           style="flex: 1; margin-bottom: 0;"> <button type="button" id="sendEmailBtn" class="btn btn-secondary"
-                                                                       style="width: 100px; padding: 0; font-size: 14px; height: 45px;">인증요청</button>
+                           placeholder="example@email.com" required class="email-input">
+                    <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>
                 </div>
                 <div class="field-hint">2차 인증에 사용됩니다</div>
                 <div class="field-error" id="emailError"></div>
 
-                <div id="emailAuthGroup" style="margin-top: 12px; display: none;">
-                    <div style="display: flex; gap: 8px;">
+                <div id="emailAuthGroup" class="email-auth-group">
+                    <div class="auth-code-row">
                         <input type="text" id="authCode" placeholder="인증번호 6자리"
-                               maxlength="6" style="flex: 1; margin-bottom: 0;">
-                        <button type="button" id="verifyBtn" class="btn btn-primary"
-                                style="width: 100px; padding: 0; font-size: 14px; height: 45px;">확인</button>
+                               maxlength="6" class="auth-code-input">
+                        <button type="button" id="verifyBtn" class="btn btn-primary verify-code-button">확인</button>
                     </div>
                     <div class="field-hint" id="authHint">이메일로 발송된 번호를 입력해주세요.</div>
                     <%-- 인증번호 유효 시간 표시 --%>
-                    <div id="authTimer" class="auth-timer" style="display: none;">
+                    <div id="authTimer" class="auth-timer initially-hidden">
                         ⏱ 남은 시간: <span id="authTimeLeft">05:00</span>
                     </div>
                 </div>
@@ -89,8 +87,7 @@
 
             <div class="btn-group">
                 <button type="submit" class="btn btn-primary" id="submitBtn">추가하기</button>
-                <button type="button" class="btn btn-secondary"
-                        onclick="location.href='${pageContext.request.contextPath}/dashboard'">
+                <button type="button" class="btn btn-secondary" id="cancelButton">
                     취소
                 </button>
             </div>

@@ -178,3 +178,27 @@
     margin-left: 6px;
     vertical-align: middle;
 }
+
+.list-title-wrapper {
+    overflow: hidden;
+}
+
+.list-title {
+    display: inline-block;
+}
+
+.role-link {
+    color: #667eea;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.normal-manager-link {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.empty-manager-row {
+    padding: 30px;
+    color: #999;
+}

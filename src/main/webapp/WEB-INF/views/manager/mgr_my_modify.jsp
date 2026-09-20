@@ -85,26 +85,23 @@
             <%-- 이메일 인증 영역 --%>
             <div class="form-group">
                 <label for="email">이메일 <span class="required">*</span></label>
-                <div style="display: flex; gap: 8px;">
+                <div class="email-input-row">
                     <input type="email" id="email" name="email"
                            value="<%= manager.getEmail() %>" maxlength="100"
-                           placeholder="example@email.com" required
-                           style="flex: 1; margin-bottom: 0;">
-                    <button type="button" id="sendEmailBtn" class="btn btn-secondary"
-                            style="width: 100px; padding: 0; font-size: 14px; height: 45px;">인증요청</button>
+                           placeholder="example@email.com" required class="email-input">
+                    <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>
                 </div>
                 <div class="field-hint">정보 수정 시 반드시 이메일 인증이 필요합니다.</div>
                 <div class="field-error" id="emailError"></div>
 
                 <%-- 인증번호 입력 영역 --%>
-                <div id="emailAuthGroup" style="margin-top: 12px; display: none;">
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                <div id="emailAuthGroup" class="email-auth-group initially-hidden">
+                    <div class="auth-code-row">
                         <input type="text" id="authCode" placeholder="인증번호 6자리"
-                               maxlength="6" style="flex: 1; margin-bottom: 0;">
-                        <button type="button" id="verifyBtn" class="btn btn-primary"
-                                style="width: 80px; padding: 0; font-size: 14px; height: 45px; flex-shrink: 0;">확인</button>
+                               maxlength="6" class="auth-code-input">
+                        <button type="button" id="verifyBtn" class="btn btn-primary verify-code-button">확인</button>
                     </div>
-                    <div id="authTimer" class="auth-timer" style="display: none;">
+                    <div id="authTimer" class="auth-timer initially-hidden">
                         ⏱ 남은 시간: <span id="authTimeLeft">05:00</span>
                     </div>
                 </div>
@@ -112,8 +109,8 @@
 
             <%-- 처리 버튼 영역 --%>
             <div class="btn-group">
-                <button type="button" class="btn btn-secondary"
-                        onclick="location.href='${pageContext.request.contextPath}/dashboard'">
+                <button type="button" class="btn btn-secondary navigation-button"
+                        data-url="${pageContext.request.contextPath}/dashboard">
                     취소
                 </button>
                 <button type="submit" id="submitBtn" class="btn btn-primary">
@@ -127,8 +124,8 @@
             로그인 정보를 불러올 수 없습니다. 다시 로그인해주세요.
         </div>
         <div class="btn-group">
-            <button type="button" class="btn btn-secondary"
-                    onclick="location.href='${pageContext.request.contextPath}/login'">
+            <button type="button" class="btn btn-secondary navigation-button"
+                    data-url="${pageContext.request.contextPath}/login">
                 로그인 페이지로
             </button>
         </div>

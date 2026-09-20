@@ -468,3 +468,14 @@ document.getElementById('confirmPassword').addEventListener('keydown', e => {
 document.getElementById('inputOtp').addEventListener('input', function () {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
+
+// JSP의 인라인 이벤트 대신 화면 요소에 동작을 연결한다.
+document.getElementById('submitStep1Btn').addEventListener('click', submitStep1);
+document.getElementById('loginBackLink').addEventListener('click', goLogin);
+document.getElementById('sendOtpBtn').addEventListener('click', sendOtp);
+document.getElementById('verifyOtpBtn').addEventListener('click', verifyOtp);
+document.getElementById('restartIdLink').addEventListener('click', function () {
+    goStep(1);
+});
+document.getElementById('resetPasswordBtn').addEventListener('click', submitNewPassword);
+document.getElementById('passwordResetLoginBtn').addEventListener('click', goLogin);

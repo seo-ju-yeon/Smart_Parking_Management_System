@@ -10,6 +10,7 @@
 <head>
     <title>정산 목록</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/list.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
@@ -34,7 +35,7 @@
                         if (paymentList == null || paymentList.isEmpty()) {
                     %>
                     <tr>
-                        <td colspan="6" style="text-align: center;">정산 내역이 없습니다.</td>
+                        <td colspan="6" class="empty-payment-row">정산 내역이 없습니다.</td>
                     </tr>
                     <%
                     } else {

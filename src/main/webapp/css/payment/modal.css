@@ -32,3 +32,87 @@
 .modal-footer { text-align: right; display: flex; gap: 10px; justify-content: center; }
 .btn-confirm { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
 .btn-cancel { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+
+.receipt-modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.receipt-modal-content {
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+.receipt-modal-body {
+    padding: 0;
+    background: none;
+}
+
+.receipt-modal-footer,
+.receipt-print-area {
+    display: none;
+}
+
+.receipt-print-area {
+    overflow: scroll;
+}
+
+.receipt-paper {
+    box-sizing: border-box;
+    width: 330px;
+    margin: 0 auto;
+    padding: 12px;
+    border: 2px solid #0000ff;
+    background: #fff;
+    color: #0000ff;
+    font-family: 'Malgun Gothic', sans-serif;
+    line-height: 1.1;
+}
+
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 2px solid #0000ff;
+}
+
+.receipt-title { margin: 0; font-size: 19px; letter-spacing: 4px; }
+.receipt-copy-label { font-size: 9px; }
+.receipt-table { width: 100%; border-collapse: collapse; border: 1px solid #0000ff; }
+.supplier-table { font-size: 10.5px; }
+.supplier-label { width: 18px; padding: 2px 0; border-right: 1px solid #0000ff; text-align: center; writing-mode: vertical-lr; font-size: 9px; }
+.business-number-label { width: 65px; padding: 3px 0; border-right: 1px solid #0000ff; border-bottom: 1px solid #0000ff; text-align: center; }
+.business-number-value { border-bottom: 1px solid #0000ff; color: #000; font-weight: bold; text-align: center; }
+.receipt-row { height: 20px; }
+.receipt-label-cell { border-right: 1px solid #0000ff; border-bottom: 1px solid #0000ff; text-align: center; }
+.receipt-value-cell { padding-left: 4px; border-right: 1px solid #0000ff; border-bottom: 1px solid #0000ff; color: #000; }
+.name-label { width: 30px; }
+.receipt-right-value { padding-right: 4px; border-bottom: 1px solid #0000ff; color: #000; text-align: right; }
+.receipt-address { padding-left: 4px; border-bottom: 1px solid #0000ff; color: #000; font-size: 9.5px; }
+.no-bottom-border { border-bottom: none; }
+.receipt-value-last { padding-left: 4px; color: #000; }
+.summary-table { margin-top: 4px; font-size: 11px; }
+.summary-row { height: 26px; }
+.summary-label { width: 55px; border-right: 1px solid #0000ff; background: #f0f4ff; text-align: center; }
+.summary-date { width: 90px; border-right: 1px solid #0000ff; color: #000; text-align: center; }
+.summary-amount { padding-right: 4px; color: #000; font-weight: bold; text-align: right; }
+.detail-table { margin-top: 4px; font-size: 10.5px; text-align: center; }
+.detail-table-head { background: #f0f4ff; }
+.detail-header-row { height: 22px; }
+.detail-table-body { color: #000; }
+.detail-row { height: 20px; }
+.detail-bordered-cell { border-right: 1px solid #0000ff; border-bottom: 1px solid #0000ff; }
+.detail-bottom-cell { border-bottom: 1px solid #0000ff; }
+.receipt-total-row { height: 26px; background: #f0f4ff; font-weight: bold; }
+.receipt-total-label { border-right: 1px solid #0000ff; text-align: center; }
+.receipt-total-value { padding-right: 4px; color: #000; text-align: right; }
+.receipt-thanks { margin-top: 6px; margin-bottom: 12px; color: #000; font-size: 9px; text-align: center; }
+.receipt-actions { display: flex; justify-content: center; gap: 10px; padding-top: 10px; border-top: 1px dashed #0000ff; }
+.receipt-action-button { padding: 6px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 13px; font-weight: bold; }
+.receipt-confirm-button { background: #2ecc71; }
+.receipt-cancel-button { background: #7f8c8d; }

@@ -68,15 +68,14 @@
 
         <div class="btn-group-custom">
             <% if (!policy.isActive()) { %>
-            <button type="button" class="btn btn-success btn-custom"
-                    onclick="if(confirm('이 정책을 현재 주차 요금 정책으로 즉시 적용하시겠습니까?'))
-                            location.href='${pageContext.request.contextPath}/view/policy/apply?id=<%= policy.getPolicyId()%>&pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>'">
+            <button type="button" class="btn btn-success btn-custom apply-policy-button"
+                    data-url="${pageContext.request.contextPath}/view/policy/apply?id=<%= policy.getPolicyId()%>&pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>">
                 <i class="fas fa-play mr-1"></i> 정책 적용하기
             </button>
             <% } %>
 
-            <button type="button" class="btn btn-outline-primary btn-custom"
-                    onclick="location.href='${pageContext.request.contextPath}/view/policy/list?pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>'">
+            <button type="button" class="btn btn-outline-primary btn-custom navigation-button"
+                    data-url="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>">
                 <i class="fas fa-list mr-1"></i> 목록으로
             </button>
         </div>
@@ -84,5 +83,6 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/policy/view.js"></script>
 </body>
 </html>

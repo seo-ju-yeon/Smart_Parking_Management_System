@@ -119,8 +119,9 @@
                         <button type="submit" class="btn btn-primary btn-custom shadow-sm mr-2">
                             <i class="fas fa-save mr-1"></i> 정책 저장하기
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-custom"
-                                onclick="location.href='${pageContext.request.contextPath}/view/policy/list'">
+                        <button type="button" id="cancelPolicyButton"
+                                class="btn btn-outline-secondary btn-custom"
+                                data-url="${pageContext.request.contextPath}/view/policy/list">
                             <i class="fas fa-times mr-1"></i> 취소
                         </button>
                     </div>

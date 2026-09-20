@@ -379,3 +379,7 @@ emailInput.addEventListener('input', function() {
     }
     hideError(this.id);
 });
+
+document.getElementById('cancelButton').addEventListener('click', function () {
+    window.location.href = contextPath + '/dashboard';
+});

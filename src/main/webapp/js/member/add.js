@@ -40,3 +40,26 @@ function validateRegister() {
     }
     return true;
 }
+
+const memberSearchForm = document.getElementById('memberSearchForm');
+if (memberSearchForm) {
+    memberSearchForm.addEventListener('submit', function (event) {
+        if (!validateCarNum()) event.preventDefault();
+    });
+}
+
+const memberRegisterForm = document.getElementById('memberRegisterForm');
+if (memberRegisterForm) {
+    memberRegisterForm.addEventListener('submit', function (event) {
+        if (!validateRegister()) event.preventDefault();
+    });
+}
+
+const renewMemberButton = document.getElementById('renewMemberButton');
+if (renewMemberButton) {
+    renewMemberButton.addEventListener('click', function (event) {
+        if (!window.confirm('월정액 1개월을 갱신하시겠습니까?')) {
+            event.preventDefault();
+        }
+    });
+}

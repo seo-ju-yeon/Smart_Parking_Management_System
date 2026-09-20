@@ -133,8 +133,8 @@
                 for (MemberDTO m : dtoList) {
                     boolean isExpired = !m.isSubscribed();
             %>
-            <tr class="<%= isExpired ? "table-secondary" : "" %>" style="cursor: pointer;"
-                onclick="location.href='/member/member_detail?carNum=<%= m.getCarNum() %>&page=<%= currentPage %>'">
+            <tr class="member-row <%= isExpired ? "table-secondary" : "" %>"
+                data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= m.getCarNum() %>&page=<%= currentPage %>">
                 <td><%= displayNo-- %></td>
                 <td><%= m.getCarNum() %></td>
                 <td><%= m.CarTypeText() %></td>
@@ -150,20 +150,16 @@
                     <% } %>
                 </td>
                 <!-- 갱신 버튼: tr 클릭과 분리 -->
-                <td onclick="event.stopPropagation()" style="text-align:center; vertical-align:middle;">
+                <td class="member-action-cell">
                     <% if (isExpired) { %>
-                    <form action="/member/member_list" method="post"
-                          style="display:inline; margin:0;">
+                    <form action="/member/member_list" method="post" class="renew-form">
                         <input type="hidden" name="action" value="renew">
                         <input type="hidden" name="carNum" value="<%= m.getCarNum() %>">
-                        <button type="submit"
-                                onclick="event.stopPropagation(); return confirm('<%= m.getCarNum() %> 1개월 갱신하시겠습니까?')"
-                                style="background:#e67e22; color:#fff; border:none; border-radius:4px;
-                                           padding:4px 12px; font-size:13px; cursor:pointer; width:60px;">갱신</button>
+                        <button type="submit" class="renew-button"
+                                data-car-num="<%= m.getCarNum() %>">갱신</button>
                     </form>
                     <% } else { %>
-                    <button disabled style="background:#2c3e50; color:#fff; border:none; border-radius:4px;
-                                       padding:4px 12px; font-size:13px; cursor:not-allowed; width:60px; opacity:0.7;">갱신</button>
+                    <button type="button" class="renew-button renew-button-disabled" disabled>갱신</button>
                     <% } %>
                 </td>
             </tr>
@@ -194,5 +190,6 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
+<script src="${pageContext.request.contextPath}/js/member/list.js"></script>
 </body>
 </html>

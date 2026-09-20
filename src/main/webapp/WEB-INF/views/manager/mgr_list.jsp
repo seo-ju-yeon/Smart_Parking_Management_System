@@ -21,7 +21,7 @@
             최고 관리자 계정은 이 화면에서 수정할 수 없습니다.<br>
             좌측 메뉴의 <strong>최고 관리자 정보 수정</strong> 탭을 이용해 주세요.
         </div>
-        <button class="modal-btn" onclick="closeAdminModal()">확인</button>
+        <button type="button" id="closeAdminModalButton" class="modal-btn">확인</button>
     </div>
 </div>
 
@@ -34,7 +34,7 @@
             해당 계정은 <strong>시스템의 모든 기능을<br> 조회하기 위해 생성된 전용 계정</strong>입니다.<br><br>
             보안 정책상 이 계정은 수정할 수 없습니다.
         </div>
-        <button class="modal-btn" onclick="closeSuperModal()">확인</button>
+        <button type="button" id="closeSuperModalButton" class="modal-btn">확인</button>
     </div>
 </div>
 
@@ -46,8 +46,8 @@
 
 <div class="main-content">
     <div id="entry" class="page">
-        <div style="overflow: hidden;">
-            <h2 style="display: inline-block;">관리자 계정 목록</h2>
+        <div class="list-title-wrapper">
+            <h2 class="list-title">관리자 계정 목록</h2>
 
         </div>
 
@@ -110,24 +110,20 @@
                     <td>
                         <% if ("ADMIN".equals(mgr.getRole())) { %>
                         <%-- 최고관리자는 상세/수정 진입 대신 안내 모달 표시 --%>
-                        <a href="javascript:void(0);"
-                           onclick="openAdminModal();"
-                           style="color: #667eea; font-weight: bold; cursor: pointer;">
+                        <a href="#" class="role-link open-admin-modal">
                             <%= mgr.getManagerName() %>
                         </a>
                         <span class="badge-admin">최고관리자</span>
                         <% } else if ("SUPER".equals(mgr.getRole())) { %>
                         <%-- 슈퍼관리자는 전용 안내 모달 표시 --%>
-                        <a href="javascript:void(0);"
-                           onclick="openSuperModal();"
-                           style="color: #667eea; font-weight: bold; cursor: pointer;">
+                        <a href="#" class="role-link open-super-modal">
                             <%= mgr.getManagerName() %>
                         </a>
                         <span class="badge-admin">슈퍼관리자</span>
                         <% } else { %>
                         <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
                         <a href="${pageContext.request.contextPath}/mgr/view?id=<%= mgr.getManagerId() %>"
-                           style="color: #007bff; font-weight: bold;">
+                           class="normal-manager-link">
                             <%= mgr.getManagerName() %>
                         </a>
                         <% } %>
@@ -145,7 +141,7 @@
                 } else {
                 %>
                 <tr>
-                    <td colspan="5" style="padding: 30px; color: #999;">등록된 관리자가 없습니다.</td>
+                    <td colspan="5" class="empty-manager-row">등록된 관리자가 없습니다.</td>
                 </tr>
                 <%
                     }

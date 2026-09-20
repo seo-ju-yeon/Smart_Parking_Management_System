@@ -11,7 +11,6 @@ import org.example.smart_parking_260219.dto.MemberDTO;
 import org.example.smart_parking_260219.service.MemberService;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -108,9 +107,6 @@ public class MemberAddController extends HttpServlet {
         String action = req.getParameter("action");
         String carNum = req.getParameter("carNum");
 
-        resp.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = resp.getWriter();
-
         try {
             if ("register".equals(action)) {
                 int carType = Integer.parseInt(req.getParameter("carType"));
@@ -133,19 +129,19 @@ public class MemberAddController extends HttpServlet {
                 memberService.addMember(memberDTO);
                 log.info("회원 등록 완료: {} ({} ~ {})", carNum, startDate, endDate);
 
-                out.println("<script>");
-                out.println("alert('월정액 회원 등록이 완료되었습니다.');");
-                out.println("location.href='/member/member_list';");
-                out.println("</script>");
+                forwardAlert(req, resp,
+                        "월정액 회원 등록이 완료되었습니다.",
+                        "redirect",
+                        req.getContextPath() + "/member/member_list");
 
             } else if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
                 log.info("월정액 갱신 완료: {}", carNum);
 
-                out.println("<script>");
-                out.println("alert('월정액 1개월 갱신이 완료되었습니다.');");
-                out.println("location.href='/member/member_list';");
-                out.println("</script>");
+                forwardAlert(req, resp,
+                        "월정액 1개월 갱신이 완료되었습니다.",
+                        "redirect",
+                        req.getContextPath() + "/member/member_list");
 
             } else {
                 resp.sendRedirect("/member/member_list");
@@ -159,12 +155,29 @@ public class MemberAddController extends HttpServlet {
                     req.getParameter("name"),
                     req.getParameter("startDate"),
                     req.getParameter("endDate"));
-            out.println("<script>");
-            out.println("alert('처리에 실패했습니다: " + e.getMessage() + "');");
-            out.println("history.back();");
-            out.println("</script>");
-        } finally {
-            out.close();
+            forwardAlert(req, resp,
+                    "처리에 실패했습니다.",
+                    "back",
+                    null);
         }
+    }
+
+    /**
+     * Servlet이 실행 가능한 script 문자열을 직접 만들지 않고 공통 알림 화면에 표시 정보만 전달한다.
+     */
+    private void forwardAlert(
+            HttpServletRequest req,
+            HttpServletResponse resp,
+            String message,
+            String action,
+            String url
+    ) throws ServletException, IOException {
+        req.setAttribute("pageAlertMessage", message);
+        req.setAttribute("pageAlertAction", action);
+        if (url != null) {
+            req.setAttribute("pageAlertUrl", url);
+        }
+        req.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                .forward(req, resp);
     }
 }

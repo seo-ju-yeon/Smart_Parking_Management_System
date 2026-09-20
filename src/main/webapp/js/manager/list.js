@@ -27,3 +27,20 @@ document.getElementById('superModal').addEventListener('click', function (e) {
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closeAdminModal(); closeSuperModal(); }
 });
+
+document.getElementById('closeAdminModalButton').addEventListener('click', closeAdminModal);
+document.getElementById('closeSuperModalButton').addEventListener('click', closeSuperModal);
+
+document.querySelectorAll('.open-admin-modal').forEach(link => {
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        openAdminModal();
+    });
+});
+
+document.querySelectorAll('.open-super-modal').forEach(link => {
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        openSuperModal();
+    });
+});

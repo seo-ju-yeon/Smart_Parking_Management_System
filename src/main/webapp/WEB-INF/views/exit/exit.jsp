@@ -1,4 +1,21 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    String space = request.getParameter("id");
+    String carNum = request.getParameter("carNum");
+    String failInput = request.getParameter("fail");
+
+    String alertMessage = null;
+    if ("false".equals(failInput)) alertMessage = "존재하지 않는 차량입니다.";
+    if ("nullId".equals(failInput)) alertMessage = "존재하지 않는 구역입니다.";
+
+    if (alertMessage != null) {
+        request.setAttribute("pageAlertMessage", alertMessage);
+        request.setAttribute("pageAlertAction", "back");
+        request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
+                .forward(request, response);
+        return;
+    }
+%>
 <html>
 <head>
     <title>출차</title>
@@ -6,17 +23,6 @@
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
-<%
-    String space = request.getParameter("id");
-    String carNum = request.getParameter("carNum");
-    String failInput = request.getParameter("fail");
-    if ("false".equals(failInput)) {
-        out.println("<script>alert('존재하지 않는 차량입니다.'); history.back();</script>");
-    }
-    if ("nullId".equals(failInput)) {
-        out.println("<script>alert('존재하지 않는 구역입니다.'); history.back();</script>");
-    }
-%>
 <div class="main-content">
     <div id="exit" class="page">
         <%-- [버그수정] ../output 상대경로 → contextPath 기준 절대경로 --%>

@@ -18,12 +18,13 @@
 <head>
     <title>회원 등록</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/member/add.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-    <div class="container mt-4" style="max-width: 500px;">
+    <div class="container mt-4 member-add-container">
 
         <%-- STEP 1: 차량번호 조회 (member_search.jsp 와 동일한 구조) --%>
         <% if ("search".equals(step)) { %>
@@ -39,7 +40,7 @@
                 차량번호 조회
             </div>
             <div class="card-body">
-                <form action="/member/member_add" method="get" onsubmit="return validateCarNum()">
+                <form id="memberSearchForm" action="/member/member_add" method="get">
                     <div class="form-group">
                         <label>차량번호 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="carNum" id="carNum"
@@ -66,7 +67,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="/member/member_add" method="post" onsubmit="return validateRegister()">
+                <form id="memberRegisterForm" action="/member/member_add" method="post">
                     <input type="hidden" name="action" value="register">
 
                     <div class="form-group">
@@ -232,8 +233,8 @@
             <input type="hidden" name="action" value="renew">
             <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
             <div class="d-flex">
-                <button type="submit" class="btn btn-warning flex-fill mr-2 text-white"
-                        onclick="return confirm('월정액 1개월을 갱신하시겠습니까?')">
+                <button type="submit" id="renewMemberButton"
+                        class="btn btn-warning flex-fill mr-2 text-white">
                     갱신
                 </button>
                 <a href="${pageContext.request.contextPath}/member/member_add" class="btn btn-secondary flex-fill">다시 조회</a>

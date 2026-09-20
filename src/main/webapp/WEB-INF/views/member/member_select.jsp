@@ -15,12 +15,13 @@
 <head>
   <title>회원 선택</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/member/select.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-  <div class="container mt-4" style="max-width: 600px;">
+  <div class="container mt-4 member-select-container">
     <h2 class="mb-4">회원 선택</h2>
 
     <div class="alert alert-info">

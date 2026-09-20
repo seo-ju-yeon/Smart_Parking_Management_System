@@ -1,6 +1,29 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
 
+// 서버가 숨김 DOM에 기록한 차트 데이터를 숫자 배열로 변환한다.
+function readSeries(seriesName) {
+    return Array.from(
+        document.querySelectorAll('[data-series="' + seriesName + '"] [data-value]')
+    ).map(item => ({
+        label: item.dataset.label,
+        value: Number(item.dataset.value)
+    }));
+}
+
+const hourlySalesSeries = readSeries('hourly-sales');
+const hourlyCountSeries = readSeries('hourly-counts');
+const dailySalesSeries = readSeries('daily-sales');
+const carTypeSeries = readSeries('car-types');
+
+const hourlyLabels = hourlySalesSeries.map(item => item.label);
+const hourlySalesData = hourlySalesSeries.map(item => item.value);
+const hourlyCountData = hourlyCountSeries.map(item => item.value);
+const dailyLabels = dailySalesSeries.map(item => item.label.substring(8) + '일');
+const dailyData = dailySalesSeries.map(item => item.value);
+const carLabels = carTypeSeries.map(item => item.label);
+const carData = carTypeSeries.map(item => item.value);
+
 window.onload = function() {
     renderHourlyChart();
     renderDailyChart();
@@ -100,3 +123,7 @@ function changeStatisticsDate(input) {
     form.action = contextPath + '/statistics/statistics';
     form.submit();
 }
+
+document.getElementById('statisticsDate').addEventListener('change', function () {
+    changeStatisticsDate(this);
+});

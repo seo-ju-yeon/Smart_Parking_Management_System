@@ -7,8 +7,15 @@
 
     // 2. 데이터 가져오기 (Null 방어 포함)
     List<StatisticsDTO> hSalesList = (List<StatisticsDTO>) request.getAttribute("hourlySales");
+    List<StatisticsDTO> hCountsList = (List<StatisticsDTO>) request.getAttribute("hourlyCounts");
     List<StatisticsDTO> dSalesList = (List<StatisticsDTO>) request.getAttribute("dailySales");
+    List<StatisticsDTO> carTypeStatsList = (List<StatisticsDTO>) request.getAttribute("carTypeStats");
     int monthSubscribedFee = (int) request.getAttribute("monthSubscribedFee");
+
+    if (hSalesList == null) hSalesList = java.util.Collections.emptyList();
+    if (hCountsList == null) hCountsList = java.util.Collections.emptyList();
+    if (dSalesList == null) dSalesList = java.util.Collections.emptyList();
+    if (carTypeStatsList == null) carTypeStatsList = java.util.Collections.emptyList();
 
     // 3. 일 총 매출 직접 계산 (hSalesList 순회)
     long daySum = 0;
@@ -50,7 +57,7 @@
             <form action="${pageContext.request.contextPath}/payment/payment_list" method="get" class="control-bar" id="dateForm">
                 <div class="selector-box">
                     <div class="btn-label">조회 기준일</div>
-                    <input type="date" name="targetDate" value="${targetDate}" onchange="changeStatisticsDate(this)">
+                    <input type="date" id="statisticsDate" name="targetDate" value="${targetDate}">
                     <button type="submit" class="btn-search">조회</button>
                 </div>
             </form>
@@ -91,44 +98,29 @@
     </div>
 </div>
 
-<script>
-    // 1. 서버에서 넘어온 데이터를 JS 배열로 변환
-    <%
-        List<StatisticsDTO> hSales = (List<StatisticsDTO>) request.getAttribute("hourlySales");
-        List<StatisticsDTO> hCounts = (List<StatisticsDTO>) request.getAttribute("hourlyCounts");
-        List<StatisticsDTO> dSales = (List<StatisticsDTO>) request.getAttribute("dailySales");
-        List<StatisticsDTO> cStats = (List<StatisticsDTO>) request.getAttribute("carTypeStats");
-    %>
-
-    // 시간대별 데이터 - 0시~23시까지의 매출 및 입차 대수
-    const hourlyLabels = [
-        <% for(StatisticsDTO dto : hSales) { %> "<%= dto.getLabel() %>", <% } %>
-    ];
-    const hourlySalesData = [
-        <% for(StatisticsDTO dto : hSales) { %> <%= dto.getValue() %>, <% } %>
-    ];
-    const hourlyCountData = [
-        <% for(StatisticsDTO dto : hCounts) { %> <%= dto.getValue() %>, <% } %>
-    ];
-
-    // 일별 매출 데이터 - 해당 월의 1일~말일까지의 일간 합계
-    const dailyLabels = [
-        <% for(StatisticsDTO dto : dSales) { %>
-        "<%= dto.getLabel().substring(8) %>일", // "2026-02-01" 형태에서 일자만 추출
+<%-- 서버 데이터는 실행 가능한 JavaScript 문자열 대신 숨김 DOM의 data-* 속성으로 전달한다. --%>
+<div id="statisticsData" hidden>
+    <div data-series="hourly-sales">
+        <% for (StatisticsDTO dto : hSalesList) { %>
+        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
         <% } %>
-    ];
-    const dailyData = [
-        <% for(StatisticsDTO dto : dSales) { %> <%= dto.getValue() %>, <% } %>
-    ];
-
-    // 차종별 데이터 - 일반, 경차, 장애인 등 차종별 카운트
-    const carLabels = [
-        <% for(StatisticsDTO dto : cStats) { %> "<%= dto.getLabel() %>", <% } %>
-    ];
-    const carData = [
-        <% for(StatisticsDTO dto : cStats) { %> <%= dto.getValue() %>, <% } %>
-    ];
-</script>
+    </div>
+    <div data-series="hourly-counts">
+        <% for (StatisticsDTO dto : hCountsList) { %>
+        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <% } %>
+    </div>
+    <div data-series="daily-sales">
+        <% for (StatisticsDTO dto : dSalesList) { %>
+        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <% } %>
+    </div>
+    <div data-series="car-types">
+        <% for (StatisticsDTO dto : carTypeStatsList) { %>
+        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <% } %>
+    </div>
+</div>
 
 <script src="${pageContext.request.contextPath}/js/statistics/statistics.js"></script>
 </body>
