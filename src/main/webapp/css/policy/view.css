@@ -1,0 +1,80 @@
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* 가로축 중앙 정렬 */
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background-color: #f8f9fc;
+}
+.detail-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 40px;
+    margin-top: 30px;
+
+    width: 100%;            /* 모바일 대응 */
+    max-width: 900px;       /* [추가] 상세페이지는 리스트보다 조금 좁은 게 더 예쁩니다 */
+    margin-left: auto;      /* [추가] 좌우 마진 자동 */
+    margin-right: auto;     /* [추가] 좌우 마진 자동 */
+}
+.detail-header {
+    border-bottom: 2px solid #f8f9fa;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+}
+.detail-header h2 {
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+.info-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.info-item {
+    flex: 0 0 50%; /* 2단 구성 */
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 10px;
+    border-bottom: 1px solid #fcfcfc;
+}
+.info-label {
+    width: 150px;
+    font-weight: 600;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+}
+.info-label i {
+    margin-right: 10px;
+    color: #4e73df;
+    width: 20px;
+    text-align: center;
+}
+.info-value {
+    font-size: 1.1rem;
+    color: #495057;
+    font-weight: 500;
+}
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.btn-group-custom {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.btn-custom {
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s;
+}

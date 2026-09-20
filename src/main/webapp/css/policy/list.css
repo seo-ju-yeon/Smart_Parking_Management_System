@@ -1,0 +1,83 @@
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background-color: #f8f9fc;
+}
+
+.list-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 30px;
+    margin-top: 20px;
+
+    width: 100%;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f8f9fa;
+    padding-bottom: 15px;
+}
+.list-header h2 {
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+/* 테이블 스타일 개선 */
+.table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+.table thead th {
+    border: none;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    text-align: center;
+}
+.table tbody tr {
+    cursor: pointer; /* 마우스 오버 시 손가락 모양 */
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+}
+.table tbody tr:hover {
+    transform: translateY(-2px);
+    background-color: #f8faff;
+}
+.table td {
+    vertical-align: middle;
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f1f1f1;
+}
+.table td:first-child { border-left: 1px solid #f1f1f1; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.table td:last-child { border-right: 1px solid #f1f1f1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+
+.table-responsive {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.active-row { background-color: #f0f8ff !important; border: 1px solid #4e73df !important; }
+.policy-link { font-weight: 700; color: #4e73df; text-decoration: none; }
+.policy-link:hover { text-decoration: underline; }
+
+/* 페이지네이션 스타일 */
+.pagination-container .btn {
+    border-radius: 5px;
+    margin: 0 2px;
+    font-weight: 600;
+}
