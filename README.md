@@ -133,22 +133,30 @@ src/main/java/org/example/smart_parking_260219
 src/main/webapp
 ├── index.jsp
 ├── css
-│   ├── auth        # 로그인 화면 스타일
+│   ├── auth        # 로그인, OTP, 비밀번호 찾기 스타일
 │   ├── common      # 공통 스타일
 │   ├── dashboard   # 대시보드 스타일
+│   ├── exit        # 출차 화면 스타일
+│   ├── manager     # 관리자 계정 관리 스타일
 │   ├── member      # 회원 관리 스타일
 │   ├── payment     # 결제 화면 스타일
+│   ├── policy      # 요금 정책 스타일
 │   └── statistics  # 통계 화면 스타일
 ├── js
-│   ├── common      # 공통 스크립트
+│   ├── auth        # 로그인, OTP, 비밀번호 찾기 동작
+│   ├── common      # 공통 메뉴와 알림 처리
 │   ├── dashboard   # 대시보드 스크립트
+│   ├── exit        # 출차 화면 동작
+│   ├── manager     # 관리자 계정 관리 동작
 │   ├── member      # 회원 관리 스크립트
-│   └── payment     # 결제 화면 스크립트
+│   ├── payment     # 결제와 영수증 처리
+│   ├── policy      # 요금 정책 화면 동작
+│   └── statistics  # 통계 차트와 조회 조건 처리
 └── WEB-INF
     ├── web.xml
     └── views
         ├── auth        # 로그인/이메일 인증 화면
-        ├── common      # 공통 메뉴와 레이아웃
+        ├── common      # 공통 메뉴와 요청 처리 알림
         ├── dashboard   # 대시보드
         ├── entry       # 입차 관리
         ├── exit        # 출차 관리
@@ -159,7 +167,9 @@ src/main/webapp
         └── statistics  # 통계 화면
 ```
 
-JSP는 브라우저에서 직접 접근하지 않도록 `WEB-INF/views` 아래에 두고 기능별 디렉터리로 구분했습니다. CSS와 JavaScript도 기능별로 분류했으며, 디렉터리명과 파일 참조 경로는 소문자로 통일했습니다. 정적 리소스를 참조할 때는 애플리케이션의 배포 경로가 바뀌어도 동작하도록 Context Path를 기준으로 경로를 생성합니다.
+JSP는 브라우저에서 직접 접근하지 않도록 `WEB-INF/views` 아래에 두고 기능별 디렉터리로 구분했습니다. CSS와 JavaScript도 동일한 기능 단위로 분류했으며, 디렉터리명과 파일 참조 경로는 소문자로 통일했습니다. 정적 리소스를 참조할 때는 애플리케이션의 Context Path를 기준으로 경로를 생성합니다.
+
+JSP에 있던 인라인 스타일과 `onclick`, `onsubmit`, `onchange` 이벤트는 화면별 CSS·JavaScript 파일로 이동했습니다. JSP나 Servlet이 JavaScript 코드를 직접 생성하던 알림 응답은 공통 알림 JSP에 메시지와 이동 정보만 전달하도록 변경했고, 결제 시간과 통계 값처럼 JavaScript에서 필요한 서버 값은 HTML의 `data-*` 속성을 통해 전달합니다.
 
 ### 주요 테이블
 
@@ -253,9 +263,15 @@ DB 초기 스키마와 샘플 데이터는 `src/main/resources/sql/init.sql`을 
 
 개발 환경마다 사용하는 JDK 버전이 달라 빌드 결과가 달라지는 문제를 줄이기 위해 Gradle Java Toolchain을 Java 17로 고정했습니다. 프로젝트가 요구하는 Java 버전을 빌드 설정에 명시해 동일한 기준으로 컴파일할 수 있도록 했습니다.
 
-### JSP·CSS·JavaScript 구조 통일
+### JSP와 정적 리소스 구조 통일
 
 여러 경로에 나뉘어 있던 JSP를 `WEB-INF/views` 아래의 기능별 디렉터리로 정리했습니다. CSS와 JavaScript도 소문자 디렉터리와 기능별 구조로 통일하고, Servlet과 JSP의 화면 이동 경로 및 정적 리소스 참조 경로를 함께 수정했습니다.
+
+- JSP는 서버 데이터 출력과 화면 구조를 담당합니다.
+- CSS는 화면별 스타일을 담당하며 JSP의 인라인 `style` 속성을 사용하지 않습니다.
+- JavaScript는 폼 검증, 버튼 이벤트, 화면 이동과 모달 동작을 담당합니다.
+- Servlet과 JSP는 실행 가능한 `<script>` 문자열을 응답으로 직접 생성하지 않고 공통 알림 화면에 표시할 값만 전달합니다.
+- 화면별 JavaScript가 필요한 서버 값은 `data-*` 속성에서 읽습니다.
 
 ### 인증 및 보안 개선
 
