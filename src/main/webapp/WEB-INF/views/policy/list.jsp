@@ -217,7 +217,6 @@
         </div>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 </body>
 </html>

@@ -104,7 +104,6 @@
     </div>
   </div>
 </div>
-    <script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
     <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
     <script>
         // 행 전체를 클릭하면 해당 차량의 출차 메뉴로 이동

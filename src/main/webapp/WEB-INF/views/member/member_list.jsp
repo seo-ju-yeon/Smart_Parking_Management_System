@@ -193,7 +193,6 @@
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 </body>
 </html>

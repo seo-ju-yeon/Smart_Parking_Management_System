@@ -392,7 +392,6 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script>
     // 최고관리자 접근 차단 모달 제어

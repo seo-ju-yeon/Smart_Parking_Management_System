@@ -210,7 +210,6 @@
     </div>
     <!-- 영수증 -->
 </div>
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 
 <script>

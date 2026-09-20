@@ -200,7 +200,6 @@
         </div>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script>
     // 유효성 검사
     function registerMember() {
@@ -212,4 +211,3 @@
 </script>
 </body>
 </html>
-

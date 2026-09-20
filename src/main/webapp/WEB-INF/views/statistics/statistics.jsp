@@ -91,7 +91,6 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/js/common/menu.js"></script>
 <script>
     // 1. 서버에서 넘어온 데이터를 JS 배열로 변환
     <%
