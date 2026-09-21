@@ -1,5 +1,6 @@
 package org.example.smart_parking_260219.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.FeePolicyDAO;
 import org.example.smart_parking_260219.dao.MemberDAO;
 import org.example.smart_parking_260219.dao.StatisticsDAO;
@@ -10,6 +11,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+@Log4j2
 public enum StatisticsService {
     INSTANCE;
 
@@ -91,8 +93,7 @@ public enum StatisticsService {
             int fee = FeePolicyService.getInstance().getPolicy().getSubscribedFee();
             return count * fee;
         } catch (Exception e) {
-            // 로그를 찍어서 에러 원인을 파악해야 합니다.
-            System.out.println("Service Error: " + e.getMessage());
+            log.error("월정액 매출 계산 중 오류 발생", e);
             return 0;
         }
     }

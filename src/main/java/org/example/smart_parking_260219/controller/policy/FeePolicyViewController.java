@@ -5,11 +5,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.FeePolicyDTO;
 import org.example.smart_parking_260219.service.FeePolicyService;
 
 import java.io.IOException;
 
+@Log4j2
 @WebServlet(name = "FeePolicyViewController", value = "/view/policy")
 public class FeePolicyViewController extends HttpServlet {
 
@@ -30,7 +32,7 @@ public class FeePolicyViewController extends HttpServlet {
                 req.setAttribute("policy", dto);
             } catch (Exception e) {
                 // 예외 발생 시 로그를 남기거나 에러 페이지로 보냅니다.
-                e.printStackTrace();
+                log.error("요금 정책 조회 중 오류 발생", e);
             }
 
         }

@@ -43,14 +43,11 @@ public class StatisticsController extends HttpServlet {
 
             // 일일 매출 총합 계산 (hourlySales 리스트의 value 합산)
             long dayTotal = hourlySales.stream().mapToLong(StatisticsDTO::getValue).sum();
-            log.info("dayTotal: " + dayTotal);
 
             // 월간 매출 총합 계산 (dailySales 리스트의 value 합산)
             long monthTotal = dailySales.stream().mapToLong(StatisticsDTO::getValue).sum();
-            log.info("monthTotal: " + monthTotal);
 
             int monthSubscribedFee = statisticsService.getMonthlySales();
-            log.info("monthSubscribedFee: " + monthSubscribedFee);
 
             // 4. JSP 화면으로 전달하기 위해 request에 setAttribute
             req.setAttribute("targetDate", targetDate);
@@ -63,16 +60,14 @@ public class StatisticsController extends HttpServlet {
             req.setAttribute("monthSubscribedFee", monthSubscribedFee);
 
             // 5. 결과를 보여줄 JSP로 포워딩
-            log.info(req.getRequestURI());
             req.getRequestDispatcher("/WEB-INF/views/statistics/statistics.jsp").forward(req, resp);
 
         } catch (Exception e) {
-            log.error("StatisticsController failed: " + e.getMessage());
+            log.error("통계 데이터 조회 중 오류 발생", e);
             // 에러 발생 시 처리 (예: 에러 페이지로 리다이렉트)
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "통계 데이터를 불러올 수 없습니다.");
         }
     }
 
 }
-
 

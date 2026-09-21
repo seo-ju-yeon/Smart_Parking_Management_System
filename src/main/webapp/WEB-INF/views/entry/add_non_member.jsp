@@ -10,7 +10,6 @@
 <%
     String space = (String) request.getAttribute("id");
     String carNum = (String) request.getAttribute("carNum");
-    System.out.println("spaceId : " + space);
 %>
 <div class="main-content">
     <div id="exit" class="page">

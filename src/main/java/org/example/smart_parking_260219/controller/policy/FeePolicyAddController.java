@@ -28,8 +28,6 @@ public class FeePolicyAddController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        log.info("요금 정책 등록 처리 시작...");
-
         try {
             // 1. 파라미터 수집 및 DTO 생성
             FeePolicyDTO feePolicyDTO = FeePolicyDTO.builder()
@@ -45,8 +43,6 @@ public class FeePolicyAddController extends HttpServlet {
                     .isActive(Boolean.parseBoolean(req.getParameter("isActive")))
                     .build();
 
-            log.info("생성된 DTO: " + feePolicyDTO);
-
             // 2. 서비스 계층 호출 (등록 실행)
             feePolicyService.addPolicy(feePolicyDTO);
 
@@ -54,10 +50,9 @@ public class FeePolicyAddController extends HttpServlet {
             resp.sendRedirect("/view/policy/list");
 
         } catch (Exception e) {
-            log.error("등록 중 오류 발생: " + e.getMessage());
+            log.error("요금 정책 등록 중 오류 발생", e);
             // 4. 실패 시 에러 메시지와 함께 다시 등록 폼으로 이동
             resp.sendRedirect("/view/policy/add?error=fail");
         }
     }
 }
-

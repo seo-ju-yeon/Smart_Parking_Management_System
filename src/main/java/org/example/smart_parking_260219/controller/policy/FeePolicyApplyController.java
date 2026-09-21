@@ -5,10 +5,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.FeePolicyService;
 
 import java.io.IOException;
 
+@Log4j2
 @WebServlet(name = "FeePolicyApplyController", value = "/view/policy/apply")
 public class FeePolicyApplyController extends HttpServlet {
     private final FeePolicyService feePolicyService = FeePolicyService.getInstance();
@@ -26,7 +28,7 @@ public class FeePolicyApplyController extends HttpServlet {
                 // 서비스에 정책 적용 로직 호출
                 feePolicyService.applyPolicy(id);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("요금 정책 적용 중 오류 발생", e);
             }
         }
 

@@ -37,7 +37,6 @@ public class FeePolicyService {
 
     // 신규 추가: 월정액 요금 조회
     public Integer getSubscribedFee() throws Exception {
-        log.info("getSubscribedFee() 호출");
         try (Connection connection = DBConnection.INSTANCE.getConnection()) {
             return feePolicyDAO.getSubscribedFee(connection);
         }
@@ -45,8 +44,6 @@ public class FeePolicyService {
 
     // [정책 등록]
     public void addPolicy(FeePolicyDTO feePolicyDTO) {
-        log.info("addPolicy()");
-
         // 수치 입력시 기본값이 0보다 커야 함.
         if (feePolicyDTO.getDefaultTime() <= 0) {
             throw new IllegalArgumentException("defaultTime은 0보다 커야 합니다.");
@@ -86,8 +83,8 @@ public class FeePolicyService {
                 .isActive(true)
                 .modifyDate(originalVo.getModifyDate())
                 .build();
-        log.info("feePolicyVo : {}" , feePolicyVo);
         feePolicyDAO.insertPolicy(feePolicyVo);
+        log.info("요금 정책 등록 완료");
     }
 
     // [목록 조회]
@@ -126,6 +123,6 @@ public class FeePolicyService {
         // 2. 선택한 특정 ID의 정책만 켬 (새로 추가한 메서드 호출)
         feePolicyDAO.activatePolicy(id);
 
-        log.info(id + "번 요금 정책이 현재 정책으로 적용되었습니다.");
+        log.info("요금 정책 적용 완료 - 정책 ID: {}", id);
     }
 }

@@ -24,10 +24,7 @@ public class FeePolicyDAO {
     // 새로운 정책 등록 (생성된 PK 반환)
     public void insertPolicy(FeePolicyVO feePolicyVo) {
         /* 데이터베이스에 정책을 추가하는 메서드 */
-        log.info("feePolicyVo : {}", feePolicyVo);
-
         LocalDateTime registrationTime = LocalDateTime.now();
-        log.info("feePolicyVo : {} | 등록 시각 : {}", feePolicyVo, registrationTime);
 
         String sql = "INSERT INTO fee_policy " +
                 " (grace_period, default_time, default_fee, extra_time, extra_fee, light_discount, " +
@@ -199,7 +196,6 @@ public class FeePolicyDAO {
 
             return preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            log.error("정책 활성화 중 오류 발생 (ID: " + id + ")", e);
             throw new RuntimeException(e);
         }
     }
