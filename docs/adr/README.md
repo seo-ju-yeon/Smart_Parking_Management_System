@@ -16,6 +16,8 @@
 1. [시연용 인증 우회 제거](001-remove-demo-authentication-bypass.md)
 2. [권한별 추가 확인 완료 전 보호 경로 접근 차단](002-require-complete-authentication-for-protected-routes.md)
 3. [OTP 인증 후 세션 기반 비밀번호 변경 허가 도입](003-use-session-bound-password-reset.md)
+4. [Docker Compose와 Flyway로 로컬 데이터베이스 환경 구성](004-use-docker-compose-and-flyway-for-local-database.md)
+5. [로컬 이메일 확인에 Mailpit 사용](005-use-mailpit-for-local-email-testing.md)
 
 ## 상태
 
