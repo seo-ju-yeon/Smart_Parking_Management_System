@@ -44,4 +44,5 @@ bin/
 .DS_Store
 
 ### Local application secrets ###
+.env
 src/main/resources/application.properties
