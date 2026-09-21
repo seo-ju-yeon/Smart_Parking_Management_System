@@ -205,7 +205,15 @@ docker compose up -d
 docker compose ps -a
 ```
 
-MariaDB는 `healthy`, Flyway는 마이그레이션 완료 후 `Exited (0)`으로 표시되면 정상입니다. 기본 DB 포트는 3306이며, 충돌하는 경우 `.env`의 `DB_PORT`와 아래 JDBC URL의 포트를 같은 값으로 변경합니다.
+다음 상태로 표시되면 로컬 인프라가 정상적으로 준비된 것입니다.
+
+| 서비스 | 정상 상태 | 역할 |
+| --- | --- | --- |
+| `db` | `Up (healthy)` | MariaDB 실행 |
+| `flyway` | `Exited (0)` | 마이그레이션 적용 후 정상 종료 |
+| `mailpit` | `Up` | 로컬 SMTP와 메일 확인 화면 제공 |
+
+기본 DB 포트는 3306이며, 충돌하는 경우 `.env`의 `DB_PORT`와 아래 JDBC URL의 포트를 같은 값으로 변경합니다.
 
 애플리케이션의 민감정보는 소스 코드에 직접 작성하지 않고 `src/main/resources/application.properties`에서 읽습니다. 예시 파일을 복사한 뒤 로컬 환경에 맞게 수정합니다.
 
@@ -231,9 +239,57 @@ mail.debug=false
 
 `db.password`는 `.env`의 `MARIADB_PASSWORD`와 동일한 값으로 설정합니다.
 
-로컬 OTP 메일은 Mailpit이 수신하며 `http://localhost:8025`에서 확인할 수 있습니다. 실제 SMTP 발송이 필요한 환경에서는 `config/naver-smtp.properties.example`을 참고해 환경변수를 설정합니다. 실제 SMTP 계정과 비밀번호는 저장소에 커밋하지 않습니다.
+### 로컬 시연 계정
+
+로컬 Compose 환경에서는 Flyway가 다음 시연 계정을 자동으로 생성합니다. 이 계정과 비밀번호는 로컬 기능 확인만을 위한 값이며 다른 환경의 초기 데이터에는 포함하지 않습니다.
+
+| 아이디 | 비밀번호 | 역할 | 추가 확인 방법 |
+| --- | --- | --- | --- |
+| `demo_normal` | `normal1234` | `NORMAL` | `demo-normal@smartparking.local` 입력값과 등록 이메일 일치 확인 |
+| `demo_super` | `super1234` | `SUPER` | `demo-super@smartparking.local`로 발송된 OTP를 Mailpit에서 확인 |
+
+`demo_super`로 로그인한 뒤 OTP가 발송되면 다음 순서로 확인합니다.
+
+1. 브라우저에서 `http://localhost:8025`에 접속합니다.
+2. Mailpit 수신함에서 가장 최근 OTP 메일을 엽니다.
+3. 메일의 6자리 인증번호를 애플리케이션에 입력합니다.
+
+Mailpit은 메일을 실제 외부 주소로 전달하지 않고 로컬에서 보관합니다. 재발송하면 요청한 횟수만큼 메일이 저장되므로 가장 최근에 발급된 인증번호를 사용합니다. 관리자 등록·수정과 비밀번호 찾기에서 발송되는 메일도 같은 수신함에서 확인할 수 있습니다.
+
+### 실제 SMTP 설정
+
+실제 SMTP 발송이 필요한 환경에서는 `config/naver-smtp.properties.example`을 참고합니다. 이 파일은 참고용이며 애플리케이션이 자동으로 읽지 않습니다. 필요한 값을 Git에서 제외된 `application.properties`에 옮기거나 다음 환경변수로 제공합니다.
+
+```text
+MAIL_HOST
+MAIL_PORT
+MAIL_FROM
+MAIL_AUTH
+MAIL_SSL_ENABLE
+MAIL_STARTTLS_ENABLE
+MAIL_DEBUG
+MAIL_USERNAME
+MAIL_PASSWORD
+```
+
+환경변수는 `application.properties`보다 우선합니다. 실제 SMTP 계정과 앱 비밀번호는 저장소에 커밋하지 않으며, 설정 변경 후에는 애플리케이션을 다시 시작합니다.
 
 데이터베이스 스키마와 필수 기준 데이터는 `src/main/resources/db/migration`의 Flyway 버전 마이그레이션으로 관리합니다. 로컬 시연 데이터는 `docker/flyway/local`의 반복 마이그레이션으로 분리했으며, 로컬 Docker Compose 실행 시 함께 적용됩니다.
+
+### 로컬 데이터베이스 초기화
+
+Flyway가 빈 데이터베이스를 처음부터 다시 구성하는 과정을 확인하려면 다음 명령을 사용합니다.
+
+> `docker compose down -v`는 `db_data` 볼륨과 로컬에서 추가·수정한 데이터를 모두 삭제합니다. 보존할 데이터가 없는지 확인한 후 실행해야 합니다.
+
+```bash
+docker compose down -v
+docker compose up -d
+docker compose ps -a
+docker compose logs flyway
+```
+
+재생성 후 `db`가 `healthy`, `flyway`가 `Exited (0)`인지 다시 확인합니다.
 
 빌드 확인:
 
