@@ -32,8 +32,8 @@ public enum MemberService {
     // 회원 등록
     public void addMember(MemberDTO memberDTO) throws SQLException {
         MemberVO memberVO = modelMapper.map(memberDTO, MemberVO.class);
-        log.info(memberVO);
         memberDAO.insertMember(memberVO);
+        log.info("회원 등록 완료 - 차량번호: {}", memberVO.getCarNum());
     }
 
     // 회원 목록 조회
@@ -57,7 +57,7 @@ public enum MemberService {
         MemberVO memberVO = memberDAO.selectOneMember(carNum);
 
         if (memberVO == null) {
-            log.info("회원 정보 없음: {}", carNum);
+            log.info("회원 조회 결과 없음");
             return null;
         }
 
@@ -77,6 +77,7 @@ public enum MemberService {
     public void modifyMember(MemberDTO memberDTO) throws SQLException {
         MemberVO memberVO = modelMapper.map(memberDTO, MemberVO.class);
         memberDAO.updateMember(memberVO);
+        log.info("회원 정보 수정 완료 - 차량번호: {}", memberVO.getCarNum());
     }
 
     // 월정액 만료 고객 월정액 여부 false로 변경
@@ -88,7 +89,7 @@ public enum MemberService {
     // 월정액 갱신 (insert로 데이터를 중첩하여 갱신 데이터 관리)
     public void renewSubscription(String carNum) throws SQLException {
         MemberVO memberVO = memberDAO.selectOneMember(carNum);
-        if (memberVO == null) throw new SQLException("회원 없음: " + carNum);
+        if (memberVO == null) throw new SQLException("갱신할 회원 정보가 없습니다.");
 
         LocalDate baseDate = memberVO.getEndDate();
         LocalDate today = LocalDate.now();
@@ -114,11 +115,12 @@ public enum MemberService {
                 .build();
 
         memberDAO.insertSubscription(memberVO1);
-        log.info("월정액 갱신 완료: {} ({} ~ {})", carNum, newStart, newEnd);
+        log.info("월정액 갱신 완료 - 차량번호: {}", carNum);
     }
 
     // 회원 삭제
     public void removeMember(String carNum) throws SQLException {
         memberDAO.deleteMember(carNum);
+        log.info("회원 삭제 완료 - 차량번호: {}", carNum);
     }
 }

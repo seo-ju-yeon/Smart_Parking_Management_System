@@ -41,13 +41,13 @@ public class MemberSubscribeController extends HttpServlet {
 
             if (member == null) {
                 // 차량번호 없음 → 회원등록 페이지로 이동
-                log.info("차량번호 없음 → 회원등록: {}", carNum);
+                log.info("기존 회원 조회 결과 없음 - 회원 등록 화면으로 이동");
                 resp.sendRedirect(req.getContextPath() + "/member/member_add?carNum=" + encodedCarNum);
                 return;
             }
 
             // 차량번호 있음 → 기존 회원 등록 화면의 월정액 갱신 단계로 이동
-            log.info("차량번호 있음 → 월정액 등록: {}", carNum);
+            log.info("기존 회원 조회 완료 - 월정액 갱신 화면으로 이동");
             resp.sendRedirect(req.getContextPath()
                     + "/member/member_add?step=renew&carNum=" + encodedCarNum);
 
@@ -67,7 +67,6 @@ public class MemberSubscribeController extends HttpServlet {
         try {
             // 1개월 갱신: endDate 다음날부터 시작
             memberService.renewSubscription(carNum);
-            log.info("월정액 등록 완료: {}", carNum);
             String encodedCarNum = URLEncoder.encode(carNum, StandardCharsets.UTF_8);
             resp.sendRedirect(req.getContextPath()
                     + "/member/member_detail?carNum=" + encodedCarNum + "&success=subscribe");

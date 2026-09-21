@@ -31,14 +31,13 @@ public class MemberSearchController extends HttpServlet {
         }
 
         carNum = carNum.trim();
-        log.info("검색 차량번호: {}", carNum);
 
         try {
             // 차량번호 4자리로 검색
             List<MemberDTO> matchedMembers = memberService.getCarNum(carNum);
 
             if (matchedMembers == null || matchedMembers.isEmpty()) {
-                log.warn("검색 결과 없음: {}", carNum);
+                log.info("회원 검색 결과 없음");
                 req.setAttribute("error", "notFound");
                 req.setAttribute("searchCarNum", carNum);
                 req.getRequestDispatcher("/WEB-INF/views/member/member_search.jsp").forward(req, resp);

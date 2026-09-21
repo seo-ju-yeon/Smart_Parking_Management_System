@@ -77,11 +77,11 @@ public class MemberAddController extends HttpServlet {
 
             if (matchedMembers == null || matchedMembers.isEmpty()) {
                 // STEP2: 결과 없음 → 바로 신규 등록 폼
-                log.info("신규 차량 → 등록 폼: {}", carNum);
+                log.info("신규 차량 조회 결과 - 등록 폼으로 이동");
                 req.setAttribute("step", "register");
             } else {
                 // STEP3: 중복 목록 → 선택 화면
-                log.info("중복 차량 {}건 → 선택 화면: {}", matchedMembers.size(), carNum);
+                log.info("차량 조회 결과 {}건 - 선택 화면으로 이동", matchedMembers.size());
                 req.setAttribute("matchedMembers", matchedMembers);
                 req.setAttribute("step", "select");
             }
@@ -127,7 +127,6 @@ public class MemberAddController extends HttpServlet {
                         .build();
 
                 memberService.addMember(memberDTO);
-                log.info("회원 등록 완료: {} ({} ~ {})", carNum, startDate, endDate);
 
                 forwardAlert(req, resp,
                         "월정액 회원 등록이 완료되었습니다.",
@@ -136,7 +135,6 @@ public class MemberAddController extends HttpServlet {
 
             } else if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
-                log.info("월정액 갱신 완료: {}", carNum);
 
                 forwardAlert(req, resp,
                         "월정액 1개월 갱신이 완료되었습니다.",
@@ -149,12 +147,6 @@ public class MemberAddController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("member_add POST 오류 상세", e);
-            // 2. 모든 파라미터를 다 찍어봅니다.
-            log.info("파라미터 상세 -> carType: {}, name: {}, startDate: {}, endDate: {}",
-                    req.getParameter("carType"),
-                    req.getParameter("name"),
-                    req.getParameter("startDate"),
-                    req.getParameter("endDate"));
             forwardAlert(req, resp,
                     "처리에 실패했습니다.",
                     "back",

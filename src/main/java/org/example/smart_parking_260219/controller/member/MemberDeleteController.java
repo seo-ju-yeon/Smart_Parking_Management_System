@@ -22,7 +22,6 @@ public class MemberDeleteController extends HttpServlet {
 
         try {
             String carNum = req.getParameter("carNum");
-            log.info("삭제할 차량번호: {}", carNum);
 
             // 파라미터 검증
             if (carNum == null || carNum.trim().isEmpty()) {
@@ -33,7 +32,6 @@ public class MemberDeleteController extends HttpServlet {
 
             // 회원 삭제
             memberService.removeMember(carNum);
-            log.info("회원 삭제 완료: {}", carNum);
 
             // 성공 시 목록으로 리다이렉트
             resp.sendRedirect("/member/member_list?success=delete");

@@ -24,7 +24,6 @@ public class MemberDetailController extends HttpServlet {
 
         try {
             String carNum = req.getParameter("carNum");
-            log.info("회원 조회 - 입력된 번호: {}", carNum);
 
             // 파라미터 검증
             if (carNum == null || carNum.trim().isEmpty()) {

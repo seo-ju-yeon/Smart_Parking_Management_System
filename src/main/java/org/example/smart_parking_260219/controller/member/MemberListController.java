@@ -115,7 +115,6 @@ public class MemberListController extends HttpServlet {
         try {
             if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
-                log.info("갱신 완료: {}", carNum);
                 resp.sendRedirect("/member/member_list?success=renew");
             } else {
                 resp.sendRedirect("/member/member_list");
@@ -126,4 +125,3 @@ public class MemberListController extends HttpServlet {
         }
     }
 }
-

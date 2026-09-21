@@ -72,7 +72,6 @@ public class MemberModifyController extends HttpServlet {
             // 1개월 갱신
             if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
-                log.info("수정 페이지에서 갱신 완료: {}", carNum);
                 resp.sendRedirect("/member/member_list?success=renew&page=" + page);
                 return;
             }
@@ -109,7 +108,6 @@ public class MemberModifyController extends HttpServlet {
                     .build();
 
             memberService.modifyMember(memberDTO);
-            log.info("회원 수정 완료: {}", carNum);
             resp.sendRedirect("/member/member_list?success=modify&page=" + page);
 
         } catch (Exception e) {
