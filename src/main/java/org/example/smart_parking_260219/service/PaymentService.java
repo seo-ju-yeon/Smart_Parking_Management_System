@@ -35,8 +35,6 @@ public enum PaymentService {
 
     // 결제 등록
     public void addPayment(PaymentDTO paymentDTO) throws Exception {
-        log.info("Service: addPayment 호출 - 차량번호: " + paymentDTO.getCarNum());
-
         ParkingVO parkingVO = parkingDAO.selectParkingByCarNum(paymentDTO.getCarNum());
 
         if (parkingVO == null || parkingVO.getParkingId() == 0) {
@@ -56,7 +54,6 @@ public enum PaymentService {
                 .build();
 
         paymentDAO.insertPayment(paymentVO);
-        log.info("Service: 결제 등록 완료");
     }
 
     // 결제 날짜별 목록 조회

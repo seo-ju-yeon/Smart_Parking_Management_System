@@ -5,7 +5,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.PaymentDTO;
 import org.example.smart_parking_260219.service.PaymentService;
 
@@ -14,7 +13,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Log4j2
 @WebServlet(name = "paymentListController", value = "/payment/payment_list")
 public class PaymentListController extends HttpServlet {
     private final PaymentService paymentService = PaymentService.INSTANCE;
@@ -62,14 +60,6 @@ public class PaymentListController extends HttpServlet {
 
         // 8. 시작 번호 계산 (역순 표시용)
         int startNo = totalItems - (startIndex);
-
-        log.info("target date: " + targetDate
-                + "totalItems: " + totalItems
-                + "currentPage: " + currentPage
-                + "itemsPerPage: " + itemsPerPage
-                + "totalPages: " + totalPages
-                + " startIndex: " + startIndex
-                + " endIndex: " + endIndex);
 
         // JSP로 데이터 전달
         req.setAttribute("targetDate", targetDate);

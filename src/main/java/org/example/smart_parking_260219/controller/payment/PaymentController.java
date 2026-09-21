@@ -48,12 +48,10 @@ public class PaymentController extends HttpServlet {
             // [중요] 상태 변경 전에 미리 ID를 확보해야 합니다.
             var parkingDTO = parkingService.getParkingByCarNum(carNum);
             if (parkingDTO == null) {
-                log.error("해당 차량의 주차 기록을 찾을 수 없습니다: " + carNum);
+                log.warn("결제 처리 대상 주차 기록을 찾을 수 없습니다.");
                 resp.sendRedirect(req.getContextPath() + "/dashboard");
                 return;
             }
-
-            log.info("parkingDTO, " + parkingDTO);
 
             // 결제 정보 저장
             PaymentDTO paymentDTO = PaymentDTO.builder()
@@ -68,14 +66,8 @@ public class PaymentController extends HttpServlet {
                     .totalTime(parkingDTO.getTotalTime())
                     .build();
 
-            log.info("완성된 paymentDTO: " + paymentDTO);
-
-            log.info("paymentDTO, " + paymentDTO);
-
             ParkingSpotDTO parkingSpotDTO = ParkingSpotDTO.builder()
                     .carNum(carNum).build();
-
-            log.info("parkingSpotDTO, " + parkingSpotDTO);
 
             ParkingDTO parkingDTO1 = ParkingDTO.builder()
                     .carNum(carNum)
@@ -89,13 +81,13 @@ public class PaymentController extends HttpServlet {
             parkingService.modifyParking(parkingDTO1);
             parkingSpotService.modifyOutputParkingSpot(parkingSpotDTO);
 
-            log.info("Payment and Parking, ParkingSpot update success!");
+            log.info("결제 및 출차 처리 완료 - 차량번호: {}", carNum);
 
             // 이동할 때 ContextPath를 포함한 올바른 URL로 이동
             resp.sendRedirect(req.getContextPath() + "/dashboard"); // 대시보드 URL로 수정
 
         } catch (Exception e) {
-            log.error("결제 처리 중 에러 발생: " + e.getMessage());
+            log.error("결제 처리 중 오류 발생", e);
             throw new ServletException(e);
         }
     }

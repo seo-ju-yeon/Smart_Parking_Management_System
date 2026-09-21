@@ -30,8 +30,6 @@ public class PaymentDAO {
 
     // 등록 - 요금 계산 후 결제 정보 저장
     public void insertPayment(PaymentVO vo) {
-        log.info("insertPayment 실행: " + vo.getCarNum());
-
         // 1. 해당 차량의 '출차 전' 주차 기록 ID 조회 (차 번호 존재 여부 확인 대용)
         // 2. 결제 내역(payment) 등록
         // 3. 주차 기록(parking)의 결제 완료 및 출차 시간 업데이트
@@ -84,7 +82,7 @@ public class PaymentDAO {
                 paymentVOList.add(paymentVO);
             }
         } catch (SQLException e) {
-            log.error("selectAllPayments 오류: " + e.getMessage());
+            log.error("결제 목록 조회 중 오류 발생", e);
             throw new RuntimeException(e);
         }
         return paymentVOList;
@@ -99,7 +97,6 @@ public class PaymentDAO {
         List<PaymentVO> paymentVOList = new ArrayList<>();
 
         LocalDate date = LocalDate.parse(targetDate);
-        log.info(date);
 
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
