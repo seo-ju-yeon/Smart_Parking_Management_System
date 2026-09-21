@@ -60,7 +60,6 @@ public class ParkingDAOImpl implements ParkingDAO {
                         .totalTime(resultSet.getInt("total_time"))
                         .paid(resultSet.getBoolean("paid"))
                         .build();
-                log.info("parkingVO : {}", parkingVO);
                 return parkingVO;
             }
         } catch (SQLException e) {
@@ -86,7 +85,6 @@ public class ParkingDAOImpl implements ParkingDAO {
                         .entryTime(resultSet.getTimestamp("entry_time").toLocalDateTime())
                         .paid(resultSet.getBoolean("paid"))
                         .build();
-                log.info("parkingVO : {}", parkingVO);
                 return parkingVO;
             }
         } catch (SQLException e) {
@@ -139,7 +137,6 @@ public class ParkingDAOImpl implements ParkingDAO {
                         .entryTime(resultSet.getTimestamp("entry_time").toLocalDateTime())
                         .paid(resultSet.getBoolean("paid"))
                         .build();
-                log.info("parkingVO : {}", parkingVO);
                 return parkingVO;
             }
         } catch (SQLException e) {
@@ -167,7 +164,6 @@ public class ParkingDAOImpl implements ParkingDAO {
                         .entryTime(resultSet.getTimestamp("entry_time").toLocalDateTime())
                         .paid(resultSet.getBoolean("paid"))
                         .build();
-                log.info("parkingVO : {}", parkingVO);
                 ParkingVOList.add(parkingVO);
             }
         } catch (SQLException e) {

@@ -100,7 +100,6 @@ public class ParkingInputController extends HttpServlet {
                 .build();
         parkingService.addParking(parkingDTO);
 
-        log.info("입차 정상 처리 - 대시보드로 이동");
         resp.sendRedirect(req.getContextPath() + "/dashboard");
     }
 }

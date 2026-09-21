@@ -1,5 +1,6 @@
 package org.example.smart_parking_260219.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ParkingDAO;
 import org.example.smart_parking_260219.dao.ParkingDAOImpl;
 import org.example.smart_parking_260219.dto.ParkingDTO;
@@ -9,6 +10,7 @@ import org.modelmapper.ModelMapper;
 
 import java.util.List;
 
+@Log4j2
 public enum ParkingService {
     INSTANCE;
 
@@ -24,6 +26,7 @@ public enum ParkingService {
     public void addParking(ParkingDTO parkingDTO) {
         ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
         parkingDAO.insertParking(parkingVO);
+        log.info("입차 처리 완료 - 차량번호: {}", parkingVO.getCarNum());
     }
 
     // 차번호 뒷자리 일치 차량 조회

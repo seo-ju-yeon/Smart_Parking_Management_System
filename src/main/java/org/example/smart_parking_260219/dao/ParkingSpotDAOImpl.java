@@ -1,7 +1,6 @@
 package org.example.smart_parking_260219.dao;
 
 import lombok.Cleanup;
-import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.connection.DBConnection;
 import org.example.smart_parking_260219.vo.ParkingSpotVO;
 
@@ -9,7 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Log4j2
 public class ParkingSpotDAOImpl implements ParkingSpotDAO {
     private static ParkingSpotDAO instance;
 
@@ -51,7 +49,6 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
                         .carNum(resultSet.getString("car_num"))
                         .lastUpdate(resultSet.getTimestamp("last_update").toLocalDateTime())
                         .build();
-                log.info("ParkingSpotVO: {}", parkingSpotVO);
                 ParkingSpotVOList.add(parkingSpotVO);
             }
         } catch (SQLException e) {
@@ -105,7 +102,6 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
                         .carNum(resultSet.getString("car_num"))
                         .lastUpdate(resultSet.getTimestamp("last_update").toLocalDateTime())
                         .build();
-                log.info("ParkingSpotVO: {}", parkingSpotVO);
                 ParkingSpotVOList.add(parkingSpotVO);
             }
         } catch (SQLException e) {
@@ -129,7 +125,6 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
                         .carNum(resultSet.getString("car_num"))
                         .lastUpdate(resultSet.getTimestamp("last_update").toLocalDateTime())
                         .build();
-                log.info("parkingSpotVO : {}", parkingSpotVO);
                 return parkingSpotVO;
             }
         } catch (SQLException e) {

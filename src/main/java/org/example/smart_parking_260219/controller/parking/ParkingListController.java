@@ -59,11 +59,7 @@ public class  ParkingListController extends HttpServlet {
         String carNum = req.getParameter("carNum");
         req.setAttribute("carNum", carNum);
         String carType = req.getParameter("carType");
-        log.info(carType);
         req.setAttribute("carType", carType);
-        log.info("carType: {}",carType);
-
-
 
         req.getRequestDispatcher("/WEB-INF/views/payment/payment.jsp").forward(req, resp);
     }

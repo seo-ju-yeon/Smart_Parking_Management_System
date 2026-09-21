@@ -34,14 +34,11 @@ public class ParkingNonMemberInputController extends HttpServlet {
         String carType = req.getParameter("finish");
         String phone = req.getParameter("phone");
 
-        log.info(spaceId);
-
         // 주차장 현황 갱신
         ParkingSpotDTO parkingSpotDTO = ParkingSpotDTO.builder()
                 .carNum(carNum)
                 .spaceId(spaceId)
                 .build();
-        log.info("parkingSpotDTO: {}", parkingSpotDTO);
         parkingSpotService.modifyInputParkingSpot(parkingSpotDTO);
 
         // 주차 기록 추가
@@ -52,7 +49,6 @@ public class ParkingNonMemberInputController extends HttpServlet {
                 .phone(phone)
                 .carType(Integer.parseInt(carType))
                 .build();
-        log.info("parkingDTO: {}", parkingDTO);
         parkingService.addParking(parkingDTO);
 
         // 비회원 입차 정상 처리

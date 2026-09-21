@@ -1,6 +1,5 @@
 package org.example.smart_parking_260219.service;
 
-import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ParkingSpotDAO;
 import org.example.smart_parking_260219.dao.ParkingSpotDAOImpl;
 import org.example.smart_parking_260219.dto.ParkingSpotDTO;
@@ -10,7 +9,6 @@ import org.modelmapper.ModelMapper;
 
 import java.util.List;
 
-@Log4j2
 public enum ParkingSpotService {
     INSTANCE;
 
@@ -52,14 +50,9 @@ public enum ParkingSpotService {
 
     // 주차 구역 기준 조회
     public ParkingSpotDTO getParkingSpotBySpaceId(String spaceId) {
-        log.info("tlqkf111");
-        log.info("space ID , {}", spaceId);
         if (spaceId == null) return null;
-        log.info("tlqkf222");
         ParkingSpotVO parkingSpotVO = parkingSpotDAO.selectParkingSpotBySpaceId(spaceId);
-        log.info("tlqkf333");
         if (parkingSpotVO == null) return null;
-        log.info("tlqkf444");
         return modelMapper.map(parkingSpotVO, ParkingSpotDTO.class);
     }
 }
