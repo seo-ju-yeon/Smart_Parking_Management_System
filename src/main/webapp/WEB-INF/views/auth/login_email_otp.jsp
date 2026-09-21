@@ -39,13 +39,14 @@
         🔒 보안을 위해 이메일 인증과 OTP 확인이 필요합니다.
     </div>
 
-    <%-- OTP 인증 실패 메시지 표시 --%>
+    <%-- 발송·검증 결과는 하나의 영역에서 교체하여 메시지가 중복 생성되지 않게 한다. --%>
     <% String error = (String) request.getAttribute("error");
-        if (error != null && !error.isEmpty()) { %>
-    <div class="error-message" id="errorMessage">
-        <%= error %>
+        boolean hasError = error != null && !error.isEmpty(); %>
+    <div id="otpStatusMessage"
+         class="<%= hasError ? "error-message" : "" %>"
+         <%= hasError ? "" : "hidden" %>>
+        <%= hasError ? error : "" %>
     </div>
-    <% } %>
 
     <%-- 이메일과 OTP 인증 정보 전송 --%>
     <form id="otpForm" action="${pageContext.request.contextPath}/login/verifyEmailOtp" method="post">

@@ -14,6 +14,7 @@ const cancelBtn = document.getElementById('cancelBtn');
 const otpForm = document.getElementById('otpForm');
 const timerDiv = document.getElementById('timer');
 const timeLeftSpan = document.getElementById('timeLeft');
+const otpStatusMessage = document.getElementById('otpStatusMessage');
 
 // 서버가 전달한 OTP 유효 상태를 화면의 초기 인증 상태로 사용
 let isEmailVerified = initialOtpActive;
@@ -149,17 +150,12 @@ sendOtpBtn.addEventListener('click', function () {
         })
         .then(data => {
             if (data.success) {
-                // 기존 에러 영역을 성공 메시지 영역으로 재사용
-                const errorMessage = document.getElementById('errorMessage');
-                if (errorMessage) {
-                    errorMessage.className = 'success-message';
-                    errorMessage.textContent = email + '로 인증번호를 발송했습니다. 이메일을 확인해주세요.';
-                } else {
-                    const successDiv = document.createElement('div');
-                    successDiv.className = 'success-message';
-                    successDiv.textContent = email + '로 인증번호를 발송했습니다. 이메일을 확인해주세요.';
-                    otpForm.insertBefore(successDiv, otpForm.firstChild);
-                }
+                // 재발송할 때 새 요소를 만들지 않고 기존 결과 영역의 내용만 교체한다.
+                otpStatusMessage.className = 'success-message';
+                otpStatusMessage.textContent =
+                    email
+                    + '로 인증번호를 발송했습니다. 이메일을 확인해주세요.';
+                otpStatusMessage.hidden = false;
 
                 // 리다이렉트 후 이메일 입력값을 복원하기 위해 현재 탭에 임시 저장
                 // sessionStorage는 현재 브라우저 탭을 닫으면 제거됨
