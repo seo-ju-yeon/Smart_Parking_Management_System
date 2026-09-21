@@ -1,8 +1,11 @@
-db.url=jdbc:mariadb://localhost:3306/your_database
-db.username=your_db_user
-db.password=your_db_password
+db.url=jdbc:mariadb://localhost:3306/smart_parking_team2
+db.username=parking_app
+db.password=change-me-local-app-password
 
-mail.host=smtp.naver.com
-mail.port=465
-mail.username=your_email@naver.com
-mail.password=your_app_password
+mail.host=localhost
+mail.port=1025
+mail.from=no-reply@smartparking.local
+mail.auth=false
+mail.ssl.enable=false
+mail.starttls.enable=false
+mail.debug=false

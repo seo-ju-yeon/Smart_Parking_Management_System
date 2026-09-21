@@ -40,5 +40,14 @@ services:
     command: migrate
     restart: "no"
 
+  mailpit:
+    image: axllent/mailpit:v1.31.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_WEB_PORT:-8025}:8025"
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+
 volumes:
   db_data:

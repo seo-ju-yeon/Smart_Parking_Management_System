@@ -1,0 +1,11 @@
+# 실제 네이버 SMTP 발송이 필요한 환경에서 참고하는 설정 예시입니다.
+# 실제 이메일과 애플리케이션 비밀번호는 저장소에 커밋하지 않습니다.
+mail.host=smtp.naver.com
+mail.port=465
+mail.from=your_email@naver.com
+mail.auth=true
+mail.ssl.enable=true
+mail.starttls.enable=false
+mail.debug=false
+mail.username=your_email@naver.com
+mail.password=your_app_password

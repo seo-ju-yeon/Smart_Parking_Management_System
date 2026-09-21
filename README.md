@@ -30,7 +30,7 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 | Data Access | JDBC, HikariCP, PreparedStatement |
 | Security | Session, BCrypt, Email OTP |
 | Logging | Log4j2, SLF4J Bridge |
-| Mail | Jakarta Mail API, Angus Mail, Naver SMTP |
+| Mail | Jakarta Mail API, Angus Mail, Mailpit (로컬), SMTP (외부 환경) |
 | Library | Lombok, ModelMapper |
 | Build/Runtime | Gradle Wrapper 8.8, WAR Plugin, Tomcat |
 | Local Infrastructure | Docker Compose |
@@ -220,13 +220,18 @@ db.url=jdbc:mariadb://localhost:3306/smart_parking_team2
 db.username=parking_app
 db.password=change-me-local-app-password
 
-mail.host=smtp.naver.com
-mail.port=465
-mail.username=your_email@naver.com
-mail.password=your_app_password
+mail.host=localhost
+mail.port=1025
+mail.from=no-reply@smartparking.local
+mail.auth=false
+mail.ssl.enable=false
+mail.starttls.enable=false
+mail.debug=false
 ```
 
 `db.password`는 `.env`의 `MARIADB_PASSWORD`와 동일한 값으로 설정합니다.
+
+로컬 OTP 메일은 Mailpit이 수신하며 `http://localhost:8025`에서 확인할 수 있습니다. 실제 SMTP 발송이 필요한 환경에서는 `config/naver-smtp.properties.example`을 참고해 환경변수를 설정합니다. 실제 SMTP 계정과 비밀번호는 저장소에 커밋하지 않습니다.
 
 데이터베이스 스키마와 필수 기준 데이터는 `src/main/resources/db/migration`의 Flyway 버전 마이그레이션으로 관리합니다. 로컬 시연 데이터는 `docker/flyway/local`의 반복 마이그레이션으로 분리했으며, 로컬 Docker Compose 실행 시 함께 적용됩니다.
 
