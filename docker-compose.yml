@@ -23,5 +23,22 @@ services:
       retries: 10
       start_period: 30s
 
+  flyway:
+    image: flyway/flyway:13.7.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:mariadb://db:3306/${MARIADB_DATABASE}
+      FLYWAY_USER: ${MARIADB_USER}
+      FLYWAY_PASSWORD: ${MARIADB_PASSWORD}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql/migration,filesystem:/flyway/sql/local
+      FLYWAY_CONNECT_RETRIES: 60
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql/migration:ro
+      - ./docker/flyway/local:/flyway/sql/local:ro
+    command: migrate
+    restart: "no"
+
 volumes:
   db_data:

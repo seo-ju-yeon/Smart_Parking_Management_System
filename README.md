@@ -25,13 +25,15 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 | Language | Java 17 |
 | Backend | JSP/Servlet, Jakarta Servlet |
 | Frontend/View | JSP, HTML, CSS, JavaScript |
-| Database | MariaDB |
+| Database | MariaDB 12.3.3 |
+| Database Migration | Flyway 13.7.0 |
 | Data Access | JDBC, HikariCP, PreparedStatement |
 | Security | Session, BCrypt, Email OTP |
 | Logging | Log4j2, SLF4J Bridge |
 | Mail | Jakarta Mail API, Angus Mail, Naver SMTP |
 | Library | Lombok, ModelMapper |
 | Build/Runtime | Gradle Wrapper 8.8, WAR Plugin, Tomcat |
+| Local Infrastructure | Docker Compose |
 | Test | JUnit 5 |
 
 ## 3. 프로젝트 전체 기능
@@ -189,12 +191,23 @@ JSP에 있던 인라인 스타일과 `onclick`, `onsubmit`, `onchange` 이벤트
 
 - Java 17
 - Tomcat 10.x (Jakarta Servlet 6.0 기준)
-- MariaDB
+- Docker Desktop 및 Docker Compose
+- MariaDB 12.3.3, Flyway 13.7.0 (Docker Compose로 실행)
 - Gradle Wrapper 8.8
 
 ### 로컬 설정
 
-민감정보는 소스 코드에 직접 작성하지 않고 `src/main/resources/application.properties`에서 읽습니다. 최초 실행 시 예시 파일을 복사한 뒤 로컬 환경에 맞게 수정합니다.
+먼저 Docker Compose 환경변수 예시를 복사하고 MariaDB와 Flyway를 실행합니다.
+
+```bash
+cp .env.example .env
+docker compose up -d
+docker compose ps -a
+```
+
+MariaDB는 `healthy`, Flyway는 마이그레이션 완료 후 `Exited (0)`으로 표시되면 정상입니다. 기본 DB 포트는 3306이며, 충돌하는 경우 `.env`의 `DB_PORT`와 아래 JDBC URL의 포트를 같은 값으로 변경합니다.
+
+애플리케이션의 민감정보는 소스 코드에 직접 작성하지 않고 `src/main/resources/application.properties`에서 읽습니다. 예시 파일을 복사한 뒤 로컬 환경에 맞게 수정합니다.
 
 ```bash
 cp src/main/resources/application.properties.example src/main/resources/application.properties
@@ -204,8 +217,8 @@ cp src/main/resources/application.properties.example src/main/resources/applicat
 
 ```properties
 db.url=jdbc:mariadb://localhost:3306/smart_parking_team2
-db.username=your_db_user
-db.password=your_db_password
+db.username=parking_app
+db.password=change-me-local-app-password
 
 mail.host=smtp.naver.com
 mail.port=465
@@ -213,7 +226,9 @@ mail.username=your_email@naver.com
 mail.password=your_app_password
 ```
 
-DB 초기 스키마와 샘플 데이터는 `src/main/resources/sql/init.sql`을 참고합니다.
+`db.password`는 `.env`의 `MARIADB_PASSWORD`와 동일한 값으로 설정합니다.
+
+데이터베이스 스키마와 필수 기준 데이터는 `src/main/resources/db/migration`의 Flyway 버전 마이그레이션으로 관리합니다. 로컬 시연 데이터는 `docker/flyway/local`의 반복 마이그레이션으로 분리했으며, 로컬 Docker Compose 실행 시 함께 적용됩니다.
 
 빌드 확인:
 
