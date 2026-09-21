@@ -55,10 +55,8 @@ public class MemberDetailController extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/member/member_detail.jsp").forward(req, resp);
 
         } catch (Exception e) {
-            log.error("회원 조회 오류: {}", e.getMessage(), e);
-            String msg = java.net.URLEncoder.encode(
-                    e.getClass().getSimpleName() + ": " + e.getMessage(), "UTF-8");
-            resp.sendRedirect("/member/member_list?error=fail&debug=" + msg);
+            log.error("회원 조회 중 오류 발생", e);
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?error=fail");
         }
     }
 }

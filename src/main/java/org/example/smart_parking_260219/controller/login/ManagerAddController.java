@@ -206,7 +206,7 @@ public class ManagerAddController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("관리자 추가 중 오류 발생", e);
-            request.setAttribute("error", "관리자 추가 중 오류가 발생했습니다: " + e.getMessage());
+            request.setAttribute("error", "관리자 추가 중 오류가 발생했습니다.");
             request.setAttribute("managerId", managerId);
             request.setAttribute("managerName", managerName);
             request.setAttribute("email", email);

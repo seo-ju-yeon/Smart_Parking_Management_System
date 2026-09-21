@@ -377,7 +377,7 @@ public class ManagerModifyController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("관리자 정보 수정 중 오류 발생", e);
-            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다: " + e.getMessage());
+            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다.");
 
             try {
                 ManagerVO manager = managerDAO.selectOne(managerId);
@@ -473,7 +473,7 @@ public class ManagerModifyController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("수정 중 오류 발생", e);
-            request.setAttribute("error", "오류가 발생했습니다: " + e.getMessage());
+            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다.");
             request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
         }
     }
@@ -600,7 +600,7 @@ public class ManagerModifyController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("본인 정보 수정 중 오류 발생 - ID: {}", sessionId, e);
-            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다: " + e.getMessage());
+            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다.");
             try {
                 ManagerVO fresh = managerDAO.selectOne(sessionId);
                 request.setAttribute("manager", fresh);
