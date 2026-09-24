@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
+import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
@@ -23,9 +24,6 @@ import java.io.IOException;
  */
 @Log4j2
 public class AuthorizationFilter implements Filter {
-
-    private static final String ROLE_NORMAL = "NORMAL";
-    private static final String ROLE_ADMIN = "ADMIN";
 
     /**
      * 세션의 관리자 역할과 요청 경로를 비교하여 접근 허용 여부를 판단합니다.
@@ -71,7 +69,7 @@ public class AuthorizationFilter implements Filter {
         }
 
         ManagerVO manager = (ManagerVO) loginManager;
-        String role = manager.getRole();
+        ManagerRole role = manager.getRole();
 
         // 로그아웃은 역할값 이상 여부와 관계없이 세션을 종료할 수 있도록 항상 통과시킴
         if ("/logout".equals(path)) {
@@ -79,12 +77,11 @@ public class AuthorizationFilter implements Filter {
             return;
         }
 
-        // 정의되지 않은 역할은 권한 정책에 포함되지 않으므로 기본적으로 차단함
-        if (!ROLE_NORMAL.equals(role) && !ROLE_ADMIN.equals(role)) {
+        // 세션 관리자에게 역할 정보가 없으면 권한을 판단할 수 없으므로 차단함
+        if (role == null) {
             log.warn(
-                    "정의되지 않은 역할의 요청 차단 - ID: {}, 역할: {}, 경로: {}, 메서드: {}",
+                    "역할 정보가 없는 요청 차단 - ID: {}, 경로: {}, 메서드: {}",
                     manager.getManagerId(),
-                    role,
                     path,
                     req.getMethod()
             );
@@ -93,7 +90,7 @@ public class AuthorizationFilter implements Filter {
         }
 
         // 관리자 계정 관리 또는 요금 정책 변경 경로는 ADMIN만 접근 가능함
-        if (isAdminOnlyPath(path) && !ROLE_ADMIN.equals(role)) {
+        if (isAdminOnlyPath(path) && role != ManagerRole.ADMIN) {
             log.warn(
                     "ADMIN 전용 요청 차단 - ID: {}, 역할: {}, 경로: {}, 메서드: {}",
                     manager.getManagerId(),
@@ -106,7 +103,7 @@ public class AuthorizationFilter implements Filter {
         }
 
         // 일반 관리자 본인 정보 수정 경로는 NORMAL만 접근 가능함
-        if (isNormalOnlyPath(path) && !ROLE_NORMAL.equals(role)) {
+        if (isNormalOnlyPath(path) && role != ManagerRole.NORMAL) {
             log.warn(
                     "NORMAL 전용 요청 차단 - ID: {}, 역할: {}, 경로: {}, 메서드: {}",
                     manager.getManagerId(),

@@ -3,6 +3,7 @@ package org.example.smart_parking_260219.dao;
 import lombok.Cleanup;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.connection.DBConnection;
+import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 import org.example.smart_parking_260219.util.PasswordUtil;
 
@@ -96,7 +97,7 @@ public class ManagerDAO {
                         .password(resultSet.getString("password"))  // DB에 저장된 해시값이 담김
                         .email(resultSet.getString("email"))
                         .active(resultSet.getBoolean("active"))
-                        .role(resultSet.getString("role"))
+                        .role(ManagerRole.from(resultSet.getString("role")))
                         .build();
                 return managerVO;
             }
@@ -130,7 +131,7 @@ public class ManagerDAO {
                         .password(resultSet.getString("password"))
                         .email(resultSet.getString("email"))
                         .active(resultSet.getBoolean("active"))
-                        .role(resultSet.getString("role"))
+                        .role(ManagerRole.from(resultSet.getString("role")))
                         .build();
                 list.add(managerVO);
             }

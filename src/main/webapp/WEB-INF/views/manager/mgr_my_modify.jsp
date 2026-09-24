@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <!DOCTYPE html>
 <html>
@@ -39,7 +40,7 @@
             ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
 
             // 최고관리자는 전용 수정 페이지로 이동
-            if (manager != null && "ADMIN".equals(manager.getRole())) {
+            if (manager != null && manager.getRole() == ManagerRole.ADMIN) {
                 response.sendRedirect(request.getContextPath() + "/mgr/modify");
                 return;
             }

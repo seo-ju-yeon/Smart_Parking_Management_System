@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ManagerDAO;
+import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
@@ -184,7 +185,7 @@ public class ManagerModifyController extends HttpServlet {
         }
 
         // ADMIN은 관리자 전용 수정 화면을 사용
-        if ("ADMIN".equals(myManager.getRole())) {
+        if (myManager.getRole() == ManagerRole.ADMIN) {
             log.warn("ADMIN 계정의 /my_modify 접근 차단 → /mgr/modify 로 리다이렉트");
             response.sendRedirect(request.getContextPath() + "/mgr/modify");
             return;
@@ -418,7 +419,7 @@ public class ManagerModifyController extends HttpServlet {
             }
 
             // POST 위조 요청으로 ADMIN 계정이 수정되지 않도록 차단
-            if ("ADMIN".equals(existing.getRole())) {
+            if (existing.getRole() == ManagerRole.ADMIN) {
                 log.warn("최고관리자 계정({}) POST 수정 시도 차단", managerId);
                 HttpSession sess = request.getSession(false);
                 if (sess != null) {
@@ -454,7 +455,7 @@ public class ManagerModifyController extends HttpServlet {
             HttpSession sess = request.getSession(false);
             ManagerVO currentLogin = (sess != null) ? (ManagerVO) sess.getAttribute("loginManager") : null;
 
-            if (currentLogin != null && "NORMAL".equals(currentLogin.getRole())) {
+            if (currentLogin != null && currentLogin.getRole() == ManagerRole.NORMAL) {
                 // 일반 관리자가 본인 정보를 수정한 경우 세션 무효화 후 재로그인 유도
                 log.info("일반 관리자 본인 수정 완료 - 세션 무효화 후 로그인 페이지로 이동");
 
@@ -503,7 +504,7 @@ public class ManagerModifyController extends HttpServlet {
         }
 
         // ADMIN은 관리자 전용 수정 화면을 사용
-        if ("ADMIN".equals(loginManager.getRole())) {
+        if (loginManager.getRole() == ManagerRole.ADMIN) {
             log.warn("ADMIN이 /my_modify POST 시도 - 차단");
             response.sendRedirect(request.getContextPath() + "/mgr/modify");
             return;

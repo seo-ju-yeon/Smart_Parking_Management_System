@@ -1,9 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <%
     // 일반 관리자 수정 화면은 ADMIN만 접근 가능
     ManagerVO loginCheck = (ManagerVO) session.getAttribute("loginManager");
-    if (loginCheck == null || !"ADMIN".equals(loginCheck.getRole())) {
+    if (loginCheck == null || loginCheck.getRole() != ManagerRole.ADMIN) {
         response.sendRedirect(request.getContextPath() + "/mgr/my_modify");
         return;
     }

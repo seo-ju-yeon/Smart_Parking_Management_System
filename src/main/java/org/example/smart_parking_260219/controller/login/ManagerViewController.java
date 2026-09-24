@@ -10,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dao.ManagerDAO;
 import org.example.smart_parking_260219.dto.ManagerDTO;
 import org.example.smart_parking_260219.service.ManagerService;
+import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
@@ -147,7 +148,7 @@ public class ManagerViewController extends HttpServlet {
 
                 if (manager != null) {
                     // 최고 관리자 계정은 별도 수정 메뉴를 사용하도록 상세 조회 화면 접근을 제한함
-                    if ("ADMIN".equals(manager.getRole())) {
+                    if (manager.getRole() == ManagerRole.ADMIN) {
                         log.warn("최고관리자 계정({}) view 접근 차단 → 목록으로 리다이렉트", viewId);
                         session.setAttribute("error",
                                 "최고 관리자 계정은 '최고 관리자 정보 수정' 메뉴를 이용해 주세요.");

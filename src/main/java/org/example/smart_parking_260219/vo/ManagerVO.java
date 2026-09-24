@@ -27,5 +27,5 @@ public class ManagerVO {
     private String email;  // 이메일 인증에 사용할 주소
 
     private boolean active;  // 계정 활성화 여부
-    private String role;  // 관리자 권한 (ADMIN / NORMAL)
+    private ManagerRole role;  // 관리자 권한 (ADMIN / NORMAL)
 }

@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.ManagerDTO" %>
+<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 
 <html>
 <head>
@@ -82,13 +83,13 @@
                         for (int i = startIndex; i < endIndex; i++) {
                             ManagerDTO mgr = managerList.get(i);
                 %>
-                <tr class="<%= "ADMIN".equals(mgr.getRole()) ? "row-admin" : "" %>">
+                <tr class="<%= mgr.getRole() == ManagerRole.ADMIN ? "row-admin" : "" %>">
                     <td><%= mgr.getManagerNo() %>
                     </td>
                     <td><%= mgr.getManagerId() %>
                     </td>
                     <td>
-                        <% if ("ADMIN".equals(mgr.getRole())) { %>
+                        <% if (mgr.getRole() == ManagerRole.ADMIN) { %>
                         <%-- 최고관리자는 상세/수정 진입 대신 안내 모달 표시 --%>
                         <a href="#" class="role-link open-admin-modal">
                             <%= mgr.getManagerName() %>

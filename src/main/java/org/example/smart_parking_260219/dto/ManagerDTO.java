@@ -1,6 +1,7 @@
 package org.example.smart_parking_260219.dto;
 
 import lombok.*;
+import org.example.smart_parking_260219.vo.ManagerRole;
 
 /**
  * 관리자 정보를 화면과 서비스 계층 사이에서 전달하기 위한 DTO입니다.
@@ -25,5 +26,5 @@ public class ManagerDTO {
     private String email;  // 이메일 인증에 사용할 주소
 
     private boolean active;  // 계정 활성화 여부
-    private String role;  // 관리자 권한 (ADMIN / NORMAL)
+    private ManagerRole role;  // 관리자 권한 (ADMIN / NORMAL)
 }

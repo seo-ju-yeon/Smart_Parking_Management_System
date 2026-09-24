@@ -11,6 +11,7 @@ import org.example.smart_parking_260219.dao.ManagerDAO;
 import org.example.smart_parking_260219.mail.MailService;
 import org.example.smart_parking_260219.util.OtpGenerator;
 import org.example.smart_parking_260219.util.PasswordUtil;
+import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.io.PrintWriter;
  *
  * <p>
  * 일반 관리자는 이메일 확인만 수행하고,
- * 최고 관리자와 슈퍼 계정은 이메일 확인 후 OTP 인증까지 수행합니다.
+ * ADMIN 관리자는 이메일 확인 후 OTP 인증까지 수행합니다.
  * </p>
  */
 @Log4j2
@@ -272,7 +273,7 @@ public class LoginController extends HttpServlet {
 
             // 권한에 따라 2차 인증 페이지 분기
             // ADMIN은 실제 이메일 OTP 인증 단계로 이동
-            if ("ADMIN".equals(managerVO.getRole())) {
+            if (managerVO.getRole() == ManagerRole.ADMIN) {
                 log.info("관리자 이메일 OTP 인증 단계로 이동: {}", managerId);
                 response.sendRedirect(
                         request.getContextPath() + "/login/verifyEmailOtp"

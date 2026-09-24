@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <nav>
     <h1>주차장 관리 시스템</h1>
@@ -7,8 +8,8 @@
         // 세션에서 "loginManager" 객체를 가져옴 -> Controller에서 session.setAttribute("loginManager", manager)
         Object loginManager = session.getAttribute("loginManager");
         String mName = (String) session.getAttribute("managerName");
-        // mRole을 초기화할 때 null 방지를 위해 빈 문자열로 시작
-        String mRole = "";
+        // 로그인 정보가 없으면 역할도 없는 상태로 시작
+        ManagerRole mRole = null;
 
         // 세션에서 꺼낸 객체가 ManagerVO 타입인지 확인하고 캐스팅
         if (loginManager instanceof ManagerVO) {
@@ -37,7 +38,7 @@
     <ul id="navMenu">
 
         <%-- ADMIN: 관리자 메뉴 토글 표시 --%>
-        <% if ("ADMIN".equals(mRole)) { %>
+        <% if (mRole == ManagerRole.ADMIN) { %>
         <li class="dropdown">
             <a href="#" class="dropbtn">관리자 메뉴 ▼</a>
             <div id="adminSubMenu" class="dropdown-content">
@@ -49,7 +50,7 @@
         <% } %>
 
         <%-- NORMAL: 일반 관리자 본인 정보 수정 메뉴 표시 --%>
-        <% if ("NORMAL".equals(mRole)) { %>
+        <% if (mRole == ManagerRole.NORMAL) { %>
         <li><a href="${pageContext.request.contextPath}/mgr/my_modify">내 정보 수정</a></li>
         <% } %>
         <li><a href="${pageContext.request.contextPath}/dashboard">주차 현황</a></li>
