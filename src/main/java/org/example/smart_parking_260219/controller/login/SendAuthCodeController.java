@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.ValidationService;
+import org.example.smart_parking_260219.vo.ManagerRole;
+import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,7 +43,7 @@ public class SendAuthCodeController extends HttpServlet {
         // 로그인 필터에서 확인된 기존 세션 조회
         HttpSession session = req.getSession(false);
 
-        // 공용 이메일 OTP 상태는 로그인 세션에 저장하므로 세션이 없으면 처리할 수 없음
+        // 관리자 등록과 수정에서 사용하는 이메일 OTP 상태는 로그인 세션에 저장함
         if (session == null) {
             log.warn("세션이 없는 이메일 인증번호 발송 요청");
 
@@ -96,9 +98,71 @@ public class SendAuthCodeController extends HttpServlet {
             return;
         }
 
-        // enum 변환이 성공한 뒤 관리자 등록 목적 여부를 판단
+        // 관리자 등록과 관리자 정보 수정 목적만 이 이메일 OTP API에서 처리함
         boolean isManagerAddPurpose =
                 purpose == ValidationService.Purpose.ADD_MANAGER;
+
+        boolean isManagerModifyPurpose =
+                purpose == ValidationService.Purpose.MODIFY_MANAGER;
+
+        if (!isManagerAddPurpose && !isManagerModifyPurpose) {
+            log.warn("이메일 OTP API에서 허용되지 않은 인증 목적 요청");
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = resp.getWriter();
+            out.write(
+                    "{\"success\": false, \"message\": \"유효하지 않은 인증 목적입니다.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        // 역할별 OTP 발송 권한을 검사하기 위해 로그인 관리자 정보를 조회함
+        Object loginManagerAttribute =
+                session.getAttribute("loginManager");
+
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            log.warn("로그인 관리자 정보가 없는 이메일 인증번호 발송 요청");
+
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = resp.getWriter();
+            out.write(
+                    "{\"success\": false, \"message\": \"로그인 정보가 유효하지 않습니다.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        ManagerVO loginManager =
+                (ManagerVO) loginManagerAttribute;
+
+        // 관리자 등록 OTP는 ADMIN 역할만 발송할 수 있음
+        if (isManagerAddPurpose
+                && loginManager.getRole() != ManagerRole.ADMIN) {
+
+            log.warn(
+                    "관리자 등록 OTP 발송 권한 없음 - ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = resp.getWriter();
+            out.write(
+                    "{\"success\": false, \"message\": \"관리자 등록 권한이 없습니다.\"}"
+            );
+            out.flush();
+            return;
+        }
 
         try {
             // 새로운 인증번호를 발송하면 이전 OTP와 관리자 등록 인증 상태를 재사용할 수 없도록 초기화
@@ -106,6 +170,7 @@ public class SendAuthCodeController extends HttpServlet {
             session.removeAttribute("managerAddVerifiedEmail");
             session.removeAttribute("authCodePendingEmail");
             session.removeAttribute("authCodeAttemptCount");
+            session.removeAttribute("authCodePurpose");
 
             // DB 저장, 메일 발송, 세션 저장에서 동일한 이메일 값을 사용하도록 앞뒤 공백 제거
             String pendingEmail = email.trim();
@@ -113,7 +178,13 @@ public class SendAuthCodeController extends HttpServlet {
             // 이메일과 인증 목적에 맞는 인증번호를 생성하고 발송
             validationService.sendAuthCode(pendingEmail, purpose);
 
-            // 메일 발송까지 성공한 경우에만 검증 대상 이메일과 실패 횟수를 세션에 저장
+            // 검증 요청에서 사용할 인증 목적은 서버가 승인한 enum 값으로 저장함
+            session.setAttribute(
+                    "authCodePurpose",
+                    purpose.name()
+            );
+
+            // 메일 발송까지 성공한 경우에만 검증 대상 이메일과 실패 횟수를 세션에 저장함
             session.setAttribute(
                     "authCodePendingEmail",
                     pendingEmail
@@ -149,7 +220,9 @@ public class SendAuthCodeController extends HttpServlet {
             // 발송에 실패한 OTP에 대한 검증 상태가 남지 않도록 초기화
             session.removeAttribute("authCodePendingEmail");
             session.removeAttribute("authCodeAttemptCount");
+            session.removeAttribute("authCodePurpose");
             session.removeAttribute("managerAddPendingEmail");
+            session.removeAttribute("managerAddVerifiedEmail");
 
             log.error("인증코드 발송 실패", e);
 

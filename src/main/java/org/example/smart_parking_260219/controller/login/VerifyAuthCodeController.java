@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.ValidationService;
+import org.example.smart_parking_260219.vo.ManagerRole;
+import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -56,7 +58,7 @@ public class VerifyAuthCodeController extends HttpServlet {
         String email = req.getParameter("email");
         String code = req.getParameter("code");
 
-        // 공용 이메일 OTP 상태가 저장된 기존 로그인 세션 조회
+        // 관리자 등록과 수정에서 사용하는 이메일 OTP 상태가 저장된 기존 로그인 세션 조회
         HttpSession session = req.getSession(false);
 
         if (session == null) {
@@ -70,9 +72,12 @@ public class VerifyAuthCodeController extends HttpServlet {
             return;
         }
 
-        // OTP 발송 시 저장한 이메일과 현재까지의 실패 횟수 조회
+        // OTP 발송 시 서버가 저장한 대상 이메일과 인증 목적을 조회함
         String authCodePendingEmail =
                 (String) session.getAttribute("authCodePendingEmail");
+
+        String authCodePurposeName =
+                (String) session.getAttribute("authCodePurpose");
 
         Integer attemptCount =
                 (Integer) session.getAttribute("authCodeAttemptCount");
@@ -80,13 +85,99 @@ public class VerifyAuthCodeController extends HttpServlet {
         int failedAttempts =
                 attemptCount == null ? 0 : attemptCount;
 
-        // 정상적으로 발송된 OTP 상태가 없으면 DB 검증을 진행하지 않음
-        if (authCodePendingEmail == null) {
-            log.warn("세션에 이메일 OTP 발송 상태 없음");
+        // 발송 이메일과 인증 목적이 모두 있어야 유효한 OTP 발송 상태로 판단함
+        if (authCodePendingEmail == null || authCodePurposeName == null) {
+            log.warn("세션에 이메일 OTP 발송 상태가 없거나 불완전함");
+
+            // 현재 검증 상태만 정리하고 이미 완료된 관리자 등록 인증 상태는 유지함
+            clearCommonEmailOtpState(session);
+            session.removeAttribute("managerAddPendingEmail");
 
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write(
                     "{\"success\": false, \"message\": \"인증번호를 먼저 발급받아주세요.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        ValidationService.Purpose authCodePurpose;
+
+        try {
+            authCodePurpose =
+                    ValidationService.Purpose.valueOf(
+                            authCodePurposeName
+                    );
+        } catch (IllegalArgumentException e) {
+            log.warn("세션에 유효하지 않은 이메일 OTP 목적이 저장되어 있음");
+
+            clearCommonEmailOtpState(session);
+            session.removeAttribute("managerAddPendingEmail");
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.write(
+                    "{\"success\": false, \"message\": \"인증 상태가 유효하지 않습니다. 인증번호를 다시 발급받아주세요.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        boolean isManagerAddPurpose =
+                authCodePurpose == ValidationService.Purpose.ADD_MANAGER;
+
+        boolean isManagerModifyPurpose =
+                authCodePurpose == ValidationService.Purpose.MODIFY_MANAGER;
+
+        // 관리자 등록과 관리자 정보 수정 목적만 이 이메일 OTP API에서 처리함
+        if (!isManagerAddPurpose && !isManagerModifyPurpose) {
+            log.warn("이메일 OTP 검증 API에서 허용되지 않은 인증 목적");
+
+            clearCommonEmailOtpState(session);
+            session.removeAttribute("managerAddPendingEmail");
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.write(
+                    "{\"success\": false, \"message\": \"유효하지 않은 인증 목적입니다.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        // 검증 단계에서도 역할별 OTP 사용 권한을 다시 확인함
+        Object loginManagerAttribute =
+                session.getAttribute("loginManager");
+
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            log.warn("로그인 관리자 정보가 없는 이메일 인증번호 검증 요청");
+
+            clearEmailOtpState(session);
+
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            out.write(
+                    "{\"success\": false, \"message\": \"로그인 정보가 유효하지 않습니다.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        ManagerVO loginManager =
+                (ManagerVO) loginManagerAttribute;
+
+        // 관리자 등록 OTP는 검증 단계에서도 ADMIN 역할을 다시 확인함
+        if (isManagerAddPurpose
+                && loginManager.getRole() != ManagerRole.ADMIN) {
+
+            log.warn(
+                    "관리자 등록 OTP 검증 권한 없음 - ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+
+            clearEmailOtpState(session);
+
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.write(
+                    "{\"success\": false, \"message\": \"관리자 등록 권한이 없습니다.\"}"
             );
             out.flush();
             return;
@@ -127,6 +218,25 @@ public class VerifyAuthCodeController extends HttpServlet {
         String managerAddPendingEmail =
                 (String) session.getAttribute("managerAddPendingEmail");
 
+        // 관리자 등록 목적이면 등록용 이메일과 OTP 발송 이메일이 일치해야 함
+        if (isManagerAddPurpose
+                && (managerAddPendingEmail == null
+                || !managerAddPendingEmail.equalsIgnoreCase(
+                        authCodePendingEmail
+                ))) {
+
+            log.warn("관리자 등록 OTP 이메일 상태 불일치");
+
+            clearEmailOtpState(session);
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.write(
+                    "{\"success\": false, \"message\": \"인증 상태가 일치하지 않습니다. 인증번호를 다시 발급받아주세요.\"}"
+            );
+            out.flush();
+            return;
+        }
+
         log.info("인증 검증 요청");
 
         // 요청 이메일 대신 서버 세션에 저장된 발송 이메일을 사용하여 DB의 OTP 검증
@@ -137,22 +247,15 @@ public class VerifyAuthCodeController extends HttpServlet {
                 );
 
         if (verificationResult == ValidationService.VerificationResult.SUCCESS) {
-            // 관리자 등록 인증인 경우 발송 이메일과 검증 이메일이 같은 상태인지 확인
-            boolean isManagerAddEmailMatched =
-                    managerAddPendingEmail != null
-                            && managerAddPendingEmail.equalsIgnoreCase(
-                                    authCodePendingEmail
-                            );
-
             // 인증에 사용된 OTP는 다시 사용할 수 없도록 DB에서 즉시 삭제
             validationService.invalidateAuthCode(
                     authCodePendingEmail
             );
 
-            // 공용 OTP 상태만 삭제하고 관리자 등록 완료 증명은 최종 등록 POST까지 유지
+            // OTP 검증 상태만 삭제하고 관리자 등록 완료 증명은 최종 등록 POST까지 유지함
             clearCommonEmailOtpState(session);
 
-            if (isManagerAddEmailMatched) {
+            if (isManagerAddPurpose) {
                 // 관리자 등록 POST에서 다시 검사할 인증 완료 이메일 저장
                 session.setAttribute(
                         "managerAddVerifiedEmail",
@@ -235,16 +338,17 @@ public class VerifyAuthCodeController extends HttpServlet {
     }
 
     /**
-     * 공용 이메일 OTP의 발송 이메일과 실패 횟수를 삭제합니다.
+     * 이메일 OTP의 발송 이메일, 실패 횟수, 인증 목적을 삭제합니다.
      * 관리자 등록 인증 완료 상태는 최종 등록 POST에서 사용하므로 유지합니다.
      */
     private void clearCommonEmailOtpState(HttpSession session) {
         session.removeAttribute("authCodePendingEmail");
         session.removeAttribute("authCodeAttemptCount");
+        session.removeAttribute("authCodePurpose");
     }
 
     /**
-     * 공용 이메일 OTP와 관리자 등록 인증 상태를 모두 삭제합니다.
+     * 이메일 OTP와 관리자 등록 인증 상태를 모두 삭제합니다.
      * 실패 횟수 초과, 만료, DB 인증정보 없음처럼 인증 흐름 전체를 무효화할 때 사용합니다.
      */
     private void clearEmailOtpState(HttpSession session) {
