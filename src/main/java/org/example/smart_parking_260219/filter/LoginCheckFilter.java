@@ -25,7 +25,6 @@ import java.util.List;
  * </p>
  */
 @Log4j2
-@WebFilter(value = "/*") // 모든 요청에 대해 필터 적용 (내부에서 예외 처리)
 public class LoginCheckFilter implements Filter {
 
     /**

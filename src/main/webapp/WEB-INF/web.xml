@@ -3,4 +3,30 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
+
+    <!-- 로그인과 2차 인증 완료 여부를 먼저 확인함 -->
+    <filter>
+        <filter-name>LoginCheckFilter</filter-name>
+        <filter-class>org.example.smart_parking_260219.filter.LoginCheckFilter</filter-class>
+    </filter>
+
+    <!-- 인증된 관리자의 역할별 접근 권한을 확인함 -->
+    <filter>
+        <filter-name>AuthorizationFilter</filter-name>
+        <filter-class>org.example.smart_parking_260219.filter.AuthorizationFilter</filter-class>
+    </filter>
+
+    <!-- filter-mapping 작성 순서가 실제 필터 실행 순서가 됨 -->
+    <filter-mapping>
+        <filter-name>LoginCheckFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthorizationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
 </web-app>
