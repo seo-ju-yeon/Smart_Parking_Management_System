@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.ManagerDTO" %>
-<%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 
 <html>
 <head>
@@ -24,25 +23,6 @@
         <button type="button" id="closeAdminModalButton" class="modal-btn">확인</button>
     </div>
 </div>
-
-<%-- 슈퍼관리자 접근 차단 안내 모달 --%>
-<div id="superModal" class="modal-backdrop">
-    <div class="modal-box">
-        <div class="modal-icon">🛡️</div>
-        <div class="modal-title">수정 불가 계정</div>
-        <div class="modal-desc">
-            해당 계정은 <strong>시스템의 모든 기능을<br> 조회하기 위해 생성된 전용 계정</strong>입니다.<br><br>
-            보안 정책상 이 계정은 수정할 수 없습니다.
-        </div>
-        <button type="button" id="closeSuperModalButton" class="modal-btn">확인</button>
-    </div>
-</div>
-
-    <%
-    /* 현재 로그인한 관리자 권한 확인 */
-    ManagerVO sessionMgr = (ManagerVO) session.getAttribute("loginManager");
-    String loginRole = (sessionMgr != null) ? sessionMgr.getRole() : "";
-%>
 
 <div class="main-content">
     <div id="entry" class="page">
@@ -102,7 +82,7 @@
                         for (int i = startIndex; i < endIndex; i++) {
                             ManagerDTO mgr = managerList.get(i);
                 %>
-                <tr class="<%= ("ADMIN".equals(mgr.getRole()) || "SUPER".equals(mgr.getRole())) ? "row-admin" : "" %>">
+                <tr class="<%= "ADMIN".equals(mgr.getRole()) ? "row-admin" : "" %>">
                     <td><%= mgr.getManagerNo() %>
                     </td>
                     <td><%= mgr.getManagerId() %>
@@ -114,12 +94,6 @@
                             <%= mgr.getManagerName() %>
                         </a>
                         <span class="badge-admin">최고관리자</span>
-                        <% } else if ("SUPER".equals(mgr.getRole())) { %>
-                        <%-- 슈퍼관리자는 전용 안내 모달 표시 --%>
-                        <a href="#" class="role-link open-super-modal">
-                            <%= mgr.getManagerName() %>
-                        </a>
-                        <span class="badge-admin">슈퍼관리자</span>
                         <% } else { %>
                         <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
                         <a href="${pageContext.request.contextPath}/mgr/view?id=<%= mgr.getManagerId() %>"

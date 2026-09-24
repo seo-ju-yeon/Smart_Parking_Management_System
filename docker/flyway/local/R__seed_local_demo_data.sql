@@ -4,7 +4,17 @@
 
 -- 로컬 로그인 계정
 -- demo_normal / normal1234 : 등록 이메일 일치 확인 흐름
--- demo_super  / super1234  : Mailpit에서 OTP를 확인하는 전체 기능 시연 흐름
+-- demo_admin  / admin1234  : Mailpit에서 OTP를 확인하는 ADMIN 시연 흐름
+
+-- 기존 로컬 볼륨의 SUPER 시연 계정을 ADMIN 시연 계정으로 전환합니다.
+UPDATE `manager`
+SET `manager_id`   = 'demo_admin',
+    `manager_name` = '최고관리자',
+    `email`        = 'demo-admin@smartparking.local',
+    `role`         = 'ADMIN'
+WHERE `manager_no` = 1002
+  AND `manager_id` = 'demo_super';
+
 INSERT INTO `manager`
 (`manager_no`, `manager_id`, `manager_name`, `password`, `email`, `active`, `role`)
 VALUES (1001,
@@ -15,12 +25,12 @@ VALUES (1001,
         TRUE,
         'NORMAL'),
        (1002,
-        'demo_super',
-        '슈퍼관리자',
-        '$2a$12$EaDDPZlExsClDZsQMl8c8e4gu8RA/K8uk9SqJTP9CynVIns5YujDq',
-        'demo-super@smartparking.local',
+        'demo_admin',
+        '최고관리자',
+        '$2a$12$96JjPBESEsnpHR6BWAonoeW.1I6Zvf3iefPmfS7ZZNZ.6O5PvmAuS',
+        'demo-admin@smartparking.local',
         TRUE,
-        'SUPER')
+        'ADMIN')
 ON DUPLICATE KEY UPDATE `manager_name` = VALUES(`manager_name`),
                         `password`     = VALUES(`password`),
                         `email`        = VALUES(`email`),

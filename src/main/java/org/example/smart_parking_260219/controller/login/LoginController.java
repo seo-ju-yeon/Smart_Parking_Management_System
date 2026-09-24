@@ -271,8 +271,8 @@ public class LoginController extends HttpServlet {
             session.setAttribute("awaitingSecondAuth", true);
 
             // 권한에 따라 2차 인증 페이지 분기
-            // ADMIN과 SUPER는 실제 이메일 OTP 인증 단계로 이동
-            if ("ADMIN".equals(managerVO.getRole()) || "SUPER".equals(managerVO.getRole())) {
+            // ADMIN은 실제 이메일 OTP 인증 단계로 이동
+            if ("ADMIN".equals(managerVO.getRole())) {
                 log.info("관리자 이메일 OTP 인증 단계로 이동: {}", managerId);
                 response.sendRedirect(
                         request.getContextPath() + "/login/verifyEmailOtp"
