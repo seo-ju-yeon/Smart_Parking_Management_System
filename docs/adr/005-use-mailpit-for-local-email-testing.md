@@ -104,7 +104,7 @@ Docker Compose에 `axllent/mailpit:v1.31.2` 기반 `mailpit` 서비스를 추가
 
 | 시나리오 | 예상 결과 | 확인 결과 |
 | --- | --- | --- |
-| `demo_super` 계정으로 로그인 OTP 요청 | Mailpit에 OTP 메일 수신 | 통과 |
+| `demo_admin` 계정으로 로그인 OTP 요청 | Mailpit에 OTP 메일 수신 | 통과 |
 | OTP 재발송 3회 | Mailpit에는 요청별 메일이 저장되고 화면 안내는 한 개만 표시 | 통과 |
 | Mailpit에서 확인한 OTP 입력 | 2차 인증 완료 후 보호 경로 접근 | 통과 |
 

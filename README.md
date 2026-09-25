@@ -12,8 +12,8 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 
 ### 구현 및 확인한 내용
 
-- ID/PW 확인 후 일반 관리자는 등록 이메일 일치 여부를 확인하고, ADMIN·SUPER 계정은 이메일 OTP를 확인하도록 2차 인증 흐름을 나눴습니다.
-- 보호 경로는 2차 인증까지 완료한 세션만 접근할 수 있도록 공통 필터에서 검사합니다.
+- ID/PW 확인 후 `NORMAL`은 등록 이메일 일치 여부를 확인하고, `ADMIN`은 이메일 OTP를 확인하도록 추가 인증 흐름을 나눴습니다.
+- `LoginCheckFilter`는 추가 인증 완료 여부를 검사하고, `AuthorizationFilter`는 인증된 관리자의 역할에 따라 요청 경로를 제한합니다.
 - BCrypt 기반 비밀번호 해싱을 적용하고, 이중 해싱으로 인한 로그인 실패 문제를 분석해 수정했습니다.
 - Java 17 Toolchain을 적용해 빌드에 사용하는 Java 버전을 고정했습니다.
 - JSP와 CSS·JavaScript 파일을 기능별 디렉터리로 분류하고 참조 경로를 통일했습니다.
@@ -56,24 +56,34 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 
 | 역할 | 현재 기능 범위 | 로그인 추가 인증 |
 | --- | --- | --- |
-| `NORMAL` | 일반 운영 기능과 본인 정보 수정 | 등록 이메일 일치 확인 |
-| `ADMIN` | 관리자 계정 등록·조회·수정 | 등록 이메일로 발송된 OTP 확인 |
-| `SUPER` | 관리자 계정 관리와 본인 정보 수정 | 등록 이메일로 발송된 OTP 확인 |
+| `NORMAL` | 주차·회원·결제 등 일반 운영 기능과 본인 정보 수정 | 등록 이메일 일치 확인 |
+| `ADMIN` | 일반 운영 기능, 관리자 계정 관리, 요금 정책 변경과 본인 정보 수정 | 등록 이메일로 발송된 OTP 확인 |
+
+화면에서는 `NORMAL`을 일반 관리자, `ADMIN`을 최고 관리자로 표시합니다. 인증 우회 제거 후 별도 기능이 남지 않은 `SUPER` 역할은 `ADMIN`으로 통합했습니다.
 
 ### 관리자 로그인과 추가 확인
 
 - `LoginController`에서 ID/PW와 계정 활성 상태를 확인한 뒤 관리자 권한에 따라 추가 확인 화면으로 분기
-- 일반 관리자는 입력 이메일과 등록 이메일이 같은지 확인하고, ADMIN·SUPER 계정은 등록 이메일로 발송된 OTP까지 확인
+- `NORMAL`은 입력 이메일과 등록 이메일이 같은지 확인하고, `ADMIN`은 등록 이메일로 발송된 OTP까지 확인
 - `LoginCheckFilter`에서 1차 인증 정보인 `loginManager`와 2차 인증 완료 상태인 `fullyAuthenticated`를 모두 확인
 - 1차 인증만 완료한 상태에서 보호된 URL로 직접 접근하면 로그인 화면으로 이동
 - 계정 비활성화 상태에서는 로그인할 수 없도록 인증 흐름에 반영
+
+### 역할별 접근 제어
+
+- `web.xml`에서 `LoginCheckFilter` 다음에 `AuthorizationFilter`가 실행되도록 순서를 고정
+- `/mgr/**`는 ADMIN 전용으로 처리하되, `/mgr/my_modify`는 NORMAL 본인 수정 경로로 분리
+- 요금 정책 조회는 두 역할에 허용하고 `/view/policy/add`, `/view/policy/apply`는 ADMIN만 허용
+- JSP의 메뉴 노출 조건은 화면 표시 목적으로만 사용하고, 실제 접근 허용 여부는 필터와 Controller에서 판단
+- 요청 파라미터의 관리자 ID를 그대로 신뢰하지 않고 Controller가 세션 사용자, 대상 계정의 존재 여부와 역할을 다시 확인
 
 ### 관리자 계정 관리
 
 - 관리자 등록, 목록 조회, 상세 조회, 정보 수정, 활성화/비활성화 기능 구현
 - 관리자 ID 중복 확인, 이메일 형식 검증, 비밀번호 확인 검증 처리
 - 관리자 등록 최종 요청에서 세션의 인증 완료 이메일과 실제 등록 이메일을 서버가 다시 비교하고, 사용한 인증 상태는 즉시 삭제
-- 본인 정보 수정 요청에서 세션 ID와 요청 ID가 다르면 차단하고, 로그인 중인 본인 계정의 비활성화를 방지
+- 관리자 수정 OTP는 대상 관리자 ID와 이메일을 Session의 인증 완료 상태에 함께 저장하고, 최종 수정 POST에서 두 값이 일치할 때만 사용
+- 본인 정보 수정 요청에서 세션 ID와 요청 ID가 다르면 차단하고, ADMIN이 다른 ADMIN 계정을 수정하거나 로그인 중인 본인 계정을 비활성화하지 못하도록 제한
 - 관리자 관련 요청이 늘어나면서 기존 Controller에 있던 조회·등록·수정 기능을 각각의 Controller로 분리
 
 ### 이메일/OTP 인증
@@ -93,6 +103,7 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 ```text
 Browser / JSP
   -> LoginCheckFilter
+  -> AuthorizationFilter
   -> Servlet Controller
        ├─ 로그인·일부 관리자 요청 -> DAO 직접 호출
        └─ Service -> DAO
@@ -111,6 +122,8 @@ Controller / Service -> MailService -> SMTP
 - JDBC `PreparedStatement`를 사용해 SQL 파라미터 바인딩
 - BCrypt 기반 관리자 비밀번호 해시 검증
 - Session 기반 로그인 상태 관리
+- 인증 여부와 역할별 경로 권한을 분리한 두 단계 필터 구성
+- Controller에서 수정·조회 대상 ID와 역할을 다시 확인
 - Jakarta Mail 기반 이메일/OTP 인증
 - 민감 설정값은 `application.properties`로 분리하고, Git에는 예시 파일만 포함
 
@@ -126,7 +139,7 @@ src/main/java/org/example/smart_parking_260219
 ├── controller      # Servlet Controller
 ├── dao             # JDBC 기반 DB 접근 계층
 ├── dto             # 화면/서비스 전달 객체
-├── filter          # 로그인 접근 제어 필터
+├── filter          # 로그인 상태와 역할별 경로 접근 제어 필터
 ├── mail            # 이메일 발송 설정 및 서비스
 ├── service         # 비즈니스 로직
 ├── util            # 설정, 비밀번호, OTP 생성, 매핑 유틸
@@ -246,9 +259,9 @@ mail.debug=false
 | 아이디 | 비밀번호 | 역할 | 추가 확인 방법 |
 | --- | --- | --- | --- |
 | `demo_normal` | `normal1234` | `NORMAL` | `demo-normal@smartparking.local` 입력값과 등록 이메일 일치 확인 |
-| `demo_super` | `super1234` | `SUPER` | `demo-super@smartparking.local`로 발송된 OTP를 Mailpit에서 확인 |
+| `demo_admin` | `admin1234` | `ADMIN` | `demo-admin@smartparking.local`로 발송된 OTP를 Mailpit에서 확인 |
 
-`demo_super`로 로그인한 뒤 OTP가 발송되면 다음 순서로 확인합니다.
+`demo_admin`으로 로그인한 뒤 OTP가 발송되면 다음 순서로 확인합니다.
 
 1. 브라우저에서 `http://localhost:8025`에 접속합니다.
 2. Mailpit 수신함에서 가장 최근 OTP 메일을 엽니다.
@@ -307,9 +320,10 @@ docker compose logs flyway
 
 1. ID/PW와 계정 활성 상태를 확인합니다.
 2. 일반 관리자는 입력 이메일과 등록 이메일이 같은지 확인합니다.
-3. ADMIN·SUPER 계정은 등록 이메일로 발송한 OTP를 확인합니다.
+3. ADMIN 계정은 등록 이메일로 발송한 OTP를 확인합니다.
 4. 추가 확인이 끝나면 `fullyAuthenticated`를 Session에 저장합니다.
 5. `LoginCheckFilter`는 `loginManager`와 `fullyAuthenticated`가 모두 유효한 요청만 보호 경로로 전달합니다.
+6. `AuthorizationFilter`는 역할에 허용된 경로만 Controller로 전달합니다.
 
 ### 관리자 등록 이메일 인증
 
@@ -318,6 +332,14 @@ docker compose logs flyway
 3. 인증 성공 시 OTP를 폐기하고 인증 완료 이메일을 Session에 남깁니다.
 4. 최종 관리자 등록 POST에서 인증 완료 이메일과 등록 요청 이메일을 다시 비교합니다.
 5. 등록이 완료되면 사용한 인증 상태를 삭제하여 재사용을 막습니다.
+
+### 관리자 수정 이메일 인증
+
+1. 서버가 로그인 관리자에게 수정 대상 계정을 변경할 권한이 있는지 확인합니다.
+2. OTP 발송 이메일과 수정 대상 관리자 ID를 Session에 함께 저장합니다.
+3. OTP 검증 요청의 이메일과 관리자 ID가 발송 단계의 값과 모두 일치하는지 확인합니다.
+4. 최종 수정 POST에서 인증 완료 이메일·관리자 ID와 실제 제출값을 다시 비교합니다.
+5. 수정 성공 또는 인증 상태 불일치 시 관련 상태를 삭제하여 다른 계정이나 다음 수정에 재사용하지 못하게 합니다.
 
 ### 비밀번호 찾기
 
@@ -354,11 +376,14 @@ docker compose logs flyway
 기존 팀 프로젝트를 개인 포트폴리오로 개선하면서 인증 흐름을 다음과 같이 보완했습니다.
 
 - 시연 편의를 위해 존재했던 고정 OTP와 인증 우회 기능을 제거했습니다.
+- 별도 기능이 없어진 `SUPER` 역할을 `ADMIN`으로 통합하고 역할 값을 `NORMAL`, `ADMIN`으로 단순화했습니다.
 - 아이디와 비밀번호 인증뿐만 아니라 권한별 2차 인증까지 완료해야 보호된 관리자 기능에 접근할 수 있도록 변경했습니다.
+- 인증 완료 여부는 `LoginCheckFilter`, 역할별 URL 접근은 `AuthorizationFilter`, 실제 수정 대상 권한은 Controller가 확인하도록 책임을 구분했습니다.
 - 관리자 등록 시 JavaScript의 인증 결과만 신뢰하지 않고, 최종 등록 요청에서도 서버가 인증된 이메일인지 다시 확인합니다.
+- 관리자 수정 시 OTP 인증 결과를 대상 관리자 ID와 이메일에 연결하고 최종 POST에서 다시 확인합니다.
 - OTP 생성에 `SecureRandom`을 사용하여 예측 가능성을 낮췄습니다.
 - OTP 입력은 최대 5회로 제한하며, 인증 성공·만료·횟수 초과 시 기존 OTP와 관련 상태를 제거합니다.
-- 로그인, 관리자 등록, 비밀번호 찾기의 OTP 발급 대상과 실패 횟수를 각각의 서버 상태로 관리합니다.
+- 로그인, 관리자 등록·수정, 비밀번호 찾기의 OTP 발급 대상과 실패 횟수를 각각의 서버 상태로 관리합니다.
 - 비밀번호 찾기 과정에서 임시 비밀번호를 이메일로 발송하는 대신, OTP 인증을 마친 사용자가 제한된 시간 안에 새 비밀번호를 직접 설정하도록 변경했습니다.
 
 자세한 설계 판단과 문제 해결 과정은 아래 문서에서 확인할 수 있습니다.
