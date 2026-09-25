@@ -123,47 +123,119 @@ public class ManagerModifyController extends HttpServlet {
     /**
      * 최고 관리자 정보 수정 화면을 처리한다.
      */
-    private void showManagerModify(HttpServletRequest request, HttpServletResponse response, HttpSession session)
-            throws ServletException, IOException {
+    private void showManagerModify(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpSession session
+    ) throws ServletException, IOException {
 
         log.info("ManagerModifyController.showManagerModify() 진입");
-        log.info("관리자 수정 페이지 처리");
 
-        // 수정 대상 ID를 요청 파라미터에서 확인
-        String modifyId = request.getParameter("id");
-        log.info("수정할 관리자 ID: {}", modifyId);
+        // ADMIN 본인 수정 대상은 요청 파라미터가 아니라 로그인 세션에서 결정함
+        Object loginManagerAttribute =
+                session.getAttribute("loginManager");
 
-        // id가 없으면 현재 로그인한 관리자 정보를 수정 대상으로 사용
-        if (modifyId == null || modifyId.trim().isEmpty()) {
-            log.info("ID 파라미터가 없어 세션에서 정보를 찾습니다.");
-            ManagerVO loginManager = (ManagerVO) session.getAttribute("loginManager");
-            if (loginManager != null) {
-                modifyId = loginManager.getManagerId();
-            }
-        }
-        log.info("최종 수정할 관리자 ID: {}", modifyId);
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            // ManagerVO가 아니면 로그인 정보가 정상적이지 않다고 판단
+            log.warn("로그인 관리자 정보가 없는 ADMIN 수정 화면 요청");
 
-        if (modifyId != null && !modifyId.isEmpty()) {
-            try {
-                ManagerVO manager = managerDAO.selectOne(modifyId);
-
-                if (manager != null) {
-                    request.setAttribute("manager", manager);
-                    log.info("관리자 데이터 조회 성공 - ID: {}", modifyId);
-                } else {
-                    log.warn("ID가 {}인 관리자를 찾을 수 없음", modifyId);
-                    request.setAttribute("error", "존재하지 않는 관리자입니다.");
-                }
-            } catch (Exception e) {
-                log.error("관리자 조회 중 DB 오류", e);
-                request.setAttribute("error", "데이터를 가져오는 중 오류가 발생했습니다.");
-            }
-        } else {
-            log.warn("수정할 ID를 찾을 수 없음 (파라미터X, 세션X)");
-            request.setAttribute("error", "수정할 관리자 정보를 특정할 수 없습니다.");
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
+            return;
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify.jsp").forward(request, response);
+        ManagerVO loginManager =
+                (ManagerVO) loginManagerAttribute;
+
+        // 필터를 통과했더라도 ADMIN 역할인지 다시 확인함
+        if (loginManager.getRole() != ManagerRole.ADMIN) {
+            log.warn(
+                    "ADMIN 수정 화면 접근 권한 없음 - ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "ADMIN 계정만 접근할 수 있습니다."
+            );
+            return;
+        }
+
+        // 요청의 id를 사용하지 않고 현재 로그인한 ADMIN ID로 수정 대상을 고정함
+        String managerId =
+                loginManager.getManagerId();
+
+        try {
+            // 세션 정보가 오래되었을 수 있으므로 DB에서 최신 정보를 다시 조회함
+            ManagerVO manager =
+                    managerDAO.selectOne(managerId);
+
+            if (manager == null) {
+                log.warn(
+                        "로그인한 관리자 계정을 찾을 수 없음 - ID: {}",
+                        managerId
+                );
+
+                invalidateSessionWithMessage(
+                        request,
+                        session,
+                        "계정 정보를 확인할 수 없습니다. 다시 로그인해주세요."
+                );
+
+                response.sendRedirect(
+                        request.getContextPath() + "/login"
+                );
+                return;
+            }
+
+            // DB의 최신 역할도 ADMIN인지 확인함
+            if (manager.getRole() != ManagerRole.ADMIN) {
+                log.warn(
+                        "세션과 DB의 관리자 역할 불일치 - ID: {}, DB 역할: {}",
+                        managerId,
+                        manager.getRole()
+                );
+
+                invalidateSessionWithMessage(
+                        request,
+                        session,
+                        "계정 권한이 변경되었습니다. 다시 로그인해주세요."
+                );
+
+                response.sendRedirect(
+                        request.getContextPath() + "/login"
+                );
+                return;
+            }
+
+            request.setAttribute(
+                    "manager",
+                    manager
+            );
+
+            log.info(
+                    "ADMIN 본인 수정 정보 조회 완료 - ID: {}",
+                    managerId
+            );
+
+        } catch (Exception e) {
+            log.error(
+                    "ADMIN 본인 정보 조회 중 오류 발생 - ID: {}",
+                    managerId,
+                    e
+            );
+
+            request.setAttribute(
+                    "error",
+                    "관리자 정보를 가져오는 중 오류가 발생했습니다."
+            );
+        }
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/manager/mgr_modify.jsp"
+        ).forward(request, response);
     }
 
     /**
@@ -217,32 +289,57 @@ public class ManagerModifyController extends HttpServlet {
             throws ServletException, IOException {
 
         log.info("ManagerModifyController.showModifyNormal() 진입");
-        log.info("일반 관리자 수정 페이지 처리");
 
-        // 수정 대상 ID를 요청 파라미터에서 확인
+        // 요청 ID는 화면에 표시할 수정 대상을 찾는 용도로만 사용함
         String targetId = request.getParameter("id");
-        log.info("수정 대상 ID: {}", targetId);
 
-        // id가 없으면 현재 로그인한 관리자 정보를 수정 대상으로 사용
         if (targetId == null || targetId.trim().isEmpty()) {
             log.warn("수정할 ID가 없어 목록으로 돌아갑니다.");
             response.sendRedirect(request.getContextPath() + "/mgr/list");
             return;
         }
 
+        targetId = targetId.trim();
+
         try {
             ManagerVO targetManager = managerDAO.selectOne(targetId);
 
-            if (targetManager != null) {
-                request.setAttribute("manager", targetManager);
-                log.info("수정 대상 조회 성공 - ID: {}", targetId);
-            } else {
-                log.warn("ID가 {}인 관리자를 찾을 수 없음", targetId);
-                request.setAttribute("error", "존재하지 않는 관리자입니다.");
+            if (targetManager == null) {
+                log.warn("수정 대상 관리자를 찾을 수 없음 - ID: {}", targetId);
+                request.getSession().setAttribute(
+                        "error",
+                        "존재하지 않는 관리자입니다."
+                );
+                response.sendRedirect(request.getContextPath() + "/mgr/list");
+                return;
             }
+
+            // 이 화면은 NORMAL 계정 수정 전용이므로 ADMIN 계정은 대상으로 허용하지 않음
+            if (targetManager.getRole() != ManagerRole.NORMAL) {
+                log.warn(
+                        "일반 관리자 수정 화면의 대상 역할 불일치 - ID: {}, 역할: {}",
+                        targetId,
+                        targetManager.getRole()
+                );
+                request.getSession().setAttribute(
+                        "error",
+                        "일반 관리자 계정만 이 화면에서 수정할 수 있습니다."
+                );
+                response.sendRedirect(request.getContextPath() + "/mgr/list");
+                return;
+            }
+
+            // 존재 여부와 역할을 모두 확인한 대상만 수정 화면에 전달함
+            request.setAttribute("manager", targetManager);
+            log.info("NORMAL 수정 대상 조회 완료 - ID: {}", targetId);
+
         } catch (Exception e) {
-            log.error("관리자 조회 중 DB 오류", e);
-            request.setAttribute("error", "데이터 조회 중 오류 발생");
+            log.error("NORMAL 수정 대상 조회 중 오류 발생 - ID: {}", targetId, e);
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "관리자 정보를 확인하는 중 오류가 발생했습니다."
+            );
+            return;
         }
 
         request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
@@ -261,8 +358,116 @@ public class ManagerModifyController extends HttpServlet {
         // 세션 체크
         HttpSession session = request.getSession(false);
 
-        // 수정 폼에서 전달된 입력값을 읽음
-        String managerId = request.getParameter("id");
+        // 수정 대상은 세션의 로그인 ADMIN을 기준으로 결정함
+        Object loginManagerAttribute =
+                session == null
+                        ? null
+                        : session.getAttribute("loginManager");
+
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            log.warn("로그인 관리자 정보가 없는 ADMIN 수정 요청");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
+            return;
+        }
+
+        ManagerVO loginManager
+                = (ManagerVO) loginManagerAttribute;
+
+        // 필터를 우회한 직접 요청에 대비하여 ADMIN 역할을 다시 확인함
+        if (loginManager.getRole() != ManagerRole.ADMIN) {
+            log.warn(
+                    "ADMIN 본인 수정 권한 없음 - ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "ADMIN 계정만 접근할 수 있습니다."
+            );
+            return;
+        }
+
+        // 요청 ID는 위조 여부 확인에만 사용함
+        String requestManagerId = request.getParameter("id");
+
+        // 실제 수정 대상은 세션의 로그인 ADMIN ID로 고정함
+        String managerId = loginManager.getManagerId();
+
+        if (!managerId.equals(requestManagerId)) {
+            log.warn(
+                    "ADMIN 본인 수정 대상 불일치 - 세션 ID: {}, 요청 ID: {}",
+                    managerId,
+                    requestManagerId
+            );
+
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "본인 계정만 수정할 수 있습니다."
+            );
+            return;
+        }
+
+        // 로그인 이후 계정이 삭제되거나 역할이 변경되지 않았는지 DB에서 다시 확인함
+        try {
+            ManagerVO currentManager =
+                    managerDAO.selectOne(managerId);
+
+            if (currentManager == null) {
+                log.warn(
+                        "수정 대상 ADMIN 계정을 찾을 수 없음 - ID: {}",
+                        managerId
+                );
+
+                invalidateSessionWithMessage(
+                        request,
+                        session,
+                        "계정 정보를 확인할 수 없습니다. 다시 로그인해주세요."
+                );
+
+                response.sendRedirect(
+                        request.getContextPath() + "/login"
+                );
+                return;
+            }
+
+            if (currentManager.getRole() != ManagerRole.ADMIN) {
+                log.warn(
+                        "ADMIN 수정 요청의 DB 역할 불일치 - ID: {}, 역할: {}",
+                        managerId,
+                        currentManager.getRole()
+                );
+
+                invalidateSessionWithMessage(
+                        request,
+                        session,
+                        "계정 권한이 변경되었습니다. 다시 로그인해주세요."
+                );
+
+                response.sendRedirect(
+                        request.getContextPath() + "/login"
+                );
+                return;
+            }
+
+        } catch (Exception e) {
+            log.error(
+                    "ADMIN 수정 대상 확인 중 오류 발생 - ID: {}",
+                    managerId,
+                    e
+            );
+
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "관리자 정보를 확인하는 중 오류가 발생했습니다."
+            );
+            return;
+        }
+
+        // 수정할 입력값을 읽음
         String managerName = request.getParameter("name");
         String password = request.getParameter("pw");  // 변경할 새 비밀번호 (비어있을 수 있음)
         String passwordConfirm = request.getParameter("passwordConfirm");  // 확인용 비밀번호
@@ -274,12 +479,11 @@ public class ManagerModifyController extends HttpServlet {
                 passwordConfirm != null && !passwordConfirm.trim().isEmpty());
 
         // 필수 입력값이 누락되면 기존 정보를 다시 조회해 수정 화면으로 돌려보냄
-        if (managerId == null || managerId.trim().isEmpty() ||
-                managerName == null || managerName.trim().isEmpty() ||
+        if (managerName == null || managerName.trim().isEmpty() ||
                 email == null || email.trim().isEmpty()) {
 
             log.warn("필수 입력값 누락");
-            request.setAttribute("error", "ID, 이름, 이메일은 필수 입력값입니다.");
+            request.setAttribute("error", "이름과 이메일은 필수 입력값입니다.");
 
             try {
                 // 에러 발생 시, 기존 정보를 다시 DB에서 읽어와 화면에 뿌려줘야 입력폼이 유지됨
@@ -355,26 +559,18 @@ public class ManagerModifyController extends HttpServlet {
                     .build();
 
             managerDAO.updateManager(managerVO);
-            log.info("관리자 정보 수정 완료 - ID: {}", managerId);
+            log.info("ADMIN 본인 정보 수정 완료 - ID: {}", managerId);
 
-            ManagerVO loginManager = (ManagerVO) session.getAttribute("loginManager");
+            // 이름, 이메일 또는 비밀번호가 변경됐으므로 기존 인증 세션을 종료함
+            invalidateSessionWithMessage(
+                    request,
+                    session,
+                    "관리자 정보가 변경되었으니 다시 로그인해주세요."
+            );
 
-            // 현재 로그인한 본인 정보를 수정한 경우 세션을 종료하고 재로그인을 유도
-            if (loginManager != null && managerId.equals(loginManager.getManagerId())) {
-                log.info("최고 관리자 정보 수정 - 재로그인 필요");
-
-                invalidateSessionWithMessage(
-                        request,
-                        session,
-                        "관리자 정보가 변경되었으니 다시 로그인해주세요."
-                );
-                response.sendRedirect(request.getContextPath() + "/login");
-            } else {
-                // 다른 관리자의 정보를 수정한 경우 상세 조회 화면으로 이동
-                log.info("일반 관리자 정보 수정 완료 - ID: {}", managerId);
-                session.setAttribute("successMessage", "관리자 정보가 성공적으로 수정되었습니다.");
-                response.sendRedirect(request.getContextPath() + "/mgr/view?id=" + managerId);
-            }
+            response.sendRedirect(
+                    request.getContextPath() + "/login"
+            );
 
         } catch (Exception e) {
             log.error("관리자 정보 수정 중 오류 발생", e);
@@ -401,31 +597,76 @@ public class ManagerModifyController extends HttpServlet {
 
         log.info("ManagerModifyController.modifyManagerNormal() 진입");
 
+        // 경로 권한은 필터에서 확인하지만 실제 변경 직전에도 요청자가 ADMIN인지 확인함
+        HttpSession session = request.getSession(false);
+        Object loginManagerAttribute =
+                session == null
+                        ? null
+                        : session.getAttribute("loginManager");
+
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            log.warn("로그인 관리자 정보가 없는 NORMAL 수정 요청");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        ManagerVO loginManager =
+                (ManagerVO) loginManagerAttribute;
+
+        if (loginManager.getRole() != ManagerRole.ADMIN) {
+            log.warn(
+                    "NORMAL 수정 요청 권한 없음 - 요청자 ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "일반 관리자 정보를 수정할 권한이 없습니다."
+            );
+            return;
+        }
+
         // 일반 관리자 수정 폼에서 전달된 입력값을 읽음
         String managerId = request.getParameter("managerId");
         String managerName = request.getParameter("name");
         String password = request.getParameter("pw");
         String email = request.getParameter("email");
 
+        if (managerId == null || managerId.trim().isEmpty()) {
+            log.warn("NORMAL 수정 대상 ID 누락");
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "수정할 관리자 ID가 필요합니다."
+            );
+            return;
+        }
+
+        managerId = managerId.trim();
+
         log.info("수정 요청 수신 - ID: {}, 비밀번호 입력 여부: {}",
                 managerId, password != null && !password.isEmpty());
 
         try {
             ManagerVO existing = managerDAO.selectOne(managerId);
+
             if (existing == null) {
-                request.setAttribute("error", "존재하지 않는 관리자입니다.");
-                request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
+                log.warn("NORMAL 수정 대상을 찾을 수 없음 - ID: {}", managerId);
+                session.setAttribute("error", "존재하지 않는 관리자입니다.");
+                response.sendRedirect(request.getContextPath() + "/mgr/list");
                 return;
             }
 
-            // POST 위조 요청으로 ADMIN 계정이 수정되지 않도록 차단
-            if (existing.getRole() == ManagerRole.ADMIN) {
-                log.warn("최고관리자 계정({}) POST 수정 시도 차단", managerId);
-                HttpSession sess = request.getSession(false);
-                if (sess != null) {
-                    sess.setAttribute("error",
-                            "최고 관리자 계정은 '최고 관리자 정보 수정' 메뉴를 이용해 주세요.");
-                }
+            // hidden 필드가 변조되더라도 NORMAL이 아닌 계정은 수정하지 않음
+            if (existing.getRole() != ManagerRole.NORMAL) {
+                log.warn(
+                        "NORMAL 수정 대상 역할 불일치 - ID: {}, 역할: {}",
+                        managerId,
+                        existing.getRole()
+                );
+                session.setAttribute(
+                        "error",
+                        "일반 관리자 계정만 이 화면에서 수정할 수 있습니다."
+                );
                 response.sendRedirect(request.getContextPath() + "/mgr/list");
                 return;
             }
@@ -449,33 +690,25 @@ public class ManagerModifyController extends HttpServlet {
             }
 
             managerDAO.updateManager(builder.build());
-            log.info("관리자 수정 완료 - ID: {}", managerId);
+            log.info(
+                    "ADMIN에 의한 NORMAL 정보 수정 완료 - 대상 ID: {}",
+                    managerId
+            );
 
-            // 요청자 역할에 따른 분기 처리
-            HttpSession sess = request.getSession(false);
-            ManagerVO currentLogin = (sess != null) ? (ManagerVO) sess.getAttribute("loginManager") : null;
-
-            if (currentLogin != null && currentLogin.getRole() == ManagerRole.NORMAL) {
-                // 일반 관리자가 본인 정보를 수정한 경우 세션 무효화 후 재로그인 유도
-                log.info("일반 관리자 본인 수정 완료 - 세션 무효화 후 로그인 페이지로 이동");
-
-                invalidateSessionWithMessage(
-                        request,
-                        sess,
-                        "정보가 수정되었습니다. 변경된 정보로 다시 로그인해주세요."
-                );
-                response.sendRedirect(request.getContextPath() + "/login");
-            } else {
-                // ADMIN이 타 관리자 수정한 경우 경우 관리자 목록으로 이동
-                log.info("ADMIN에 의한 관리자 수정 완료 - 목록으로 이동");
-                request.getSession().setAttribute("successMessage", "정보가 성공적으로 수정되었습니다.");
-                response.sendRedirect(request.getContextPath() + "/mgr/list");
-            }
+            // 이 경로는 ADMIN 전용이므로 성공 후 관리자 목록으로 이동함
+            session.setAttribute(
+                    "successMessage",
+                    "정보가 성공적으로 수정되었습니다."
+            );
+            response.sendRedirect(request.getContextPath() + "/mgr/list");
 
         } catch (Exception e) {
-            log.error("수정 중 오류 발생", e);
-            request.setAttribute("error", "정보 수정 중 오류가 발생했습니다.");
-            request.getRequestDispatcher("/WEB-INF/views/manager/mgr_modify_normal.jsp").forward(request, response);
+            log.error("NORMAL 정보 수정 중 오류 발생 - ID: {}", managerId, e);
+            session.setAttribute(
+                    "error",
+                    "정보 수정 중 오류가 발생했습니다."
+            );
+            response.sendRedirect(request.getContextPath() + "/mgr/list");
         }
     }
 
@@ -622,41 +855,91 @@ public class ManagerModifyController extends HttpServlet {
 
         log.info("ManagerModifyController.toggleManagerActive() 진입");
 
-        // 본인 계정 비활성화를 막기 위해 현재 로그인한 관리자 ID를 확인
+        // 경로 권한은 필터에서 확인하지만 상태 변경 직전에도 요청자가 ADMIN인지 확인함
         HttpSession session = request.getSession(false);
-        String currentLoginId = null;
+        Object loginManagerAttribute =
+                session == null
+                        ? null
+                        : session.getAttribute("loginManager");
 
-        if (session != null) {
-            ManagerVO loginVO = (ManagerVO) session.getAttribute("loginManager");
-            if (loginVO != null) {
-                currentLoginId = loginVO.getManagerId();  // 현재 로그인한 ID
-            }
+        if (!(loginManagerAttribute instanceof ManagerVO)) {
+            log.warn("로그인 관리자 정보가 없는 계정 상태 변경 요청");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        ManagerVO loginManager =
+                (ManagerVO) loginManagerAttribute;
+
+        if (loginManager.getRole() != ManagerRole.ADMIN) {
+            log.warn(
+                    "계정 상태 변경 권한 없음 - 요청자 ID: {}, 역할: {}",
+                    loginManager.getManagerId(),
+                    loginManager.getRole()
+            );
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "관리자 계정 상태를 변경할 권한이 없습니다."
+            );
+            return;
         }
 
         // 변경 대상 ID와 활성화 상태값을 요청에서 읽음
         String targetId = request.getParameter("managerId");
         String activeStr = request.getParameter("active");
-        log.info("관리자 상태 변경 요청 - ID: {}, active: {}, currentLoginId: {}", targetId, activeStr, currentLoginId);
 
-        // 값이 하나라도 없으면 400 에러 처리
-        if (targetId == null || activeStr == null) {
+        if (targetId == null || targetId.trim().isEmpty()
+                || activeStr == null || activeStr.trim().isEmpty()) {
             log.warn("필수 파라미터 누락- ID: {}, active: {}", targetId, activeStr);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "변경 대상과 활성화 상태가 필요합니다."
+            );
+            return;
+        }
+
+        targetId = targetId.trim();
+        activeStr = activeStr.trim();
+
+        // Boolean.parseBoolean은 잘못된 문자열도 false로 처리하므로 true와 false만 허용함
+        if (!"true".equalsIgnoreCase(activeStr)
+                && !"false".equalsIgnoreCase(activeStr)) {
+            log.warn("잘못된 active 값으로 상태 변경 요청 - 값: {}", activeStr);
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "활성화 상태 값이 올바르지 않습니다."
+            );
             return;
         }
 
         boolean active = Boolean.parseBoolean(activeStr);
 
-        // 본인 계정(currentLoginId)은 스스로 비활성화(false) 할 수 없게 방어
-        if (!active && targetId.equals(currentLoginId)) {
-            log.warn("본인 계정 비활성화 시도 차단 - ID: {}", targetId);
-
-            session.setAttribute("error", "본인 계정은 비활성화할 수 없습니다.");
-            response.sendRedirect(request.getContextPath() + "/mgr/view?id=" + targetId);
-            return;
-        }
-
         try {
+            ManagerVO targetManager = managerDAO.selectOne(targetId);
+
+            if (targetManager == null) {
+                log.warn("상태 변경 대상 관리자를 찾을 수 없음 - ID: {}", targetId);
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "존재하지 않는 관리자입니다."
+                );
+                return;
+            }
+
+            // 상태 변경은 NORMAL 계정에만 허용하여 ADMIN 계정 잠금을 방지함
+            if (targetManager.getRole() != ManagerRole.NORMAL) {
+                log.warn(
+                        "상태 변경 대상 역할 불일치 - ID: {}, 역할: {}",
+                        targetId,
+                        targetManager.getRole()
+                );
+                response.sendError(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "일반 관리자 계정만 활성화 상태를 변경할 수 있습니다."
+                );
+                return;
+            }
+
             managerDAO.updateActive(active, targetId);
             log.info("관리자 계정 상태 변경 성공 - ID: {}, 활성화: {}", targetId, active);
 

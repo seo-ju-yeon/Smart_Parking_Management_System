@@ -147,11 +147,17 @@ public class ManagerViewController extends HttpServlet {
                 ManagerVO manager = managerDAO.selectOne(viewId);
 
                 if (manager != null) {
-                    // 최고 관리자 계정은 별도 수정 메뉴를 사용하도록 상세 조회 화면 접근을 제한함
-                    if (manager.getRole() == ManagerRole.ADMIN) {
-                        log.warn("최고관리자 계정({}) view 접근 차단 → 목록으로 리다이렉트", viewId);
-                        session.setAttribute("error",
-                                "최고 관리자 계정은 '최고 관리자 정보 수정' 메뉴를 이용해 주세요.");
+                    // 상세 화면은 NORMAL 계정 관리용이므로 다른 역할은 대상으로 허용하지 않음
+                    if (manager.getRole() != ManagerRole.NORMAL) {
+                        log.warn(
+                                "관리자 상세 조회 대상 역할 불일치 - ID: {}, 역할: {}",
+                                viewId,
+                                manager.getRole()
+                        );
+                        session.setAttribute(
+                                "error",
+                                "일반 관리자 계정만 상세 조회할 수 있습니다."
+                        );
                         response.sendRedirect(request.getContextPath() + "/mgr/list");
                         return;
                     }
