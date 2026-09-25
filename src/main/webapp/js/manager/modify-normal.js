@@ -1,12 +1,12 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
 
-// 인증 상태와 기존 이메일 저장
+// 관리자 수정 OTP 인증 상태 저장
 let isEmailVerified = false;
-const originalEmail = document.getElementById('email').value.trim();
 
 // 수정 폼 요소 가져오기
 const form = document.getElementById('modifyForm');
+const managerId = form.elements.managerId.value;
 const nameInput = document.getElementById('name');
 const pwInput = document.getElementById('pw');
 const passwordConfirmInput = document.getElementById('passwordConfirm');
@@ -188,7 +188,9 @@ document.getElementById('sendEmailBtn').addEventListener('click', function() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'email=' + encodeURIComponent(email) + '&purpose=MODIFY_MANAGER'
+        body: 'email=' + encodeURIComponent(email)
+            + '&purpose=MODIFY_MANAGER'
+            + '&managerId=' + encodeURIComponent(managerId)
     })
         .then(response => response.json())
         .then(data => {
@@ -234,7 +236,9 @@ document.getElementById('verifyBtn').addEventListener('click', function() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'email=' + encodeURIComponent(email) + '&code=' + encodeURIComponent(code)
+        body: 'email=' + encodeURIComponent(email)
+            + '&code=' + encodeURIComponent(code)
+            + '&managerId=' + encodeURIComponent(managerId)
     })
         .then(response => response.json())
         .then(data => {
@@ -262,22 +266,13 @@ document.getElementById('verifyBtn').addEventListener('click', function() {
 
 // 이메일 변경 시 인증 상태 초기화
 emailInput.addEventListener('input', function() {
-    const currentEmail = this.value.trim();
-
-    // 이메일이 변경되면 인증 상태 초기화
-    if (currentEmail !== originalEmail) {
-        if (isEmailVerified) {
-            isEmailVerified = false;
-            this.readOnly = false;
-            document.getElementById('sendEmailBtn').disabled = false;
-            document.getElementById('emailAuthGroup').style.display = 'none';
-            document.getElementById('authCode').value = '';
-            stopAuthTimer();
-        }
-    } else {
-        // 원래 이메일로 돌아가도 인증 필요
-        isEmailVerified = true;
-    }
+    // 기존 이메일과 같은 값이어도 수정 전에는 새 OTP 인증이 필요함
+    isEmailVerified = false;
+    this.readOnly = false;
+    document.getElementById('sendEmailBtn').disabled = false;
+    document.getElementById('emailAuthGroup').style.display = 'none';
+    document.getElementById('authCode').value = '';
+    stopAuthTimer();
 
     hideError(this.id);
 });

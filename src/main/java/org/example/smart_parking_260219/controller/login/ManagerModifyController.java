@@ -59,7 +59,7 @@ public class ManagerModifyController extends HttpServlet {
                 break;
 
             case "/mgr/modify_normal":
-                showModifyNormal(request, response);
+                showModifyNormal(request, response, session);
                 break;
 
             default:
@@ -163,6 +163,9 @@ public class ManagerModifyController extends HttpServlet {
             return;
         }
 
+        // 새 수정 화면에서는 이전에 완료한 수정 OTP 인증을 재사용하지 않음
+        clearManagerModifyEmailVerification(session);
+
         // 요청의 id를 사용하지 않고 현재 로그인한 ADMIN ID로 수정 대상을 고정함
         String managerId =
                 loginManager.getManagerId();
@@ -263,6 +266,9 @@ public class ManagerModifyController extends HttpServlet {
             return;
         }
 
+        // 새 수정 화면에서는 이전에 완료한 수정 OTP 인증을 재사용하지 않음
+        clearManagerModifyEmailVerification(session);
+
         try {
             // 세션 정보가 오래되었을 수 있으므로 DB에서 최신 정보를 다시 조회
             ManagerVO freshManager = managerDAO.selectOne(myManager.getManagerId());
@@ -285,10 +291,17 @@ public class ManagerModifyController extends HttpServlet {
     /**
      * 일반 관리자 정보 수정 페이지를 처리한다.
      */
-    private void showModifyNormal(HttpServletRequest request, HttpServletResponse response)
+    private void showModifyNormal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpSession session
+    )
             throws ServletException, IOException {
 
         log.info("ManagerModifyController.showModifyNormal() 진입");
+
+        // 새 수정 화면에서는 이전에 완료한 수정 OTP 인증을 재사용하지 않음
+        clearManagerModifyEmailVerification(session);
 
         // 요청 ID는 화면에 표시할 수정 대상을 찾는 용도로만 사용함
         String targetId = request.getParameter("id");
@@ -549,6 +562,38 @@ public class ManagerModifyController extends HttpServlet {
             return;
         }
 
+        // JavaScript 검사를 우회한 직접 POST라도 서버의 OTP 인증 완료 상태가 없으면 수정하지 않음
+        if (!isManagerModifyEmailVerified(
+                session,
+                managerId,
+                email
+        )) {
+            log.warn(
+                    "ADMIN 본인 수정 차단 - OTP 인증 상태 불일치, 대상 ID: {}",
+                    managerId
+            );
+
+            clearManagerModifyEmailVerification(session);
+            request.setAttribute(
+                    "error",
+                    "이메일 인증 정보가 확인되지 않습니다. 다시 인증해주세요."
+            );
+
+            try {
+                request.setAttribute(
+                        "manager",
+                        managerDAO.selectOne(managerId)
+                );
+            } catch (Exception e) {
+                log.error("ADMIN 정보 재조회 실패 - ID: {}", managerId, e);
+            }
+
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/manager/mgr_modify.jsp"
+            ).forward(request, response);
+            return;
+        }
+
         try {
             // 비밀번호는 평문으로 전달하고, DAO 계층에서 BCrypt로 암호화
             ManagerVO managerVO = ManagerVO.builder()
@@ -560,6 +605,9 @@ public class ManagerModifyController extends HttpServlet {
 
             managerDAO.updateManager(managerVO);
             log.info("ADMIN 본인 정보 수정 완료 - ID: {}", managerId);
+
+            // 사용이 끝난 수정 OTP 인증 상태를 삭제하여 다음 수정에 재사용하지 못하게 함
+            clearManagerModifyEmailVerification(session);
 
             // 이름, 이메일 또는 비밀번호가 변경됐으므로 기존 인증 세션을 종료함
             invalidateSessionWithMessage(
@@ -671,6 +719,29 @@ public class ManagerModifyController extends HttpServlet {
                 return;
             }
 
+            // 발급 대상 ID와 인증 이메일이 현재 수정 요청과 모두 일치해야 함
+            if (!isManagerModifyEmailVerified(
+                    session,
+                    managerId,
+                    email
+            )) {
+                log.warn(
+                        "NORMAL 수정 차단 - OTP 인증 상태 불일치, 대상 ID: {}",
+                        managerId
+                );
+
+                clearManagerModifyEmailVerification(session);
+                request.setAttribute(
+                        "error",
+                        "이메일 인증 정보가 확인되지 않습니다. 다시 인증해주세요."
+                );
+                request.setAttribute("manager", existing);
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/manager/mgr_modify_normal.jsp"
+                ).forward(request, response);
+                return;
+            }
+
             // 수정 대상의 고정 정보는 기존 DB 값을 유지하고, 변경 가능한 값만 새 입력값으로 교체
             ManagerVO.ManagerVOBuilder builder = ManagerVO.builder()
                     .managerNo(existing.getManagerNo())
@@ -694,6 +765,9 @@ public class ManagerModifyController extends HttpServlet {
                     "ADMIN에 의한 NORMAL 정보 수정 완료 - 대상 ID: {}",
                     managerId
             );
+
+            // 한 번 사용한 수정 OTP 인증 상태는 성공 직후 삭제함
+            clearManagerModifyEmailVerification(session);
 
             // 이 경로는 ADMIN 전용이므로 성공 후 관리자 목록으로 이동함
             session.setAttribute(
@@ -803,6 +877,29 @@ public class ManagerModifyController extends HttpServlet {
                 return;
             }
 
+            // NORMAL 본인 수정도 실제 대상 ID와 제출 이메일의 OTP 인증을 서버에서 확인함
+            if (!isManagerModifyEmailVerified(
+                    session,
+                    sessionId,
+                    email
+            )) {
+                log.warn(
+                        "NORMAL 본인 수정 차단 - OTP 인증 상태 불일치, 대상 ID: {}",
+                        sessionId
+                );
+
+                clearManagerModifyEmailVerification(session);
+                request.setAttribute(
+                        "error",
+                        "이메일 인증 정보가 확인되지 않습니다. 다시 인증해주세요."
+                );
+                request.setAttribute("manager", existing);
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/manager/mgr_my_modify.jsp"
+                ).forward(request, response);
+                return;
+            }
+
             // 아이디, 활성화 상태, 권한은 기존 DB 값을 유지
             ManagerVO.ManagerVOBuilder builder = ManagerVO.builder()
                     .managerNo(existing.getManagerNo())
@@ -823,6 +920,9 @@ public class ManagerModifyController extends HttpServlet {
 
             managerDAO.updateManager(builder.build());
             log.info("본인 정보 수정 완료 - ID: {}", sessionId);
+
+            // 사용이 끝난 수정 OTP 인증 상태를 삭제하여 다음 수정에 재사용하지 못하게 함
+            clearManagerModifyEmailVerification(session);
 
             // 변경된 정보로 다시 로그인하도록 기존 인증 세션을 종료
             invalidateSessionWithMessage(
@@ -985,6 +1085,48 @@ public class ManagerModifyController extends HttpServlet {
         log.info("Context Path: {}", request.getContextPath());
         log.info("Servlet Path: {}", request.getServletPath());
         log.info("Path Info: {}", request.getPathInfo());
+    }
+
+    // 최종 수정 POST의 대상 ID와 이메일이 OTP 인증 완료 상태와 같은지 확인함
+    private boolean isManagerModifyEmailVerified(
+            HttpSession session,
+            String targetManagerId,
+            String submittedEmail
+    ) {
+        if (session == null
+                || targetManagerId == null
+                || submittedEmail == null) {
+            return false;
+        }
+
+        String verifiedManagerId =
+                (String) session.getAttribute(
+                        "managerModifyVerifiedId"
+                );
+
+        String verifiedEmail =
+                (String) session.getAttribute(
+                        "managerModifyVerifiedEmail"
+                );
+
+        return targetManagerId.equals(verifiedManagerId)
+                && verifiedEmail != null
+                && verifiedEmail.equalsIgnoreCase(
+                        submittedEmail.trim()
+                );
+    }
+
+    // 관리자 수정 OTP의 발송 대상과 인증 완료 상태를 모두 삭제함
+    private void clearManagerModifyEmailVerification(
+            HttpSession session
+    ) {
+        if (session == null) {
+            return;
+        }
+
+        session.removeAttribute("managerModifyPendingId");
+        session.removeAttribute("managerModifyVerifiedId");
+        session.removeAttribute("managerModifyVerifiedEmail");
     }
 
 

@@ -57,6 +57,7 @@ public class VerifyAuthCodeController extends HttpServlet {
         // 인증 검증에 필요한 요청 파라미터 추출
         String email = req.getParameter("email");
         String code = req.getParameter("code");
+        String targetManagerId = req.getParameter("managerId");
 
         // 관리자 등록과 수정에서 사용하는 이메일 OTP 상태가 저장된 기존 로그인 세션 조회
         HttpSession session = req.getSession(false);
@@ -92,6 +93,7 @@ public class VerifyAuthCodeController extends HttpServlet {
             // 현재 검증 상태만 정리하고 이미 완료된 관리자 등록 인증 상태는 유지함
             clearCommonEmailOtpState(session);
             session.removeAttribute("managerAddPendingEmail");
+            session.removeAttribute("managerModifyPendingId");
 
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write(
@@ -113,6 +115,7 @@ public class VerifyAuthCodeController extends HttpServlet {
 
             clearCommonEmailOtpState(session);
             session.removeAttribute("managerAddPendingEmail");
+            session.removeAttribute("managerModifyPendingId");
 
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write(
@@ -134,6 +137,7 @@ public class VerifyAuthCodeController extends HttpServlet {
 
             clearCommonEmailOtpState(session);
             session.removeAttribute("managerAddPendingEmail");
+            session.removeAttribute("managerModifyPendingId");
 
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write(
@@ -218,6 +222,10 @@ public class VerifyAuthCodeController extends HttpServlet {
         String managerAddPendingEmail =
                 (String) session.getAttribute("managerAddPendingEmail");
 
+        // 관리자 수정 OTP가 발급된 실제 대상 ID를 세션에서 조회함
+        String managerModifyPendingId =
+                (String) session.getAttribute("managerModifyPendingId");
+
         // 관리자 등록 목적이면 등록용 이메일과 OTP 발송 이메일이 일치해야 함
         if (isManagerAddPurpose
                 && (managerAddPendingEmail == null
@@ -232,6 +240,24 @@ public class VerifyAuthCodeController extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.write(
                     "{\"success\": false, \"message\": \"인증 상태가 일치하지 않습니다. 인증번호를 다시 발급받아주세요.\"}"
+            );
+            out.flush();
+            return;
+        }
+
+        // 수정 목적이면 발송 단계의 대상 ID와 현재 검증 요청의 대상 ID가 같아야 함
+        if (isManagerModifyPurpose
+                && (managerModifyPendingId == null
+                || targetManagerId == null
+                || !managerModifyPendingId.equals(targetManagerId.trim()))) {
+
+            log.warn("관리자 수정 OTP 대상 ID 불일치");
+
+            clearEmailOtpState(session);
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.write(
+                    "{\"success\": false, \"message\": \"수정 대상의 인증 상태가 일치하지 않습니다. 인증번호를 다시 발급받아주세요.\"}"
             );
             out.flush();
             return;
@@ -266,6 +292,26 @@ public class VerifyAuthCodeController extends HttpServlet {
                 session.removeAttribute("managerAddPendingEmail");
 
                 log.info("관리자 등록 이메일 인증 완료 상태 저장");
+            }
+
+            if (isManagerModifyPurpose) {
+                // 최종 수정 POST에서 대상 ID와 제출 이메일을 다시 확인할 수 있도록 저장함
+                session.setAttribute(
+                        "managerModifyVerifiedId",
+                        managerModifyPendingId
+                );
+                session.setAttribute(
+                        "managerModifyVerifiedEmail",
+                        authCodePendingEmail
+                );
+
+                // 발송 대기 상태는 인증 완료 상태로 전환되었으므로 삭제함
+                session.removeAttribute("managerModifyPendingId");
+
+                log.info(
+                        "관리자 수정 이메일 인증 완료 상태 저장 - 대상 ID: {}",
+                        managerModifyPendingId
+                );
             }
 
             log.info("인증 성공 - 사용한 인증번호 폐기 완료");
@@ -355,5 +401,8 @@ public class VerifyAuthCodeController extends HttpServlet {
         clearCommonEmailOtpState(session);
         session.removeAttribute("managerAddPendingEmail");
         session.removeAttribute("managerAddVerifiedEmail");
+        session.removeAttribute("managerModifyPendingId");
+        session.removeAttribute("managerModifyVerifiedId");
+        session.removeAttribute("managerModifyVerifiedEmail");
     }
 }

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
+import org.example.smart_parking_260219.dao.ManagerDAO;
 import org.example.smart_parking_260219.service.ValidationService;
 import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
@@ -27,6 +28,7 @@ import java.io.PrintWriter;
 public class SendAuthCodeController extends HttpServlet {
 
     private final ValidationService validationService = new ValidationService();
+    private final ManagerDAO managerDAO = ManagerDAO.getInstance();
 
     /**
      * 인증정보 발송 POST 요청을 처리합니다.
@@ -39,6 +41,7 @@ public class SendAuthCodeController extends HttpServlet {
         // 인증정보 발송에 필요한 요청 파라미터 추출
         String email = req.getParameter("email");
         String purposeParam = req.getParameter("purpose");
+        String targetManagerId = req.getParameter("managerId");
 
         // 로그인 필터에서 확인된 기존 세션 조회
         HttpSession session = req.getSession(false);
@@ -164,13 +167,77 @@ public class SendAuthCodeController extends HttpServlet {
             return;
         }
 
+        // 관리자 수정 OTP는 어느 계정을 수정하기 위한 인증인지 대상 ID가 필요함
+        if (isManagerModifyPurpose
+                && (targetManagerId == null || targetManagerId.isBlank())) {
+
+            log.warn("관리자 수정 OTP 발송 대상 ID 누락");
+
+            clearEmailOtpState(session);
+
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = resp.getWriter();
+            out.write(
+                    "{\"success\": false, \"message\": \"수정할 관리자 정보가 필요합니다.\"}"
+            );
+            out.flush();
+            return;
+        }
+
         try {
-            // 새로운 인증번호를 발송하면 이전 OTP와 관리자 등록 인증 상태를 재사용할 수 없도록 초기화
-            session.removeAttribute("managerAddPendingEmail");
-            session.removeAttribute("managerAddVerifiedEmail");
-            session.removeAttribute("authCodePendingEmail");
-            session.removeAttribute("authCodeAttemptCount");
-            session.removeAttribute("authCodePurpose");
+            // 새 OTP 발송을 시작하면 이전 등록·수정 인증 상태를 재사용할 수 없도록 초기화함
+            clearEmailOtpState(session);
+
+            String managerModifyTargetId = null;
+
+            if (isManagerModifyPurpose) {
+                managerModifyTargetId = targetManagerId.trim();
+
+                // 요청 파라미터만 신뢰하지 않고 DB에서 실제 수정 대상과 역할을 다시 확인함
+                ManagerVO targetManager =
+                        managerDAO.selectOne(managerModifyTargetId);
+
+                if (targetManager == null) {
+                    log.warn(
+                            "관리자 수정 OTP 발송 대상을 찾을 수 없음 - ID: {}",
+                            managerModifyTargetId
+                    );
+
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.setContentType("application/json; charset=UTF-8");
+                    resp.setCharacterEncoding("UTF-8");
+
+                    PrintWriter out = resp.getWriter();
+                    out.write(
+                            "{\"success\": false, \"message\": \"존재하지 않는 관리자입니다.\"}"
+                    );
+                    out.flush();
+                    return;
+                }
+
+                // ADMIN은 본인 ADMIN 계정과 NORMAL 계정을, NORMAL은 본인 계정만 수정할 수 있음
+                if (!canModifyManager(loginManager, targetManager)) {
+                    log.warn(
+                            "관리자 수정 OTP 발송 대상 권한 없음 - 요청자 ID: {}, 대상 ID: {}",
+                            loginManager.getManagerId(),
+                            managerModifyTargetId
+                    );
+
+                    resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    resp.setContentType("application/json; charset=UTF-8");
+                    resp.setCharacterEncoding("UTF-8");
+
+                    PrintWriter out = resp.getWriter();
+                    out.write(
+                            "{\"success\": false, \"message\": \"해당 관리자 정보를 수정할 권한이 없습니다.\"}"
+                    );
+                    out.flush();
+                    return;
+                }
+            }
 
             // DB 저장, 메일 발송, 세션 저장에서 동일한 이메일 값을 사용하도록 앞뒤 공백 제거
             String pendingEmail = email.trim();
@@ -205,6 +272,14 @@ public class SendAuthCodeController extends HttpServlet {
                 );
             }
 
+            if (isManagerModifyPurpose) {
+                // OTP 인증 결과가 다른 관리자 수정에 사용되지 않도록 대상 ID를 함께 저장함
+                session.setAttribute(
+                        "managerModifyPendingId",
+                        managerModifyTargetId
+                );
+            }
+
             // JSON 응답 인코딩은 getWriter() 호출 전에 설정
             resp.setContentType("application/json; charset=UTF-8");
             resp.setCharacterEncoding("UTF-8");
@@ -218,11 +293,7 @@ public class SendAuthCodeController extends HttpServlet {
 
         } catch (Exception e) {
             // 발송에 실패한 OTP에 대한 검증 상태가 남지 않도록 초기화
-            session.removeAttribute("authCodePendingEmail");
-            session.removeAttribute("authCodeAttemptCount");
-            session.removeAttribute("authCodePurpose");
-            session.removeAttribute("managerAddPendingEmail");
-            session.removeAttribute("managerAddVerifiedEmail");
+            clearEmailOtpState(session);
 
             log.error("인증코드 발송 실패", e);
 
@@ -236,5 +307,42 @@ public class SendAuthCodeController extends HttpServlet {
             out.write("{\"success\": false, \"message\": \"인증코드 발송에 실패했습니다.\"}");
             out.flush();
         }
+    }
+
+    // 로그인 관리자에게 수정 대상 계정을 변경할 권한이 있는지 확인함
+    private boolean canModifyManager(
+            ManagerVO loginManager,
+            ManagerVO targetManager
+    ) {
+        boolean isOwnAccount =
+                loginManager.getManagerId().equals(
+                        targetManager.getManagerId()
+                );
+
+        if (loginManager.getRole() == ManagerRole.ADMIN) {
+            // ADMIN은 본인 계정 또는 NORMAL 계정의 정보를 수정할 수 있음
+            return (isOwnAccount
+                    && targetManager.getRole() == ManagerRole.ADMIN)
+                    || targetManager.getRole() == ManagerRole.NORMAL;
+        }
+
+        // NORMAL은 자신의 NORMAL 계정만 수정할 수 있음
+        return loginManager.getRole() == ManagerRole.NORMAL
+                && isOwnAccount
+                && targetManager.getRole() == ManagerRole.NORMAL;
+    }
+
+    // 새 OTP 발송이나 발송 실패 시 이전 이메일 인증 상태를 모두 삭제함
+    private void clearEmailOtpState(HttpSession session) {
+        session.removeAttribute("authCodePendingEmail");
+        session.removeAttribute("authCodeAttemptCount");
+        session.removeAttribute("authCodePurpose");
+
+        session.removeAttribute("managerAddPendingEmail");
+        session.removeAttribute("managerAddVerifiedEmail");
+
+        session.removeAttribute("managerModifyPendingId");
+        session.removeAttribute("managerModifyVerifiedId");
+        session.removeAttribute("managerModifyVerifiedEmail");
     }
 }

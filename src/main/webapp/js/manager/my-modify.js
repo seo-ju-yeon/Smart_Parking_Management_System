@@ -6,12 +6,12 @@ const managerModifyForm = document.getElementById('modifyForm');
 // 로그인 정보가 없어 수정 폼이 출력되지 않은 경우에는 폼 전용 로직을 실행하지 않는다.
 if (managerModifyForm) {
 
-// 인증 상태와 기존 이메일 저장
+// 관리자 수정 OTP 인증 상태 저장
 let isEmailVerified = false;
-const originalEmail = document.getElementById('email').value.trim();
 
 // 수정 폼 요소 가져오기
 const form                 = managerModifyForm;
+const managerId            = form.elements.managerId.value;
 const nameInput            = document.getElementById('name');
 const pwInput              = document.getElementById('pw');
 const passwordConfirmInput = document.getElementById('passwordConfirm');
@@ -110,16 +110,13 @@ emailInput.addEventListener('blur', function () {
 
 // 이메일 변경 시 인증 상태 초기화
 emailInput.addEventListener('input', function () {
-    const cur = this.value.trim();
-    if (cur !== originalEmail) {
-        isEmailVerified = false;
-        this.readOnly = false;
-        document.getElementById('sendEmailBtn').disabled = false;
-        document.getElementById('emailAuthGroup').style.display = 'none';
-        document.getElementById('authCode').value = '';
-        stopAuthTimer();
-    }
-    // 이메일 값과 관계없이 수정 전 인증 필요
+    // 기존 이메일과 같은 값이어도 수정 전에는 새 OTP 인증이 필요함
+    isEmailVerified = false;
+    this.readOnly = false;
+    document.getElementById('sendEmailBtn').disabled = false;
+    document.getElementById('emailAuthGroup').style.display = 'none';
+    document.getElementById('authCode').value = '';
+    stopAuthTimer();
     hideError(this.id);
 });
 
@@ -136,7 +133,9 @@ document.getElementById('sendEmailBtn').addEventListener('click', function () {
     fetch(contextPath + '/auth/sendCode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'email=' + encodeURIComponent(email) + '&purpose=MODIFY_MANAGER'
+        body: 'email=' + encodeURIComponent(email)
+            + '&purpose=MODIFY_MANAGER'
+            + '&managerId=' + encodeURIComponent(managerId)
     })
     .then(r => r.json())
     .then(data => {
@@ -172,7 +171,9 @@ document.getElementById('verifyBtn').addEventListener('click', function () {
     fetch(contextPath + '/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'email=' + encodeURIComponent(email) + '&code=' + encodeURIComponent(code)
+        body: 'email=' + encodeURIComponent(email)
+            + '&code=' + encodeURIComponent(code)
+            + '&managerId=' + encodeURIComponent(managerId)
     })
     .then(r => r.json())
     .then(data => {
