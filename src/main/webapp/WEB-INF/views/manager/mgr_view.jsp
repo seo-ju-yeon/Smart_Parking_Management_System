@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <!DOCTYPE html>
 <html>
@@ -11,13 +10,6 @@
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
-
-<%
-    /* 로그인 관리자 정보 확인
-     * menu.jsp의 loginManager 변수와 이름이 겹치지 않도록 sessionLoginManager 사용 */
-    ManagerVO sessionLoginManager = (ManagerVO) session.getAttribute("loginManager");
-    String loginId = (sessionLoginManager != null) ? sessionLoginManager.getManagerId() : "";
-%>
 
 <div class="main-content">
     <div class="container">
@@ -46,13 +38,6 @@
         <%
             ManagerVO manager = (ManagerVO) request.getAttribute("manager");
             if (manager != null) {
-
-                /* 조회 대상이 본인 계정인지, 최고관리자인지 확인 */
-                boolean isSelf      = manager.getManagerId().equals(loginId);
-                boolean isAdminRole = manager.getRole() == ManagerRole.ADMIN;
-
-                /* 최고관리자 본인 계정 비활성화 차단 여부 */
-                boolean blockDeactivate = isSelf && isAdminRole;
         %>
 
         <!-- 관리자 정보 영역 -->
@@ -99,13 +84,7 @@
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="false">
                 <button type="submit" class="btn btn-danger full-width-button account-state-button"
-                <%-- 최고관리자 본인은 비활성화 제출 차단 --%>
-                        <% if (blockDeactivate) { %>
-                        data-block-deactivate="true"
-                        <% } else { %>
-                        data-confirm-message="이 관리자 계정을 비활성화 하시겠습니까?"
-                        <% } %>
-                >
+                        data-confirm-message="이 관리자 계정을 비활성화 하시겠습니까?">
                     계정 비활성화
                 </button>
             </form>

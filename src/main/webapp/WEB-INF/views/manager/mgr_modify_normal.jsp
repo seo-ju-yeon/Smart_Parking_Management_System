@@ -1,14 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
-<%
-    // 일반 관리자 수정 화면은 ADMIN만 접근 가능
-    ManagerVO loginCheck = (ManagerVO) session.getAttribute("loginManager");
-    if (loginCheck == null || loginCheck.getRole() != ManagerRole.ADMIN) {
-        response.sendRedirect(request.getContextPath() + "/mgr/my_modify");
-        return;
-    }
-%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -93,7 +84,7 @@
                            maxlength="100" placeholder="example@email.com" required class="email-input">
                     <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>
                 </div>
-                <div class="field-hint">변경된 이메일 인증이 필요합니다</div>
+                <div class="field-hint">정보를 수정하려면 이메일 인증이 필요합니다</div>
                 <div class="field-error" id="emailError"></div>
 
                 <!-- 인증번호 입력 영역 -->

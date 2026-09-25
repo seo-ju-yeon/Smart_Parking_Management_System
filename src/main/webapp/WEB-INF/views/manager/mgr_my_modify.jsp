@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <!DOCTYPE html>
 <html>
@@ -36,14 +35,8 @@
         <% } %>
 
         <%
-            // 세션에서 로그인 관리자 정보 확인
-            ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
-
-            // 최고관리자는 전용 수정 페이지로 이동
-            if (manager != null && manager.getRole() == ManagerRole.ADMIN) {
-                response.sendRedirect(request.getContextPath() + "/mgr/modify");
-                return;
-            }
+            // Controller가 DB에서 다시 조회하여 전달한 최신 관리자 정보를 사용함
+            ManagerVO manager = (ManagerVO) request.getAttribute("manager");
 
             if (manager != null) {
         %>
