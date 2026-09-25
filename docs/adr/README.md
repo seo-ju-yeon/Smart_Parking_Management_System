@@ -18,6 +18,7 @@
 3. [OTP 인증 후 세션 기반 비밀번호 변경 허가 도입](003-use-session-bound-password-reset.md)
 4. [Docker Compose와 Flyway로 로컬 데이터베이스 환경 구성](004-use-docker-compose-and-flyway-for-local-database.md)
 5. [로컬 이메일 확인에 Mailpit 사용](005-use-mailpit-for-local-email-testing.md)
+6. [관리자 역할 단순화와 권한 검사 공통화](006-centralize-manager-authorization.md)
 
 ## 상태
 
