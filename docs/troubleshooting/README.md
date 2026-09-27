@@ -17,3 +17,4 @@ ADR이 여러 대안 중 특정 설계를 선택한 이유를 기록한다면, �
 2. [TS-002: 관리자 등록 성공 메시지가 다음 화면에 남은 문제](002-stale-success-message-in-session.md)
 3. [TS-003: 관리자 정보 수정 시 BCrypt 해시가 다시 해싱될 수 있었던 문제](003-prevent-bcrypt-password-double-hashing.md)
 4. [TS-004: 뒤로가기로 이전 OTP 페이지가 복원된 문제](004-revalidate-otp-page-restored-from-bfcache.md)
+5. [TS-005: 웹 애플리케이션 종료 시 DB 자원이 남은 문제](005-clean-up-db-resources-on-shutdown.md)
