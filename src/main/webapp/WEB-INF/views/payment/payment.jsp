@@ -92,19 +92,23 @@
             </div>
             <div class="form-group">
                 <label>총 주차 시간</label>
-                <input type="text" id="totalParkingTime" placeholder="총 주차 시간" name="totalTime" value="<%=totalTime%>분">
+                <input type="text" id="totalParkingTime" placeholder="총 주차 시간"
+                       value="<%=totalTime%>분" readonly>
             </div>
             <div class="form-group">
                 <label>할인 전 요금</label>
-                <input type="text" name="calculatedFee" id="calculatedFee" placeholder="할인 전 요금" value="<%=calculatedFee%>">
+                <input type="text" id="calculatedFee" placeholder="할인 전 요금"
+                       value="<%=calculatedFee%>" readonly>
             </div>
             <div class="form-group">
                 <label>할인액</label>
-                <input type="text" name="discountAmount" id="discountAmount" placeholder="할인액" value="<%=discountAmount%>">
+                <input type="text" id="discountAmount" placeholder="할인액"
+                       value="<%=discountAmount%>" readonly>
             </div>
             <div class="form-group">
                 <label>총 주차 요금</label>
-                <input type="text" name="finalFee" id="finalFee" placeholder="총 주차 요금" value="<%=finalFee%>">
+                <input type="text" id="finalFee" placeholder="총 주차 요금"
+                       value="<%=finalFee%>" readonly>
             </div>
             <div>
                 <input type="checkbox" name="receipt" id="receipt"><label>영수증 출력</label>

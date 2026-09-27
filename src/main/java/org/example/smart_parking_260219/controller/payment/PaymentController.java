@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import org.example.smart_parking_260219.dto.FeePolicyDTO;
 import org.example.smart_parking_260219.dto.ParkingDTO;
 import org.example.smart_parking_260219.dto.ParkingSpotDTO;
 import org.example.smart_parking_260219.dto.PaymentDTO;
@@ -13,6 +14,8 @@ import org.example.smart_parking_260219.service.FeePolicyService;
 import org.example.smart_parking_260219.service.ParkingService;
 import org.example.smart_parking_260219.service.ParkingSpotService;
 import org.example.smart_parking_260219.service.PaymentService;
+import org.example.smart_parking_260219.util.MapperUtil;
+import org.example.smart_parking_260219.vo.FeePolicyVO;
 
 import java.io.IOException;
 
@@ -44,17 +47,11 @@ public class PaymentController extends HttpServlet {
         int parkingId;
         int carType;
         int paymentType;
-        int calculatedFee;
-        int discountAmount;
-        int finalFee;
 
         try {
             parkingId = Integer.parseInt(req.getParameter("parkingId"));
             carType = Integer.parseInt(req.getParameter("carType"));
             paymentType = Integer.parseInt(req.getParameter("paymentType"));
-            calculatedFee = Integer.parseInt(req.getParameter("calculatedFee"));
-            discountAmount = Integer.parseInt(req.getParameter("discountAmount"));
-            finalFee = Integer.parseInt(req.getParameter("finalFee"));
         } catch (NumberFormatException e) {
             log.warn("숫자 형식이 아닌 결제 요청값 수신");
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 결제 요청입니다.");
@@ -81,12 +78,29 @@ public class PaymentController extends HttpServlet {
             }
             String carNum = parkingDTO.getCarNum();
 
-            // 결제 정보 저장
+            FeePolicyDTO feePolicyDTO = feePolicyService.getPolicy();
+            if (feePolicyDTO == null) {
+                throw new IllegalStateException("활성화된 요금 정책이 없습니다.");
+            }
+
+            FeePolicyVO feePolicyVO = MapperUtil.INSTANCE.getInstance()
+                    .map(feePolicyDTO, FeePolicyVO.class);
+
+            // 요청 금액을 사용하지 않고 DB의 주차 기록과 활성 요금 정책으로 다시 계산함
+            int calculatedFee = paymentService.calculateFeeLogic(parkingDTO);
+            int discountAmount = paymentService.calculateDiscountLogic(
+                    calculatedFee,
+                    carType,
+                    feePolicyVO
+            );
+            int finalFee = calculatedFee - discountAmount;
+
+            // 서버에서 계산한 금액으로 결제 정보를 생성함
             PaymentDTO paymentDTO = PaymentDTO.builder()
                     .carNum(carNum)
                     .carType(carType)
                     .parkingId(parkingId)
-                    .policyId(feePolicyService.getPolicy().getPolicyId())
+                    .policyId(feePolicyDTO.getPolicyId())
                     .paymentType(paymentType)
                     .calculatedFee(calculatedFee)
                     .discountAmount(discountAmount)
@@ -101,8 +115,6 @@ public class PaymentController extends HttpServlet {
                     .carNum(carNum)
                     .carType(carType) // 화면에서 선택한 타입 반영
                     .build();
-
-
 
             paymentService.addPayment(paymentDTO);
             parkingService.modifyParking(parkingDTO1);
