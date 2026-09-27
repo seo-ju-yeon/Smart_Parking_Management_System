@@ -19,7 +19,10 @@ public class  ParkingListController extends HttpServlet {
 
     // 차량번호와 주차구역이 실제 미정산 주차 기록과 일치하는지 확인함
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws ServletException, IOException {
         log.info("GET /get - 출차 차량 조회");
         String carNum = req.getParameter("carNum");
         String spaceId = req.getParameter("id");
@@ -49,17 +52,28 @@ public class  ParkingListController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(
+            HttpServletRequest req,
+            HttpServletResponse resp
+    ) throws ServletException, IOException {
         log.info("POST /get - 정산 페이지 이동");
 
         // 화면의 차량번호가 아니라 주차 기록 ID로 결제 대상을 다시 조회함
-        String parkingIdParam = req.getParameter("parkingId");
         int parkingId;
+        int carType;
         try {
-            parkingId = Integer.parseInt(parkingIdParam);
+            parkingId = Integer.parseInt(req.getParameter("parkingId"));
+            carType = Integer.parseInt(req.getParameter("carType"));
         } catch (NumberFormatException e) {
-            log.warn("유효하지 않은 주차 ID로 정산 페이지 이동 요청");
-            resp.sendRedirect(req.getContextPath() + "/output");
+            log.warn("숫자 형식이 아닌 정산 요청값 수신");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 정산 요청입니다.");
+            return;
+        }
+
+        // 주차 ID와 차량 유형이 서버에서 허용하는 범위인지 확인함
+        if (parkingId <= 0 || !isValidCarType(carType)) {
+            log.warn("허용 범위를 벗어난 정산 요청값 수신");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 정산 요청입니다.");
             return;
         }
 
@@ -70,10 +84,14 @@ public class  ParkingListController extends HttpServlet {
             return;
         }
 
-        String carType = req.getParameter("carType");
         req.setAttribute("parkingDTO", parkingDTO);
         req.setAttribute("carType", carType);
 
         req.getRequestDispatcher("/WEB-INF/views/payment/payment.jsp").forward(req, resp);
+    }
+
+    // 차량 유형이 일반(1), 월정액(2), 경차(3), 장애인(4) 중 하나인지 확인함
+    private boolean isValidCarType(int carType) {
+        return carType >= 1 && carType <= 4;
     }
 }

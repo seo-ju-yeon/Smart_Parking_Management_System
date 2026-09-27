@@ -1,5 +1,4 @@
-        <%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
-<%@ page import="org.example.smart_parking_260219.service.ParkingService" %>
+<%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
 <%@ page import="org.example.smart_parking_260219.service.PaymentService" %>
 <%@ page import="org.example.smart_parking_260219.util.MapperUtil" %>
 <%@ page import="org.example.smart_parking_260219.service.FeePolicyService" %>
@@ -7,18 +6,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
-    String parkingIdParam = request.getParameter("parkingId");
+    Integer selectedCarType = (Integer) request.getAttribute("carType");
 
-    // Controller를 거치지 않은 요청도 주차 ID로 DB 기록을 다시 확인함
-    if (parkingDTO == null && parkingIdParam != null) {
-        try {
-            parkingDTO = ParkingService.INSTANCE.getByIdParking(Integer.parseInt(parkingIdParam));
-        } catch (NumberFormatException ignored) {
-            parkingDTO = null;
-        }
-    }
-
-    if (parkingDTO == null || parkingDTO.isPaid()) {
+    // Controller의 대상 검증과 요청값 검증을 통과한 경우에만 정산 화면을 표시함
+    if (parkingDTO == null || parkingDTO.isPaid() || selectedCarType == null) {
         request.setAttribute("pageAlertMessage", "정산 가능한 주차 정보를 찾을 수 없습니다.");
         request.setAttribute("pageAlertAction", "redirect");
         request.setAttribute("pageAlertUrl", request.getContextPath() + "/dashboard");
@@ -28,13 +19,6 @@
     }
 
     String carNum = parkingDTO.getCarNum();
-    String carTypeParam = request.getParameter("carType");
-    if (carTypeParam == null) {
-        carTypeParam = (String) request.getAttribute("carType");
-    }
-    int selectedCarType = (carTypeParam != null)
-            ? Integer.parseInt(carTypeParam)
-            : parkingDTO.getCarType();
 
     int calculatedFee = 0;
     int discountAmount = 0;
