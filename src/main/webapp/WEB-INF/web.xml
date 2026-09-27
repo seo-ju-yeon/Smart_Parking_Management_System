@@ -4,6 +4,13 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
+    <!-- 웹 애플리케이션 시작과 종료에 맞춰 DB 커넥션 풀을 관리함 -->
+    <listener>
+        <listener-class>
+            org.example.smart_parking_260219.listener.AppLifecycleListener
+        </listener-class>
+    </listener>
+
     <!-- 로그인과 2차 인증 완료 여부를 먼저 확인함 -->
     <filter>
         <filter-name>LoginCheckFilter</filter-name>

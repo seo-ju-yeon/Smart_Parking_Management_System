@@ -11,12 +11,12 @@ import java.sql.SQLException;
  * DB 연결을 관리하는 클래스입니다.
  *
  * <p>
- *     HikariCP를 사용해서 MariaDB와 연결하고,
- *     DAO에서 DB 작업을 할 때 필요한 Connection 객체를 가져올 수 있도록 만들었습니다.
+ * HikariCP를 사용해서 MariaDB와 연결하고,
+ * DAO에서 DB 작업을 할 때 필요한 Connection 객체를 가져올 수 있도록 만들었습니다.
  * </p>
  *
  * <p>
- *     enum을 사용해서 프로젝트 안에서 하나의 DBConnection 객체만 사용하도록 했습니다.
+ * enum을 사용해서 프로젝트 안에서 하나의 DBConnection 객체만 사용하도록 했습니다.
  * </p>
  */
 public enum DBConnection {
@@ -45,11 +45,18 @@ public enum DBConnection {
 
     /**
      * DB 작업에 사용할 Connection 객체를 반환합니다.
-     *
-     * @return 커넥션 풀에서 가져온 Connection 객체
-     * @throws SQLException DB 연결을 가져오는 중 문제가 발생한 경우
      */
     public Connection getConnection() throws SQLException {
         return dataSource.getConnection();
+    }
+
+    /**
+     * 애플리케이션 종료 시 HikariCP 커넥션 풀을 종료합니다.
+     */
+    public void close() {
+        // 이미 종료된 풀에 close()를 다시 호출하지 않도록 확인
+        if (!dataSource.isClosed()) {
+            dataSource.close();
+        }
     }
 }
