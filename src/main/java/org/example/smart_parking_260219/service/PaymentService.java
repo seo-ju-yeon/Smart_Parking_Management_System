@@ -35,18 +35,17 @@ public enum PaymentService {
 
     // 결제 등록
     public void addPayment(PaymentDTO paymentDTO) throws Exception {
-        ParkingVO parkingVO = parkingDAO.selectParkingByCarNum(paymentDTO.getCarNum());
+        // 결제 대상의 존재 여부와 정산 상태를 DB에서 다시 확인함
+        ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(paymentDTO.getParkingId());
 
-        if (parkingVO == null || parkingVO.getParkingId() == 0) {
-            throw new Exception("주차 중인 차량이 아닙니다.");
+        if (parkingVO == null || parkingVO.isPaid()) {
+            throw new Exception("정산 가능한 주차 기록이 아닙니다.");
         }
 
-        int parkingId = parkingVO.getParkingId();
-
         PaymentVO paymentVO = PaymentVO.builder()
-                .parkingId(parkingId)
+                .parkingId(parkingVO.getParkingId())
                 .policyId(paymentDTO.getPolicyId())
-                .carNum(paymentDTO.getCarNum())
+                .carNum(parkingVO.getCarNum())
                 .paymentType(paymentDTO.getPaymentType())
                 .calculatedFee(paymentDTO.getCalculatedFee())
                 .discountAmount(paymentDTO.getDiscountAmount())

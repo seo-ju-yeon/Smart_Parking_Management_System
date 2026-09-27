@@ -4,56 +4,46 @@
 <%@ page import="org.example.smart_parking_260219.util.MapperUtil" %>
 <%@ page import="org.example.smart_parking_260219.service.FeePolicyService" %>
 <%@ page import="org.example.smart_parking_260219.vo.FeePolicyVO" %>
-<%@ page import="org.example.smart_parking_260219.dto.PaymentDTO" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    String carNum = request.getParameter("carNum");
+    ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
+    String parkingIdParam = request.getParameter("parkingId");
 
-    // 1. 이전 페이지(출차화면)에서 보낸 carType을 받음
-    String carTypeParam = request.getParameter("carType");
-
-    // 2. 만약 값이 없으면(직접 진입 등) 기존 DB 정보에서 가져옴
-    ParkingDTO parkingDTO = null;
-    int selectedCarType = (carTypeParam != null) ? Integer.parseInt(carTypeParam) : parkingDTO.getCarType();
-
-    // 2. 만약 Forward로 올 경우
-    if (carNum == null || carNum.isEmpty()) {
-        carNum = (String) request.getAttribute("carNum");
-    }
-    // 3. 데이터가 없을 때 DB 조회를 시도하면 에러가 나므로 조건문 처리
-    parkingDTO = null;
-    PaymentDTO paymentDTO = null;
-    int calculatedFee = 0;
-    int discountAmount = 0;
-    int finalFee = 0;
-
-    if (carNum != null && !carNum.isEmpty() && !"null".equals(carNum)) {
-        parkingDTO = ParkingService.INSTANCE.getParkingByCarNum(carNum.trim());
-//        if (parkingDTO != null) {
-//            // 주차 정보가 있을 때만 실행
-//            paymentDTO = PaymentService.INSTANCE.getPayment(parkingDTO.getParkingId());
-//        }
-
-        // DB에서 차량을 못 찾았을 경우의 처리
-        if (parkingDTO == null) {
-            request.setAttribute("pageAlertMessage", "현재 주차 중인 차량이 아닙니다.");
-            request.setAttribute("pageAlertAction", "redirect");
-            request.setAttribute("pageAlertUrl", request.getContextPath() + "/dashboard");
-            request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
-                    .forward(request, response);
-            return;
+    // Controller를 거치지 않은 요청도 주차 ID로 DB 기록을 다시 확인함
+    if (parkingDTO == null && parkingIdParam != null) {
+        try {
+            parkingDTO = ParkingService.INSTANCE.getByIdParking(Integer.parseInt(parkingIdParam));
+        } catch (NumberFormatException ignored) {
+            parkingDTO = null;
         }
-        calculatedFee = PaymentService.INSTANCE.calculateFeeLogic(parkingDTO);
-        discountAmount = PaymentService.INSTANCE.calculateDiscountLogic(calculatedFee, selectedCarType,
-                MapperUtil.INSTANCE.getInstance().map(FeePolicyService.getInstance().getPolicy(), FeePolicyVO.class));
-        finalFee = calculatedFee - discountAmount;
-    } else {
-        request.setAttribute("pageAlertMessage", "차량 정보가 없습니다.");
-        request.setAttribute("pageAlertAction", "back");
+    }
+
+    if (parkingDTO == null || parkingDTO.isPaid()) {
+        request.setAttribute("pageAlertMessage", "정산 가능한 주차 정보를 찾을 수 없습니다.");
+        request.setAttribute("pageAlertAction", "redirect");
+        request.setAttribute("pageAlertUrl", request.getContextPath() + "/dashboard");
         request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
                 .forward(request, response);
         return;
     }
+
+    String carNum = parkingDTO.getCarNum();
+    String carTypeParam = request.getParameter("carType");
+    if (carTypeParam == null) {
+        carTypeParam = (String) request.getAttribute("carType");
+    }
+    int selectedCarType = (carTypeParam != null)
+            ? Integer.parseInt(carTypeParam)
+            : parkingDTO.getCarType();
+
+    int calculatedFee = 0;
+    int discountAmount = 0;
+    int finalFee = 0;
+
+    calculatedFee = PaymentService.INSTANCE.calculateFeeLogic(parkingDTO);
+    discountAmount = PaymentService.INSTANCE.calculateDiscountLogic(calculatedFee, selectedCarType,
+            MapperUtil.INSTANCE.getInstance().map(FeePolicyService.getInstance().getPolicy(), FeePolicyVO.class));
+    finalFee = calculatedFee - discountAmount;
 
     long totalTime = 0;
     if (parkingDTO != null && parkingDTO.getEntryTime() != null) {
@@ -95,10 +85,12 @@
     <div id="register" class="page">
         <h2>정산</h2>
         <form name="payment" action="${pageContext.request.contextPath}/payment/payment" method="post">
+            <%-- 결제 요청에서는 차량번호 대신 주차 기록 ID를 대상 식별값으로 사용함 --%>
+            <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">
                 <input type="hidden" name="carType" value="<%=selectedCarType%>"/>
                 <label>차량 번호</label>
-                <input type="text" name ="carNum" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=carNum%>">
+                <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=carNum%>" readonly>
             </div>
             <div class="form-group">
                 <label>결제 타입</label>

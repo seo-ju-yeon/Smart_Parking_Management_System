@@ -17,36 +17,31 @@ public class  ParkingListController extends HttpServlet {
 
     private final ParkingService parkingService = ParkingService.INSTANCE;
 
-    // [버그수정] carNum만 setAttribute하고 DB 조회를 하지 않아 parkingDTO가 null → NPE(500)
-    // DB에서 parkingDTO 조회 후 setAttribute로 전달하도록 수정
+    // 차량번호와 주차구역이 실제 미정산 주차 기록과 일치하는지 확인함
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         log.info("GET /get - 출차 차량 조회");
         String carNum = req.getParameter("carNum");
-        // int carType = Integer.parseInt(req.getParameter("carType"));
         String spaceId = req.getParameter("id");
 
-        // 차량번호가 공백일때
+        // 차량번호가 없으면 출차 조회 화면으로 돌아감
         if (carNum == null || carNum.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/output");
             return;
         }
         ParkingDTO parkingDTO = parkingService.getParkingByCarNum(carNum);
 
-        // 주소창 내의 차량 번호 파라미터를 변경하는 부정적인 접근 차단
+        // 요청한 차량번호에 해당하는 미정산 주차 기록이 없으면 접근을 중단함
         if (parkingDTO == null) {
             resp.sendRedirect(req.getContextPath() + "/output?fail=false");
             return;
         }
 
-        // 주소창 내에 주차구역 파라미터를 변경하는 부정적인 접근 차단
+        // 요청한 주차구역과 DB의 실제 주차구역이 다르면 접근을 중단함
         if (spaceId == null || !spaceId.equals(parkingDTO.getSpaceId())) {
             resp.sendRedirect(req.getContextPath() + "/output?fail=nullId");
             return;
         }
-
-        // ParkingDTO parkingDTO1 = ParkingDTO.builder().carNum(carNum).carType(carType).build();
-        // parkingService.modifyParkingCarType(parkingDTO1);
 
         req.setAttribute("carNum", carNum);
         req.setAttribute("parkingDTO", parkingDTO);
@@ -56,9 +51,27 @@ public class  ParkingListController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         log.info("POST /get - 정산 페이지 이동");
-        String carNum = req.getParameter("carNum");
-        req.setAttribute("carNum", carNum);
+
+        // 화면의 차량번호가 아니라 주차 기록 ID로 결제 대상을 다시 조회함
+        String parkingIdParam = req.getParameter("parkingId");
+        int parkingId;
+        try {
+            parkingId = Integer.parseInt(parkingIdParam);
+        } catch (NumberFormatException e) {
+            log.warn("유효하지 않은 주차 ID로 정산 페이지 이동 요청");
+            resp.sendRedirect(req.getContextPath() + "/output");
+            return;
+        }
+
+        ParkingDTO parkingDTO = parkingService.getByIdParking(parkingId);
+        if (parkingDTO == null || parkingDTO.isPaid()) {
+            log.warn("정산 가능한 주차 기록을 찾을 수 없습니다. parkingId={}", parkingId);
+            resp.sendRedirect(req.getContextPath() + "/output");
+            return;
+        }
+
         String carType = req.getParameter("carType");
+        req.setAttribute("parkingDTO", parkingDTO);
         req.setAttribute("carType", carType);
 
         req.getRequestDispatcher("/WEB-INF/views/payment/payment.jsp").forward(req, resp);

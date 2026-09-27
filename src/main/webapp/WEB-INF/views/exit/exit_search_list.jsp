@@ -45,14 +45,16 @@
     <div id="register" class="page">
         <h2>출차</h2>
         <form action="${pageContext.request.contextPath}/get" method="post" class="form-horizontal">
+            <%-- 화면에 표시된 값 대신 주차 기록 ID로 결제 대상을 전달함 --%>
+            <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">
                 <label>주차 구역</label>
-                <input type="text" id="spaceId" placeholder="주차 구역" name="spaceId"
+                <input type="text" id="spaceId" placeholder="주차 구역"
                        value="<%=parkingDTO.getSpaceId()%>" readonly>
             </div>
             <div class="form-group">
                 <label>차량 번호</label>
-                <input type="text" id="regCarNum" placeholder="차량번호 8자리" maxlength="8" name="carNum"
+                <input type="text" id="regCarNum" placeholder="차량번호 8자리" maxlength="8"
                        value="<%=parkingDTO.getCarNum()%>" readonly>
             </div>
             <div class="form-group">
@@ -76,7 +78,7 @@
             </div>
             <div class="form-group">
                 <label>입차 시간</label>
-                <input type="text" class="time" id="entryTime" placeholder="입차 시간" name="entryTime"
+                <input type="text" class="time" id="entryTime" placeholder="입차 시간"
                        value="<%=parkingDTO.getEntryTime()%>" readonly>
             </div>
             <button type="submit">정산</button>
