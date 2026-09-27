@@ -24,7 +24,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         return instance;
     }
 
-    // 입차 확인
+    // 신규 입차 기록 저장
     @Override
     public void insertParking(ParkingVO parkingVO) {
         String sql = "INSERT INTO smart_parking_team2.parking (car_num, space_id, entry_time, car_type) VALUES (?, ?, now(), ?)";
@@ -41,7 +41,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         }
     }
 
-    // 주차 차량 조회
+    // 차량번호 뒤 4자리로 주차 기록 조회
     @Override
     public ParkingVO selectParkingByLast4(String last4) {
         String sql = "SELECT * FROM smart_parking_team2.parking WHERE RIGHT(car_num, 4) = ?";
@@ -68,6 +68,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         return null;
     }
 
+    // 차량번호로 미정산 주차 기록 조회
     @Override
     public ParkingVO selectParkingByCarNum(String carNum) {
         String sql = "SELECT * FROM smart_parking_team2.parking WHERE car_num = ? AND paid = false";
@@ -93,7 +94,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         return null;
     }
 
-    // 출차 확인
+    // 출차 시간과 총 주차 시간을 계산하여 정산 완료 처리
     @Override
     public void updateParking(ParkingVO parkingVO) {
         LocalDateTime entry = selectParkingByCarNum(parkingVO.getCarNum()).getEntryTime();
@@ -119,7 +120,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         }
     }
 
-    // 주차 기록 기준 차량 조회
+    // 주차 기록 ID로 결제, 출차 대상 조회
     @Override
     public ParkingVO selectParkingByParkingId(int parkingId) {
         String sql = "SELECT * FROM smart_parking_team2.parking WHERE parking_id = ?";
@@ -129,12 +130,20 @@ public class ParkingDAOImpl implements ParkingDAO {
             preparedStatement.setInt(1, parkingId);
             @Cleanup ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
+                Timestamp exitTimestamp = resultSet.getTimestamp("exit_time");
+
+                // 결제, 출차 처리에서 브라우저 값에 의존하지 않도록 DB의 주차 기록 전체를 복원함
                 ParkingVO parkingVO = ParkingVO.builder()
                         .parkingId(resultSet.getInt("parking_id"))
-                        .carNum(resultSet.getString("car_num"))
                         .memberId(resultSet.getInt("member_id"))
                         .spaceId(resultSet.getString("space_id"))
+                        .carNum(resultSet.getString("car_num"))
+                        .carType(resultSet.getInt("car_type"))
                         .entryTime(resultSet.getTimestamp("entry_time").toLocalDateTime())
+                        .exitTime(exitTimestamp == null
+                                ? null
+                                : exitTimestamp.toLocalDateTime())
+                        .totalTime(resultSet.getInt("total_time"))
                         .paid(resultSet.getBoolean("paid"))
                         .build();
                 return parkingVO;
@@ -145,7 +154,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         return null;
     }
 
-    // 전체 주차 차량 조회
+    // 전체 주차 기록을 최근 입차 순으로 조회
     @Override
     public List<ParkingVO> selectAllParking() {
         String sql = "SELECT * FROM smart_parking_team2.parking ORDER BY entry_time DESC";

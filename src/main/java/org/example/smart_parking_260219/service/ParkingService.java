@@ -22,45 +22,62 @@ public enum ParkingService {
         modelMapper = MapperUtil.INSTANCE.getInstance();
     }
 
-    // 입차된 시간
+    // 신규 입차 요청을 주차 기록으로 저장
     public void addParking(ParkingDTO parkingDTO) {
         ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
         parkingDAO.insertParking(parkingVO);
         log.info("입차 처리 완료 - 차량번호: {}", parkingVO.getCarNum());
     }
 
-    // 차번호 뒷자리 일치 차량 조회
+    // 차량번호 뒤 4자리로 주차 기록 조회
     public ParkingDTO getParking(String last4) {
         return modelMapper.map(parkingDAO.selectParkingByLast4(last4), ParkingDTO.class);
     }
 
-    // 출차된 시간
+    // 출차 정보를 주차 기록에 반영
     public void modifyParking(ParkingDTO parkingDTO) {
         ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
         parkingDAO.updateParking(parkingVO);
     }
 
-    // 차량 타입 업네이트
+    // 차량 유형을 포함한 출차 정보 반영
     public void modifyParkingCarType(ParkingDTO parkingDTO) {
         ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
         parkingDAO.updateParking(parkingVO);
     }
 
-    // 프라이머리키 기준 차량 조회
-    public ParkingDTO getByIdParking(int id) {
-        return modelMapper.map(parkingDAO.selectParkingByParkingId(id), ParkingDTO.class);
+    // 주차 기록 ID로 결제, 출차 대상 조회
+    public ParkingDTO getByIdParking(int parkingId) {
+        ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(parkingId);
+
+        // 존재하지 않는 주차 ID는 ModelMapper에 전달하지 않고 조회 실패로 반환함
+        if (parkingVO == null) {
+            return null;
+        }
+
+        return modelMapper.map(parkingVO, ParkingDTO.class);
     }
 
+    // 전체 주차 기록 조회
     public List<ParkingDTO> getAllParking() {
         List<ParkingVO> parkingVOList = parkingDAO.selectAllParking();
         return parkingVOList.stream()
                 .map(parkingVO -> modelMapper.map(parkingVO, ParkingDTO.class)).toList();
     }
 
+    // 차량번호로 미정산 주차 기록 조회
     public ParkingDTO getParkingByCarNum(String carNum) {
-        if (carNum == null) return null;
-        ParkingVO parkingVO = parkingDAO.selectParkingByCarNum(carNum);
-        if (parkingVO == null) return null;
-        return modelMapper.map(parkingDAO.selectParkingByCarNum(carNum), ParkingDTO.class);
+        if (carNum == null) {
+            return null;
+        }
+
+        ParkingVO parkingVO =
+                parkingDAO.selectParkingByCarNum(carNum);
+
+        if (parkingVO == null) {
+            return null;
+        }
+
+        return modelMapper.map(parkingVO, ParkingDTO.class);
     }
 }
