@@ -9,6 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParkingSpotDAOImpl implements ParkingSpotDAO {
+    // 지정한 차량이 사용 중인 주차 공간만 빈 상태로 변경함
+    private static final String UPDATE_PARKING_SPOT_FOR_EXIT_SQL =
+            "UPDATE smart_parking_team2.parking_spot "
+                    + "SET `empty` = true, car_num = null, last_update = now() "
+                    + "WHERE space_id = ? AND car_num = ? AND `empty` = false";
+
     private static ParkingSpotDAO instance;
 
     public ParkingSpotDAOImpl() {}
@@ -72,7 +78,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
         }
     }
 
-    // [버그수정] empty = false → true 로 수정 (출차 시 자리를 빈 상태로 변경해야 함)
+    // 기존 독립 출차 흐름에서 차량번호로 주차 공간을 반환함
     @Override
     public void updateOutputParkingSpot(ParkingSpotVO parkingSpotVO) {
         String sql = "UPDATE smart_parking_team2.parking_spot SET `empty` = true, car_num = null, last_update = now() WHERE car_num = ?";
@@ -84,6 +90,23 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    // 전달받은 Connection으로 공간을 반환하며 Connection은 DAO에서 닫지 않음
+    @Override
+    public int updateParkingSpotForExit(
+            Connection connection,
+            String spaceId,
+            String carNum
+    ) throws SQLException {
+        try (PreparedStatement preparedStatement =
+                     connection.prepareStatement(UPDATE_PARKING_SPOT_FOR_EXIT_SQL)) {
+            preparedStatement.setString(1, spaceId);
+            preparedStatement.setString(2, carNum);
+
+            // 공간, 차량, 사용 상태가 모두 일치할 때만 1건이 갱신됨
+            return preparedStatement.executeUpdate();
         }
     }
 
