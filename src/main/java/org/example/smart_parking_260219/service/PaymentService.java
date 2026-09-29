@@ -1,12 +1,9 @@
 package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
-import org.example.smart_parking_260219.dao.FeePolicyDAO;
 import org.example.smart_parking_260219.dao.ParkingDAO;
 import org.example.smart_parking_260219.dao.ParkingDAOImpl;
 import org.example.smart_parking_260219.dao.PaymentDAO;
-import org.example.smart_parking_260219.dto.FeePolicyDTO;
-import org.example.smart_parking_260219.dto.ParkingDTO;
 import org.example.smart_parking_260219.dto.PaymentDTO;
 import org.example.smart_parking_260219.util.MapperUtil;
 import org.example.smart_parking_260219.vo.FeePolicyVO;
@@ -26,7 +23,6 @@ public enum PaymentService {
     private final PaymentDAO paymentDAO;
     private final ModelMapper modelMapper;
     private final ParkingDAO parkingDAO = new ParkingDAOImpl();
-    private final FeePolicyDAO feePolicyDAO = new FeePolicyDAO();
 
     private PaymentService() {
         paymentDAO = PaymentDAO.getInstance();
@@ -71,28 +67,52 @@ public enum PaymentService {
                 .collect(Collectors.toList());
     }
 
-    // 요금 계산 (24시간 주기 합산)
-    public int calculateFeeLogic(ParkingDTO parkingDTO) {
-        log.info("calculateFeeLogic - parkingId: " + parkingDTO.getParkingId());
+    // 조회가 끝난 주차 시간과 요금 정책을 사용하여 24시간 단위 요금을 계산함
+    public int calculateFeeLogic(
+            LocalDateTime entryTime,
+            LocalDateTime exitTime,
+            FeePolicyVO feePolicyVO
+    ) {
+        if (entryTime == null
+                || exitTime == null
+                || feePolicyVO == null) {
+            throw new IllegalArgumentException(
+                    "요금 계산에 필요한 정보가 없습니다."
+            );
+        }
 
-        ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(parkingDTO.getParkingId());
-        FeePolicyVO policyVO = feePolicyDAO.selectOnePolicy();
-
-        LocalDateTime entryTime = parkingVO.getEntryTime();
-        LocalDateTime exitTime = (parkingVO.getExitTime() != null) ? parkingVO.getExitTime() : LocalDateTime.now();
+        if (exitTime.isBefore(entryTime)) {
+            throw new IllegalArgumentException(
+                    "출차 시각은 입차 시각보다 빠를 수 없습니다."
+            );
+        }
 
         int totalAccumulatedFee = 0;
         LocalDateTime currentStart = entryTime;
 
         while (currentStart.plusDays(1).isBefore(exitTime)) {
             LocalDateTime endOfCycle = currentStart.plusDays(1);
-            totalAccumulatedFee += calculateSingleDayFee(currentStart, endOfCycle, policyVO);
+
+            totalAccumulatedFee += calculateSingleDayFee(
+                    currentStart,
+                    endOfCycle,
+                    feePolicyVO
+            );
+
             currentStart = endOfCycle;
         }
 
-        totalAccumulatedFee += calculateSingleDayFee(currentStart, exitTime, policyVO);
+        totalAccumulatedFee += calculateSingleDayFee(
+                currentStart,
+                exitTime,
+                feePolicyVO
+        );
 
-        log.info("최종 합산 요금 (24시간 기준): " + totalAccumulatedFee);
+        log.info(
+                "24시간 단위 주차 요금 계산 완료 - 계산 금액: {}",
+                totalAccumulatedFee
+        );
+
         return totalAccumulatedFee;
     }
 

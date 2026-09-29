@@ -18,6 +18,7 @@ import org.example.smart_parking_260219.util.MapperUtil;
 import org.example.smart_parking_260219.vo.FeePolicyVO;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Log4j2
 @WebServlet(name = "paymentController", value = "/payment/payment")
@@ -86,8 +87,13 @@ public class PaymentController extends HttpServlet {
             FeePolicyVO feePolicyVO = MapperUtil.INSTANCE.getInstance()
                     .map(feePolicyDTO, FeePolicyVO.class);
 
-            // 요청 금액을 사용하지 않고 DB의 주차 기록과 활성 요금 정책으로 다시 계산함
-            int calculatedFee = paymentService.calculateFeeLogic(parkingDTO);
+            // 서버에서 출차 시각을 확정하고 조회한 주차 기록과 정책으로 요금을 계산함
+            LocalDateTime exitTime = LocalDateTime.now();
+            int calculatedFee = paymentService.calculateFeeLogic(
+                    parkingDTO.getEntryTime(),
+                    exitTime,
+                    feePolicyVO
+            );
             int discountAmount = paymentService.calculateDiscountLogic(
                     calculatedFee,
                     carType,
