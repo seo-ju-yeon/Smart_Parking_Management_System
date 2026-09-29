@@ -14,8 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Log4j2
-
 public class PaymentDAO {
+    private static final String INSERT_PAYMENT_SQL =
+            "INSERT INTO payment "
+                    + "(parking_id, policy_id, payment_type, calculated_fee, "
+                    + "discount_amount, final_fee, payment_date) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
     private static PaymentDAO instance;
 
@@ -28,29 +32,37 @@ public class PaymentDAO {
         return instance;
     }
 
-    // 등록 - 요금 계산 후 결제 정보 저장
-    public void insertPayment(PaymentVO vo) {
-        // 1. 해당 차량의 '출차 전' 주차 기록 ID 조회 (차 번호 존재 여부 확인 대용)
-        // 2. 결제 내역(payment) 등록
-        // 3. 주차 기록(parking)의 결제 완료 및 출차 시간 업데이트
+    // 기존 단독 저장 흐름에서는 DAO가 Connection을 생성하고 반환함
+    public void insertPayment(PaymentVO paymentVO) {
+        try (Connection connection = DBConnection.INSTANCE.getConnection()) {
+            int affectedRows = insertPayment(connection, paymentVO);
 
-        String sql = "INSERT INTO payment (parking_id, policy_id, payment_type, calculated_fee, discount_amount, final_fee, payment_date) "
-                + "VALUES (?, ?, ?, ?, ?, ?, NOW())";
-
-        try {
-            @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
-            @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
-            // 결제 정보 등록
-            preparedStatement.setInt(1, vo.getParkingId());
-            preparedStatement.setInt(2, vo.getPolicyId());
-            preparedStatement.setInt(3, vo.getPaymentType());
-            preparedStatement.setInt(4, vo.getCalculatedFee());
-            preparedStatement.setInt(5, vo.getDiscountAmount());
-            preparedStatement.setInt(6, vo.getFinalFee());
-            preparedStatement.executeUpdate();
+            // 결제 한 건이 정확히 저장되지 않으면 정상 처리로 판단하지 않음
+            if (affectedRows != 1) {
+                throw new SQLException("결제 정보가 정상적으로 저장되지 않았습니다.");
+            }
         } catch (SQLException e) {
-            throw new RuntimeException();
+            log.error("결제 정보 저장 중 오류 발생", e);
+            throw new RuntimeException("결제 정보 저장에 실패했습니다.", e);
+        }
+    }
+
+    // 트랜잭션 Service가 전달한 Connection을 사용하며 DAO에서는 닫지 않음
+    public int insertPayment(
+            Connection connection,
+            PaymentVO paymentVO
+    ) throws SQLException {
+        try (PreparedStatement preparedStatement =
+                     connection.prepareStatement(INSERT_PAYMENT_SQL)) {
+            preparedStatement.setInt(1, paymentVO.getParkingId());
+            preparedStatement.setInt(2, paymentVO.getPolicyId());
+            preparedStatement.setInt(3, paymentVO.getPaymentType());
+            preparedStatement.setInt(4, paymentVO.getCalculatedFee());
+            preparedStatement.setInt(5, paymentVO.getDiscountAmount());
+            preparedStatement.setInt(6, paymentVO.getFinalFee());
+
+            // 변경 행 수는 상위 Service가 성공 여부를 판단할 때 사용함
+            return preparedStatement.executeUpdate();
         }
     }
 
