@@ -26,6 +26,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     private static final String UPDATE_PARKING_FOR_PAYMENT_SQL =
             "UPDATE smart_parking_team2.parking "
                     + "SET exit_time = ?, car_type = ?, total_time = ?, paid = true "
+                    // 이미 결제된 주차 기록을 다시 출차 처리하지 않음
                     + "WHERE parking_id = ? AND paid = false";
 
     private static ParkingDAO instance;

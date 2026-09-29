@@ -15,6 +15,7 @@ import java.util.List;
 
 @Log4j2
 public class PaymentDAO {
+    // 정산에 적용한 정책과 서버에서 계산한 금액을 결제 이력으로 저장함
     private static final String INSERT_PAYMENT_SQL =
             "INSERT INTO payment "
                     + "(parking_id, policy_id, payment_type, calculated_fee, "

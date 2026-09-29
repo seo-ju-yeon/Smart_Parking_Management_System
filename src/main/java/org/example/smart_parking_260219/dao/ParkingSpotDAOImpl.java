@@ -13,6 +13,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
     private static final String UPDATE_PARKING_SPOT_FOR_EXIT_SQL =
             "UPDATE smart_parking_team2.parking_spot "
                     + "SET `empty` = true, car_num = null, last_update = now() "
+                    // 해당 차량이 실제로 사용 중인 공간만 반환함
                     + "WHERE space_id = ? AND car_num = ? AND `empty` = false";
 
     private static ParkingSpotDAO instance;
