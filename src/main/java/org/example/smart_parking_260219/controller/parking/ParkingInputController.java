@@ -15,9 +15,7 @@ import org.example.smart_parking_260219.service.ParkingSpotService;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Objects;
 
-// [버그수정] /parking/input → /input
 @WebServlet(name = "parkingInputController", value = "/input")
 @Log4j2
 public class ParkingInputController extends HttpServlet {
@@ -65,7 +63,6 @@ public class ParkingInputController extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
-        log.info("spaceId: {}, empty: {}", spaceId, Objects.requireNonNull(spotDTO).getEmpty());
 
         if (!spotDTO.getEmpty()) {
             req.setAttribute("id", spaceId);
@@ -76,17 +73,46 @@ public class ParkingInputController extends HttpServlet {
         ParkingDTO existingParking = parkingService.getParkingByCarNum(carNum);
         if (existingParking != null && !existingParking.isPaid()) {
             req.setAttribute("id", spaceId);
-            // req.setAttribute("fail", "already");
-            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp?fail=already").forward(req, resp);
+            req.setAttribute("fail", "already");
+            req.getRequestDispatcher("/WEB-INF/views/entry/entry.jsp").forward(req, resp);
             return;
         }
+
         MemberDTO memberDTO;
+
         try {
             memberDTO = memberService.getOneMember(carNum);
         } catch (SQLException e) {
-            memberDTO = null;
+            throw new ServletException(
+                    "회원 정보 조회 중 오류가 발생했습니다.",
+                    e
+            );
         }
 
+        // 등록되지 않은 차량은 비회원 입차 화면에서 차량 유형을 입력받음
+        if (memberDTO == null) {
+            req.setAttribute("id", spaceId);
+            req.setAttribute("carNum", carNum);
+
+            req.getRequestDispatcher(
+                    "/WEB-INF/views/entry/add_non_member.jsp"
+            ).forward(req, resp);
+            return;
+        }
+
+        // 월정액 회원은 월정액 유형을, 그 외 회원은 등록된 차량 유형을 사용함
+        int carType = memberDTO.isSubscribed()
+                ? 2
+                : memberDTO.getCarType();
+
+        if (!isValidCarType(carType)
+                || (!memberDTO.isSubscribed() && carType == 2)) {
+            throw new ServletException(
+                    "회원의 월정액 상태와 차량 유형이 유효하지 않습니다."
+            );
+        }
+
+        // 회원 정보에서 확정한 차량 유형을 입차 기록과 함께 저장함
         ParkingSpotDTO parkingSpotDTO = ParkingSpotDTO.builder()
                 .carNum(carNum)
                 .spaceId(spaceId)
@@ -94,12 +120,18 @@ public class ParkingInputController extends HttpServlet {
         parkingSpotService.modifyInputParkingSpot(parkingSpotDTO);
 
         ParkingDTO parkingDTO = ParkingDTO.builder()
-                .memberId((memberDTO != null) ? memberDTO.getMemberId() : 0)
+                .memberId(memberDTO.getMemberId())
                 .carNum(carNum)
                 .spaceId(spaceId)
+                .carType(carType)
                 .build();
         parkingService.addParking(parkingDTO);
 
         resp.sendRedirect(req.getContextPath() + "/dashboard");
+    }
+
+    // 입차 기록에 저장할 차량 유형이 정의된 범위인지 확인함
+    private boolean isValidCarType(int carType) {
+        return carType >= 1 && carType <= 4;
     }
 }

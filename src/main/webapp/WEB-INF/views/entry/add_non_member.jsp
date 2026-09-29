@@ -13,8 +13,8 @@
 %>
 <div class="main-content">
     <div id="exit" class="page">
-        <%-- [버그수정] ../nonMember 상대경로 → contextPath 기준 절대경로 --%>
         <form action="${pageContext.request.contextPath}/nonMember" method="post" class="form-horizontal">
+            <%-- 이전 단계에서 확인한 차량과 공간도 최종 POST에서 서버가 다시 검증함 --%>
             <input type="hidden" id="id" name="id" value="<%=(space != null) ? space : ""%>">
             <input type="hidden" id="carNum" name="carNum" value="<%=(carNum != null) ? carNum : ""%>">
             <h2>비회원 입차</h2>
@@ -24,9 +24,9 @@
             </div>
             <div class="form-group">
                 <label>차량 타입</label>
-                <label class="radio-item"><input type="radio" name="finish" value="1">일반</label>
-                <label class="radio-item"><input type="radio" name="finish" value="3">경차</label>
-                <label class="radio-item"><input type="radio" name="finish" value="4">장애인</label>
+                <label class="radio-item"><input type="radio" name="carType" value="1" checked required>일반</label>
+                <label class="radio-item"><input type="radio" name="carType" value="3">경차</label>
+                <label class="radio-item"><input type="radio" name="carType" value="4">장애인</label>
             </div>
             <button>입차 등록</button>
         </form>
