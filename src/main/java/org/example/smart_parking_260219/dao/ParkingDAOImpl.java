@@ -84,7 +84,7 @@ public class ParkingDAOImpl implements ParkingDAO {
         return null;
     }
 
-    // 차량번호로 미정산 주차 기록 조회
+    // 차량번호로 차량 유형을 포함한 미정산 주차 기록 조회
     @Override
     public ParkingVO selectParkingByCarNum(String carNum) {
         String sql = "SELECT * FROM smart_parking_team2.parking WHERE car_num = ? AND paid = false";
@@ -94,15 +94,7 @@ public class ParkingDAOImpl implements ParkingDAO {
             preparedStatement.setString(1, carNum);
             @Cleanup ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                ParkingVO parkingVO = ParkingVO.builder()
-                        .parkingId(resultSet.getInt("parking_id"))
-                        .carNum(resultSet.getString("car_num"))
-                        .memberId(resultSet.getInt("member_id"))
-                        .spaceId(resultSet.getString("space_id"))
-                        .entryTime(resultSet.getTimestamp("entry_time").toLocalDateTime())
-                        .paid(resultSet.getBoolean("paid"))
-                        .build();
-                return parkingVO;
+                return mapParking(resultSet);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -115,7 +107,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     public void updateParking(ParkingVO parkingVO) {
         LocalDateTime entry = selectParkingByCarNum(parkingVO.getCarNum()).getEntryTime();
         if (entry == null) {
-            log.error("entry is null");
+            log.error("출차 처리에 필요한 입차 시간이 없습니다.");
             return;
         }
         LocalDateTime exit = LocalDateTime.now();
