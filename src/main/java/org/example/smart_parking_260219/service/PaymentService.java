@@ -1,8 +1,12 @@
 package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.example.smart_parking_260219.connection.DBConnection;
+import org.example.smart_parking_260219.dao.FeePolicyDAO;
 import org.example.smart_parking_260219.dao.ParkingDAO;
 import org.example.smart_parking_260219.dao.ParkingDAOImpl;
+import org.example.smart_parking_260219.dao.ParkingSpotDAO;
+import org.example.smart_parking_260219.dao.ParkingSpotDAOImpl;
 import org.example.smart_parking_260219.dao.PaymentDAO;
 import org.example.smart_parking_260219.dto.PaymentDTO;
 import org.example.smart_parking_260219.util.MapperUtil;
@@ -11,6 +15,9 @@ import org.example.smart_parking_260219.vo.ParkingVO;
 import org.example.smart_parking_260219.vo.PaymentVO;
 import org.modelmapper.ModelMapper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -21,15 +28,20 @@ public enum PaymentService {
     INSTANCE;
 
     private final PaymentDAO paymentDAO;
+    private final FeePolicyDAO feePolicyDAO;
+    private final ParkingDAO parkingDAO;
+    private final ParkingSpotDAO parkingSpotDAO;
     private final ModelMapper modelMapper;
-    private final ParkingDAO parkingDAO = new ParkingDAOImpl();
 
     private PaymentService() {
         paymentDAO = PaymentDAO.getInstance();
+        feePolicyDAO = FeePolicyDAO.getInstance();
+        parkingDAO = new ParkingDAOImpl();
+        parkingSpotDAO = new ParkingSpotDAOImpl();
         modelMapper = MapperUtil.INSTANCE.getInstance();
     }
 
-    // 결제 등록
+    // 기존 단독 결제 저장 흐름
     public void addPayment(PaymentDTO paymentDTO) throws Exception {
         // 결제 대상의 존재 여부와 정산 상태를 DB에서 다시 확인함
         ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(paymentDTO.getParkingId());
@@ -51,14 +63,168 @@ public enum PaymentService {
         paymentDAO.insertPayment(paymentVO);
     }
 
+    // 결제 저장, 주차 기록 갱신, 주차 공간 반환을 하나의 트랜잭션으로 처리함
+    public PaymentDTO completePaymentAndExit(
+            int parkingId,
+            int paymentType
+    ) {
+        try (Connection connection = DBConnection.INSTANCE.getConnection()) {
+            boolean originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            try {
+                PaymentDTO paymentDTO = processPaymentAndExit(
+                        connection,
+                        parkingId,
+                        paymentType
+                );
+
+                // 세 상태 변경이 모두 성공한 경우에만 DB에 최종 반영함
+                connection.commit();
+
+                return paymentDTO;
+            } catch (Exception e) {
+                rollback(connection, e);
+
+                if (e instanceof RuntimeException runtimeException) {
+                    throw runtimeException;
+                }
+                throw new IllegalStateException(
+                        "결제 및 출차 처리에 실패했습니다.",
+                        e
+                );
+            } finally {
+                restoreAutoCommit(connection, originalAutoCommit);
+            }
+        } catch (SQLException e) {
+            log.error("결제 트랜잭션 연결 처리 중 오류 발생", e);
+            throw new IllegalStateException(
+                    "결제 및 출차 처리에 실패했습니다.",
+                    e
+            );
+        }
+    }
+
+    // 잠금 조회한 DB 값을 기준으로 계산하고 모든 상태 변경 결과를 확인함
+    private PaymentDTO processPaymentAndExit(
+            Connection connection,
+            int parkingId,
+            int paymentType
+    ) throws SQLException {
+        ParkingVO parkingVO =
+                parkingDAO.selectParkingByParkingIdForUpdate(
+                        connection,
+                        parkingId
+                );
+
+        if (parkingVO == null || parkingVO.isPaid()) {
+            throw new IllegalStateException(
+                    "정산 가능한 주차 기록이 아닙니다."
+            );
+        }
+
+        int carType = parkingVO.getCarType();
+        if (!isValidCarType(carType)) {
+            throw new IllegalStateException(
+                    "주차 기록의 차량 유형이 유효하지 않습니다."
+            );
+        }
+
+        if (!isValidPaymentType(paymentType)
+                || !isValidPaymentSelection(carType, paymentType)) {
+            throw new IllegalArgumentException(
+                    "선택할 수 없는 결제 수단입니다."
+            );
+        }
+
+        FeePolicyVO feePolicyVO =
+                feePolicyDAO.selectActivePolicy(connection);
+        if (feePolicyVO == null) {
+            throw new IllegalStateException(
+                    "활성화된 요금 정책이 없습니다."
+            );
+        }
+
+        // 한 번 확정한 출차 시각을 주차시간과 요금 계산에 함께 사용함
+        LocalDateTime exitTime = LocalDateTime.now();
+        int totalMinutes = Math.toIntExact(
+                Duration.between(
+                        parkingVO.getEntryTime(),
+                        exitTime
+                ).toMinutes()
+        );
+        int calculatedFee = calculateFeeLogic(
+                parkingVO.getEntryTime(),
+                exitTime,
+                feePolicyVO
+        );
+        int discountAmount = calculateDiscountLogic(
+                calculatedFee,
+                carType,
+                feePolicyVO
+        );
+        int finalFee = calculatedFee - discountAmount;
+
+        PaymentVO paymentVO = PaymentVO.builder()
+                .parkingId(parkingVO.getParkingId())
+                .policyId(feePolicyVO.getPolicyId())
+                .carNum(parkingVO.getCarNum())
+                .carType(carType)
+                .paymentType(paymentType)
+                .calculatedFee(calculatedFee)
+                .discountAmount(discountAmount)
+                .finalFee(finalFee)
+                .totalTime(totalMinutes)
+                .build();
+
+        int insertedPaymentRows = paymentDAO.insertPayment(connection, paymentVO);
+        requireSingleChangedRow(
+                insertedPaymentRows,
+                "결제 정보가 정상적으로 저장되지 않았습니다."
+        );
+
+        int updatedParkingRows =
+                parkingDAO.updateParkingForPayment(
+                        connection,
+                        parkingVO.getParkingId(),
+                        carType,
+                        exitTime,
+                        totalMinutes
+                );
+        requireSingleChangedRow(
+                updatedParkingRows,
+                "주차 기록이 정상적으로 갱신되지 않았습니다."
+        );
+
+        int updatedParkingSpotRows =
+                parkingSpotDAO.updateParkingSpotForExit(
+                        connection,
+                        parkingVO.getSpaceId(),
+                        parkingVO.getCarNum()
+                );
+        requireSingleChangedRow(
+                updatedParkingSpotRows,
+                "주차 공간이 정상적으로 반환되지 않았습니다."
+        );
+
+        return PaymentDTO.builder()
+                .parkingId(parkingVO.getParkingId())
+                .policyId(feePolicyVO.getPolicyId())
+                .carNum(parkingVO.getCarNum())
+                .carType(carType)
+                .paymentType(paymentType)
+                .calculatedFee(calculatedFee)
+                .discountAmount(discountAmount)
+                .finalFee(finalFee)
+                .totalTime(totalMinutes)
+                .build();
+    }
+
     // 결제 날짜별 목록 조회
     public List<PaymentDTO> getPaymentList(String targetDate) {
-        log.info("Service: getPaymentList 호출 - 날짜: " + targetDate);
-
         List<PaymentVO> paymentVOList = paymentDAO.selectPaymentByDate(targetDate);
 
         if (paymentVOList == null || paymentVOList.isEmpty()) {
-            log.info("해당 날짜에 결제 내역이 없습니다.");
             return Collections.emptyList();
         }
 
@@ -116,36 +282,30 @@ public enum PaymentService {
         return totalAccumulatedFee;
     }
 
-    // 할인 금액 계산
-    // [버그수정] DB의 lightDiscount/disabledDiscount 값이 잘못 저장되어 있어도
-    //           안전하게 동작하도록 비율을 0.0~1.0 범위로 강제 보정 후 계산
+    // 정책 할인율이 유효 범위를 벗어나면 차량 유형별 기본 할인율을 사용함
     public int calculateDiscountLogic(int totalFee, int carType, FeePolicyVO policyVO) {
         double discountRate = 0.0;
 
         if (carType == 2) {
-            // 월정액: 100% 무료
+            // 월정액 차량은 전액 할인함
             discountRate = 1.0;
         } else if (carType == 3) {
-            // 경차: DB 정책값 사용, 단 0~1 범위를 벗어나면 기본값 0.3 적용
+            // 유효한 경차 할인율이 없으면 기본 할인율 30%를 사용함
             double raw = policyVO.getLightDiscount();
             discountRate = (raw >= 0.0 && raw <= 1.0) ? raw : 0.3;
-            log.info("경차 할인율 적용: {}", discountRate);
         } else if (carType == 4) {
-            // 장애인: DB 정책값 사용, 단 0~1 범위를 벗어나면 기본값 0.5 적용
+            // 유효한 장애인 할인율이 없으면 기본 할인율 50%를 사용함
             double raw = policyVO.getDisabledDiscount();
             discountRate = (raw >= 0.0 && raw <= 1.0) ? raw : 0.5;
-            log.info("장애인 할인율 적용: {}", discountRate);
         }
-        // carType == 1 (일반): discountRate = 0.0 → 할인 없음
 
         int discountAmount = (int) (totalFee * discountRate);
-        log.info("carType={}, totalFee={}, discountRate={}, discountAmount={}", carType, totalFee, discountRate, discountAmount);
         return discountAmount;
     }
 
-    // 내부 메서드: 지정된 시간 구간(start ~ end)에 대한 요금 계산
+    // 지정된 24시간 이내 구간의 요금을 계산함
     private int calculateSingleDayFee(LocalDateTime start, LocalDateTime end, FeePolicyVO policyVO) {
-        long minutes = java.time.Duration.between(start, end).toMinutes();
+        long minutes = Duration.between(start, end).toMinutes();
 
         // 무료 구간 이내
         if (minutes <= policyVO.getGracePeriod()) return 0;
@@ -162,5 +322,61 @@ public enum PaymentService {
 
         // 일일 최대 요금 제한
         return Math.min(fee, policyVO.getMaxDailyFee());
+    }
+
+    // 각 상태 변경은 정확히 한 행에 적용되어야 정상 처리로 판단함
+    private void requireSingleChangedRow(
+            int changedRows,
+            String message
+    ) {
+        if (changedRows != 1) {
+            throw new IllegalStateException(message);
+        }
+    }
+
+    // 처리 중 오류가 발생하면 현재 Connection에서 수행한 변경을 모두 취소함
+    private void rollback(
+            Connection connection,
+            Exception cause
+    ) {
+        try {
+            connection.rollback();
+        } catch (SQLException rollbackException) {
+            cause.addSuppressed(rollbackException);
+            log.error("결제 트랜잭션 롤백 중 오류 발생", rollbackException);
+        }
+    }
+
+    // 커넥션 풀에 반환하기 전에 기존 자동 커밋 설정으로 복원함
+    private void restoreAutoCommit(
+            Connection connection,
+            boolean originalAutoCommit
+    ) {
+        try {
+            connection.setAutoCommit(originalAutoCommit);
+        } catch (SQLException e) {
+            log.warn("결제 트랜잭션 Connection 설정 복원 실패", e);
+        }
+    }
+
+    // 차량 유형이 일반, 월정액, 경차, 장애인 중 하나인지 확인함
+    private boolean isValidCarType(int carType) {
+        return carType >= 1 && carType <= 4;
+    }
+
+    // 결제 수단이 카드, 현금, 월정액 중 하나인지 확인함
+    private boolean isValidPaymentType(int paymentType) {
+        return paymentType >= 1 && paymentType <= 3;
+    }
+
+    // 월정액 차량과 일반 결제 차량에 허용된 결제 수단을 구분함
+    private boolean isValidPaymentSelection(
+            int carType,
+            int paymentType
+    ) {
+        if (carType == 2) {
+            return paymentType == 3;
+        }
+        return paymentType == 1 || paymentType == 2;
     }
 }
