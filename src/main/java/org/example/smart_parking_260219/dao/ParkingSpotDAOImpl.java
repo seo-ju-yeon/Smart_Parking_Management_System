@@ -79,21 +79,6 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
         }
     }
 
-    // 기존 독립 출차 흐름에서 차량번호로 주차 공간을 반환함
-    @Override
-    public void updateOutputParkingSpot(ParkingSpotVO parkingSpotVO) {
-        String sql = "UPDATE smart_parking_team2.parking_spot SET `empty` = true, car_num = null, last_update = now() WHERE car_num = ?";
-        try {
-            @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
-            @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, parkingSpotVO.getCarNum());
-
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     // 전달받은 Connection으로 공간을 반환하며 Connection은 DAO에서 닫지 않음
     @Override
     public int updateParkingSpotForExit(

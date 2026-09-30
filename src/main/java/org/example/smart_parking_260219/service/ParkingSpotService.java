@@ -34,12 +34,6 @@ public enum ParkingSpotService {
         parkingSpotDAO.updateInputParkingSpot(parkingSpotVO);
     }
 
-    // 주차 공간 출차 갱신
-    public void modifyOutputParkingSpot(ParkingSpotDTO parkingSpotDTO) {
-        ParkingSpotVO parkingSpotVO = modelMapper.map(parkingSpotDTO, ParkingSpotVO.class);
-        parkingSpotDAO.updateOutputParkingSpot(parkingSpotVO);
-    }
-
     // 빈 주차 공간 찾기
     public List<ParkingSpotDTO> getEmptyParkingSpot() {
         List<ParkingSpotVO> parkingSpotVOList = parkingSpotDAO.selectEmptyParkingSpot();

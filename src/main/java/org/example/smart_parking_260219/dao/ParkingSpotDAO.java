@@ -16,9 +16,6 @@ public interface ParkingSpotDAO {
     // 기존 독립 입차 흐름에서 주차 공간을 사용 중 상태로 변경
     void updateInputParkingSpot(ParkingSpotVO parkingSpotVO);
 
-    // 기존 독립 출차 흐름에서 차량이 사용하던 주차 공간 반환
-    void updateOutputParkingSpot(ParkingSpotVO parkingSpotVO);
-
     // 트랜잭션에서 출차 대상 차량이 사용 중인 주차 공간 반환
     int updateParkingSpotForExit(
             Connection connection,

@@ -1,17 +1,14 @@
 package org.example.smart_parking_260219.dao;
 
 import lombok.Cleanup;
-import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.connection.DBConnection;
 import org.example.smart_parking_260219.vo.ParkingVO;
 
 import java.sql.*;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Log4j2
 public class ParkingDAOImpl implements ParkingDAO {
 
     // parkingId로 결제 및 출차 대상이 되는 주차 기록을 조회함
@@ -100,32 +97,6 @@ public class ParkingDAOImpl implements ParkingDAO {
             throw new RuntimeException(e);
         }
         return null;
-    }
-
-    // 출차 시간과 총 주차 시간을 계산하여 정산 완료 처리
-    @Override
-    public void updateParking(ParkingVO parkingVO) {
-        LocalDateTime entry = selectParkingByCarNum(parkingVO.getCarNum()).getEntryTime();
-        if (entry == null) {
-            log.error("출차 처리에 필요한 입차 시간이 없습니다.");
-            return;
-        }
-        LocalDateTime exit = LocalDateTime.now();
-        long totalMinutes = Duration.between(entry, exit).toMinutes();
-
-        String sql = "UPDATE smart_parking_team2.parking SET exit_time= ?,car_type =?, total_time= ?, paid=true WHERE car_num=?";
-        try {
-            @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
-            @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setTimestamp(1, Timestamp.valueOf(exit));
-            preparedStatement.setInt(2, parkingVO.getCarType());
-            preparedStatement.setLong(3, totalMinutes);
-            preparedStatement.setString(4, parkingVO.getCarNum());
-
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     // 주차 기록 ID로 결제, 출차 대상 조회

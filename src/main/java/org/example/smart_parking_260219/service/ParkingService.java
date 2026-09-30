@@ -34,18 +34,6 @@ public enum ParkingService {
         return modelMapper.map(parkingDAO.selectParkingByLast4(last4), ParkingDTO.class);
     }
 
-    // 출차 정보를 주차 기록에 반영
-    public void modifyParking(ParkingDTO parkingDTO) {
-        ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
-        parkingDAO.updateParking(parkingVO);
-    }
-
-    // 차량 유형을 포함한 출차 정보 반영
-    public void modifyParkingCarType(ParkingDTO parkingDTO) {
-        ParkingVO parkingVO = modelMapper.map(parkingDTO, ParkingVO.class);
-        parkingDAO.updateParking(parkingVO);
-    }
-
     // 주차 기록 ID로 결제, 출차 대상 조회
     public ParkingDTO getByIdParking(int parkingId) {
         ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(parkingId);

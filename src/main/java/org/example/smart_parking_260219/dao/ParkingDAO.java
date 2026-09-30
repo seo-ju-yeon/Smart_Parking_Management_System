@@ -17,9 +17,6 @@ public interface ParkingDAO {
     // 차량번호로 미정산 주차 기록 조회
     ParkingVO selectParkingByCarNum(String carNum);
 
-    // 기존 독립 출차 흐름에서 출차 및 정산 완료 처리
-    void updateParking(ParkingVO parkingVO);
-
     // 주차 기록 ID로 결제, 출차 대상 조회
     ParkingVO selectParkingByParkingId(int parkingId);
 

@@ -33,21 +33,6 @@ public class PaymentDAO {
         return instance;
     }
 
-    // 기존 단독 저장 흐름에서는 DAO가 Connection을 생성하고 반환함
-    public void insertPayment(PaymentVO paymentVO) {
-        try (Connection connection = DBConnection.INSTANCE.getConnection()) {
-            int affectedRows = insertPayment(connection, paymentVO);
-
-            // 결제 한 건이 정확히 저장되지 않으면 정상 처리로 판단하지 않음
-            if (affectedRows != 1) {
-                throw new SQLException("결제 정보가 정상적으로 저장되지 않았습니다.");
-            }
-        } catch (SQLException e) {
-            log.error("결제 정보 저장 중 오류 발생", e);
-            throw new RuntimeException("결제 정보 저장에 실패했습니다.", e);
-        }
-    }
-
     // 트랜잭션 Service가 전달한 Connection을 사용하며 DAO에서는 닫지 않음
     public int insertPayment(
             Connection connection,

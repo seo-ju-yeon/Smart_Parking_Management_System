@@ -41,28 +41,6 @@ public enum PaymentService {
         modelMapper = MapperUtil.INSTANCE.getInstance();
     }
 
-    // 기존 단독 결제 저장 흐름
-    public void addPayment(PaymentDTO paymentDTO) throws Exception {
-        // 결제 대상의 존재 여부와 정산 상태를 DB에서 다시 확인함
-        ParkingVO parkingVO = parkingDAO.selectParkingByParkingId(paymentDTO.getParkingId());
-
-        if (parkingVO == null || parkingVO.isPaid()) {
-            throw new Exception("정산 가능한 주차 기록이 아닙니다.");
-        }
-
-        PaymentVO paymentVO = PaymentVO.builder()
-                .parkingId(parkingVO.getParkingId())
-                .policyId(paymentDTO.getPolicyId())
-                .carNum(parkingVO.getCarNum())
-                .paymentType(paymentDTO.getPaymentType())
-                .calculatedFee(paymentDTO.getCalculatedFee())
-                .discountAmount(paymentDTO.getDiscountAmount())
-                .finalFee(paymentDTO.getFinalFee())
-                .build();
-
-        paymentDAO.insertPayment(paymentVO);
-    }
-
     // 결제 저장, 주차 기록 갱신, 주차 공간 반환을 하나의 트랜잭션으로 처리함
     public PaymentDTO completePaymentAndExit(
             int parkingId,
