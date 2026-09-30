@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 
 @Log4j2
 @WebServlet(name = "paymentController", value = "/payment/payment")
-
 public class PaymentController extends HttpServlet {
     private final PaymentService paymentService = PaymentService.INSTANCE;
     private final ParkingService parkingService = ParkingService.INSTANCE;
@@ -43,40 +42,63 @@ public class PaymentController extends HttpServlet {
             HttpServletRequest req,
             HttpServletResponse resp
     ) throws ServletException, IOException {
-        log.info("/payment post start...");
-
         int parkingId;
-        int carType;
         int paymentType;
 
         try {
             parkingId = Integer.parseInt(req.getParameter("parkingId"));
-            carType = Integer.parseInt(req.getParameter("carType"));
             paymentType = Integer.parseInt(req.getParameter("paymentType"));
         } catch (NumberFormatException e) {
             log.warn("숫자 형식이 아닌 결제 요청값 수신");
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 결제 요청입니다.");
+            resp.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "유효하지 않은 결제 요청입니다."
+            );
             return;
         }
 
-        // 정의되지 않은 차량 유형과 결제 수단은 상태 변경 전에 차단함
+        // 유효하지 않은 주차 기록 ID와 결제 수단은 상태 변경 전에 차단함
         if (parkingId <= 0
-                || !isValidCarType(carType)
-                || !isValidPaymentType(paymentType)
-                || !isValidPaymentSelection(carType, paymentType)) {
+                || !isValidPaymentType(paymentType)) {
             log.warn("허용 범위를 벗어난 결제 요청값 수신");
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "유효하지 않은 결제 요청입니다.");
+            resp.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "유효하지 않은 결제 요청입니다."
+            );
             return;
         }
 
         try {
             // 요청의 표시값을 신뢰하지 않고 주차 ID로 결제 대상을 다시 조회함
             ParkingDTO parkingDTO = parkingService.getByIdParking(parkingId);
+
             if (parkingDTO == null || parkingDTO.isPaid()) {
                 log.warn("결제 처리 대상 주차 기록을 찾을 수 없습니다.");
                 resp.sendRedirect(req.getContextPath() + "/dashboard");
                 return;
             }
+
+            // 할인 계산에는 요청값이 아닌 입차 시 저장된 차량 유형을 사용함
+            int carType = parkingDTO.getCarType();
+
+            if (!isValidCarType(carType)) {
+                throw new IllegalStateException(
+                        "주차 기록의 차량 유형이 유효하지 않습니다."
+                );
+            }
+
+            if (!isValidPaymentSelection(
+                    carType,
+                    paymentType
+            )) {
+                log.warn("차량 유형에 허용되지 않은 결제 수단 요청");
+                resp.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "선택할 수 없는 결제 수단입니다."
+                );
+                return;
+            }
+
             String carNum = parkingDTO.getCarNum();
 
             FeePolicyDTO feePolicyDTO = feePolicyService.getPolicy();
@@ -117,16 +139,17 @@ public class PaymentController extends HttpServlet {
             ParkingSpotDTO parkingSpotDTO = ParkingSpotDTO.builder()
                     .carNum(carNum).build();
 
+            // DB 주차 기록의 차량 유형을 출차 정보에 반영함
             ParkingDTO parkingDTO1 = ParkingDTO.builder()
                     .carNum(carNum)
-                    .carType(carType) // 화면에서 선택한 타입 반영
+                    .carType(carType)
                     .build();
 
             paymentService.addPayment(paymentDTO);
             parkingService.modifyParking(parkingDTO1);
             parkingSpotService.modifyOutputParkingSpot(parkingSpotDTO);
 
-            log.info("결제 및 출차 처리 완료 - 차량번호: {}", carNum);
+            log.info("결제 및 출차 처리 완료 - parkingId={}", parkingId);
 
             resp.sendRedirect(req.getContextPath() + "/dashboard");
 

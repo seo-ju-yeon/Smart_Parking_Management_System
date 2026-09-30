@@ -134,8 +134,6 @@ public class ParkingListController extends HttpServlet {
 
         // 정산 화면은 서버가 계산한 예상 금액과 주차시간만 표시함
         req.setAttribute("parkingDTO", parkingDTO);
-        // payment.jsp 전환이 끝날 때까지 DB에서 조회한 차량 유형을 전달함
-        req.setAttribute("carType", carType);
         req.setAttribute("calculatedFee", calculatedFee);
         req.setAttribute("discountAmount", discountAmount);
         req.setAttribute("finalFee", finalFee);

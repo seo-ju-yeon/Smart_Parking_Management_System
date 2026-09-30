@@ -1,29 +1,8 @@
 <%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
-<%@ page import="org.example.smart_parking_260219.service.ParkingService" %>
-<%@ page import="java.util.Objects" %>
-<%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
-<%@ page import="org.example.smart_parking_260219.service.MemberService" %>
-<%@ page import="java.sql.SQLException" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    // Controller가 전달한 주차 정보를 우선 사용하고, 없으면 차량번호로 조회한다.
+    // Controller가 대상 검증을 마친 주차 기록만 화면에 표시함
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
-    String carNum = request.getParameter("carNum");
-    MemberDTO memberDTO;
-    try {
-        memberDTO = MemberService.INSTANCE.getOneMember(carNum);
-    } catch (SQLException e) {
-        throw new RuntimeException(e);
-    }
-
-    if (parkingDTO == null) {
-        if (carNum == null || carNum.isEmpty()) {
-            carNum = (String) request.getAttribute("carNum");
-        }
-        if (carNum != null && !carNum.isEmpty()) {
-            parkingDTO = ParkingService.INSTANCE.getParkingByCarNum(carNum);
-        }
-    }
 
     if (parkingDTO == null) {
         request.setAttribute("pageAlertMessage", "주차 중인 차량 정보를 찾을 수 없습니다.");
@@ -31,6 +10,25 @@
         request.getRequestDispatcher("/WEB-INF/views/common/alert.jsp")
                 .forward(request, response);
         return;
+    }
+
+    // DB에 저장된 차량 유형 코드를 화면 표시용 이름으로 변환함
+    String carTypeName;
+    switch (parkingDTO.getCarType()) {
+        case 1:
+            carTypeName = "일반";
+            break;
+        case 2:
+            carTypeName = "월정액";
+            break;
+        case 3:
+            carTypeName = "경차";
+            break;
+        case 4:
+            carTypeName = "장애인";
+            break;
+        default:
+            carTypeName = "알 수 없음";
     }
 %>
 <html>
@@ -59,22 +57,8 @@
             </div>
             <div class="form-group">
                 <label>차량 타입</label>
-                <div class="radio-group">
-                    <%
-                        // 월정액 회원인 경우
-                        if (memberDTO != null && Objects.requireNonNull(memberDTO).isSubscribed()) {
-                    %>
-                    <label class="radio-item"><input type="radio" name="carType" value="2" checked>월정액</label>
-                    <%
-                    } else {
-                    %>
-                    <label class="radio-item"><input type="radio" name="carType" value="1" checked>일반</label>
-                    <label class="radio-item"><input type="radio" name="carType" value="3">경차</label>
-                    <label class="radio-item"><input type="radio" name="carType" value="4">장애인</label>
-                    <%
-                        }
-                    %>
-                </div>
+                <%-- 입차 시 확정된 차량 유형을 표시하며 정산 요청에는 전송하지 않음 --%>
+                <input type="text" id="carType" value="<%=carTypeName%>" readonly>
             </div>
             <div class="form-group">
                 <label>입차 시간</label>

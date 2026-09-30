@@ -1,15 +1,24 @@
 <%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
-<%@ page import="org.example.smart_parking_260219.service.PaymentService" %>
-<%@ page import="org.example.smart_parking_260219.util.MapperUtil" %>
-<%@ page import="org.example.smart_parking_260219.service.FeePolicyService" %>
-<%@ page import="org.example.smart_parking_260219.vo.FeePolicyVO" %>
+<%@ page import="java.time.LocalDateTime" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
-    Integer selectedCarType = (Integer) request.getAttribute("carType");
+    Integer calculatedFee = (Integer) request.getAttribute("calculatedFee");
+    Integer discountAmount = (Integer) request.getAttribute("discountAmount");
+    Integer finalFee = (Integer) request.getAttribute("finalFee");
+    Long totalTime = (Long) request.getAttribute("totalTime");
+    LocalDateTime previewExitTime =
+            (LocalDateTime) request.getAttribute("previewExitTime");
 
-    // Controller의 대상 검증과 요청값 검증을 통과한 경우에만 정산 화면을 표시함
-    if (parkingDTO == null || parkingDTO.isPaid() || selectedCarType == null) {
+    // Controller의 대상 검증과 예상 금액 계산을 통과한 경우에만 정산 화면을 표시함
+    if (parkingDTO == null
+            || parkingDTO.isPaid()
+            || parkingDTO.getEntryTime() == null
+            || calculatedFee == null
+            || discountAmount == null
+            || finalFee == null
+            || totalTime == null
+            || previewExitTime == null) {
         request.setAttribute("pageAlertMessage", "정산 가능한 주차 정보를 찾을 수 없습니다.");
         request.setAttribute("pageAlertAction", "redirect");
         request.setAttribute("pageAlertUrl", request.getContextPath() + "/dashboard");
@@ -18,32 +27,12 @@
         return;
     }
 
+    int carType = parkingDTO.getCarType();
     String carNum = parkingDTO.getCarNum();
 
-    int calculatedFee = 0;
-    int discountAmount = 0;
-    int finalFee = 0;
-
-    calculatedFee = PaymentService.INSTANCE.calculateFeeLogic(parkingDTO);
-    discountAmount = PaymentService.INSTANCE.calculateDiscountLogic(calculatedFee, selectedCarType,
-            MapperUtil.INSTANCE.getInstance().map(FeePolicyService.getInstance().getPolicy(), FeePolicyVO.class));
-    finalFee = calculatedFee - discountAmount;
-
-    long totalTime = 0;
-    if (parkingDTO != null && parkingDTO.getEntryTime() != null) {
-        // 현재 시간과 입차 시간의 차이 계산
-        java.time.Duration duration = java.time.Duration.between(
-                parkingDTO.getEntryTime(),
-                java.time.LocalDateTime.now()
-        );
-        totalTime = duration.toMinutes();
-    }
-
-    // 외부 JavaScript가 사용할 시간 값은 실행 코드가 아니라 data-* 속성으로 전달한다.
-    String entryTimeStr = (parkingDTO != null && parkingDTO.getEntryTime() != null)
-            ? parkingDTO.getEntryTime().toString() : "";
-    String exitTimeStr = (parkingDTO != null && parkingDTO.getExitTime() != null)
-            ? parkingDTO.getExitTime().toString() : java.time.LocalDateTime.now().toString();
+    // 영수증 JavaScript도 Controller가 계산에 사용한 동일한 시각을 사용함
+    String entryTimeStr = parkingDTO.getEntryTime().toString();
+    String exitTimeStr = previewExitTime.toString();
 %>
 <html>
 <head>
@@ -62,32 +51,33 @@
         <div class="modal-footer receipt-modal-footer"></div>
     </div>
 </div>
-<!-- Navigation -->
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
-    <!-- Content -->
     <div id="register" class="page">
         <h2>정산</h2>
         <form name="payment" action="${pageContext.request.contextPath}/payment/payment" method="post">
             <%-- 결제 요청에서는 차량번호 대신 주차 기록 ID를 대상 식별값으로 사용함 --%>
             <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">
-                <input type="hidden" name="carType" value="<%=selectedCarType%>"/>
                 <label>차량 번호</label>
                 <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=carNum%>" readonly>
             </div>
             <div class="form-group">
                 <label>결제 타입</label>
                 <div class="radio-group">
-                    <label class="radio-item"><input type="radio" name="paymentType" value="1"
-                        <% if (selectedCarType != 2) {
-                out.println("checked");
-            } %>>카드</label>
-                    <label class="radio-item"><input type="radio" name="paymentType" value="2">현금</label>
-                    <label class="radio-item"><input type="radio" name="paymentType" value="3"
-                    <% if (selectedCarType == 2) {
-                out.println("checked");
-            } %>>월정액</label>
+                    <%-- DB 차량 유형에 허용되는 결제 수단만 화면에 표시함 --%>
+                    <% if (carType == 2) { %>
+                    <label class="radio-item">
+                        <input type="radio" name="paymentType" value="3" checked>월정액
+                    </label>
+                    <% } else { %>
+                    <label class="radio-item">
+                        <input type="radio" name="paymentType" value="1" checked>카드
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="paymentType" value="2">현금
+                    </label>
+                    <% } %>
                 </div>
             </div>
             <div class="form-group">
@@ -119,7 +109,7 @@
 
         </form>
     </div>
-    <!-- 영수증 -->
+    <!-- 영수증 출력 영역 -->
     <div id="printArea" class="receipt-print-area">
         <div class="receipt-paper">
 
@@ -202,7 +192,6 @@
             </div>
         </div>
     </div>
-    <!-- 영수증 -->
 </div>
 <script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script src="${pageContext.request.contextPath}/js/payment/payment.js"></script>
