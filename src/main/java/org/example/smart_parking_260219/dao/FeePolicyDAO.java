@@ -21,9 +21,8 @@ public class FeePolicyDAO {
         return instance;
     }
 
-    // 새로운 정책 등록 (생성된 PK 반환)
+    // 새로운 요금 정책을 저장함
     public void insertPolicy(FeePolicyVO feePolicyVo) {
-        /* 데이터베이스에 정책을 추가하는 메서드 */
         LocalDateTime registrationTime = LocalDateTime.now();
 
         String sql = "INSERT INTO fee_policy " +
@@ -54,7 +53,7 @@ public class FeePolicyDAO {
         }
     }
 
-    // [전체 조회] 요금 정책 목록 출력
+    // 요금 정책 목록을 최근 등록 순으로 조회함
     public List<FeePolicyVO> selectAllPolicies() {
         List<FeePolicyVO> list = new ArrayList<>();
 
@@ -66,24 +65,7 @@ public class FeePolicyDAO {
             @Cleanup ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
-                FeePolicyVO vo = FeePolicyVO.builder()
-                        .policyId(resultSet.getInt("policy_id"))
-                        .gracePeriod(resultSet.getInt("grace_period"))
-                        .defaultTime(resultSet.getInt("default_time"))
-                        .defaultFee(resultSet.getInt("default_fee"))
-                        .extraTime(resultSet.getInt("extra_time"))
-                        .extraFee(resultSet.getInt("extra_fee"))
-                        .lightDiscount(resultSet.getDouble("light_discount"))
-                        .disabledDiscount(resultSet.getDouble("disabled_discount"))
-                        .subscribedFee(resultSet.getInt("subscribed_fee"))
-                        .maxDailyFee(resultSet.getInt("max_daily_fee"))
-                        .isActive(resultSet.getBoolean("is_active"))
-                        .modifyDate(resultSet.getTimestamp("modify_date") != null
-                                ? resultSet.getTimestamp("modify_date").toLocalDateTime()
-                                : null)
-                        .build();
-
-                list.add(vo);
+                list.add(mapFeePolicy(resultSet));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,7 +74,7 @@ public class FeePolicyDAO {
         return list;
     }
 
-    // [단건 조회] 요금 정책 상세 출력 (ID 기반)
+    // 정책 ID로 단일 요금 정책을 조회함
     public FeePolicyVO selectPolicyById(int id) {
         String sql = "SELECT * FROM fee_policy WHERE policy_id = ?";
 
@@ -102,60 +84,44 @@ public class FeePolicyDAO {
             preparedStatement.setInt(1, id);
             @Cleanup ResultSet resultSet = preparedStatement.executeQuery();
 
-            if (!resultSet.next()) return null;
+            if (!resultSet.next()) {
+                return null;
+            }
 
-            Timestamp ts = resultSet.getTimestamp("modify_date");
-            return FeePolicyVO.builder()
-                    .policyId(resultSet.getInt("policy_id"))
-                    .gracePeriod(resultSet.getInt("grace_period"))
-                    .defaultTime(resultSet.getInt("default_time"))
-                    .defaultFee(resultSet.getInt("default_fee"))
-                    .extraTime(resultSet.getInt("extra_time"))
-                    .extraFee(resultSet.getInt("extra_fee"))
-                    .lightDiscount(resultSet.getDouble("light_discount"))
-                    .disabledDiscount(resultSet.getDouble("disabled_discount"))
-                    .subscribedFee(resultSet.getInt("subscribed_fee"))
-                    .maxDailyFee(resultSet.getInt("max_daily_fee"))
-                    .isActive(resultSet.getBoolean("is_active"))
-                    .modifyDate(ts != null ? ts.toLocalDateTime() : null)
-                    .build();
+            return mapFeePolicy(resultSet);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // [단건 조회] 요금 정책 상세 출력
+    // 독립 조회에서는 DAO가 Connection을 생성하고 반환함
     public FeePolicyVO selectOnePolicy() {
-        String sql = "SELECT * FROM fee_policy WHERE is_active = true ORDER BY modify_date DESC LIMIT 1";
-
-        try {
-            @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
-            @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            @Cleanup ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (!resultSet.next()) return null;
-
-            Timestamp ts = resultSet.getTimestamp("modify_date");
-            return FeePolicyVO.builder()
-                    .policyId(resultSet.getInt("policy_id"))
-                    .gracePeriod(resultSet.getInt("grace_period"))
-                    .defaultTime(resultSet.getInt("default_time"))
-                    .defaultFee(resultSet.getInt("default_fee"))
-                    .extraTime(resultSet.getInt("extra_time"))
-                    .extraFee(resultSet.getInt("extra_fee"))
-                    .lightDiscount(resultSet.getDouble("light_discount"))
-                    .disabledDiscount(resultSet.getDouble("disabled_discount"))
-                    .subscribedFee(resultSet.getInt("subscribed_fee"))
-                    .maxDailyFee(resultSet.getInt("max_daily_fee"))
-                    .isActive(resultSet.getBoolean("is_active"))
-                    .modifyDate(ts != null ? ts.toLocalDateTime() : null)
-                    .build();
+        try (Connection connection = DBConnection.INSTANCE.getConnection()) {
+            return selectActivePolicy(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // 월정액 요금 조회
+    // 트랜잭션 Service가 전달한 Connection으로 최신 활성 정책을 조회함
+    public FeePolicyVO selectActivePolicy(
+            Connection connection
+    ) throws SQLException {
+        String sql = "SELECT * FROM fee_policy "
+                + "WHERE is_active = true "
+                + "ORDER BY modify_date DESC LIMIT 1";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (!resultSet.next()) {
+                return null;
+            }
+
+            return mapFeePolicy(resultSet);
+        }
+    }
+
+    // 전달받은 Connection으로 월정액 요금을 조회함
     public Integer getSubscribedFee(Connection connection) throws SQLException {
         String sql = "SELECT subscribed_fee FROM fee_policy LIMIT 1";
 
@@ -166,13 +132,13 @@ public class FeePolicyDAO {
                 return rs.getInt("subscribed_fee");
             }
 
-            // 기본값 반환
+            // 정책이 없으면 기존 기본 월정액 요금을 사용함
             log.warn("fee_policy 테이블에 데이터 없음. 기본값 100000 반환");
             return 100000;
         }
     }
 
-    // 현재 활성화된 정책 모두 false로 변경
+    // 현재 활성화된 모든 정책을 비활성화함
     public int deactivateAllPolicies() {
         String sql = "UPDATE fee_policy SET is_active = false WHERE is_active = true";
 
@@ -185,7 +151,7 @@ public class FeePolicyDAO {
         }
     }
 
-    // 특정 ID의 정책을 활성화(true)로 변경하는 메서드
+    // 정책 ID로 지정한 정책을 활성화함
     public int activatePolicy(int id) {
         String sql = "UPDATE fee_policy SET is_active = true WHERE policy_id = ?";
 
@@ -198,5 +164,27 @@ public class FeePolicyDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // 모든 정책 조회가 동일한 필드를 반환하도록 매핑을 한 곳에서 관리함
+    private FeePolicyVO mapFeePolicy(
+            ResultSet resultSet
+    ) throws SQLException {
+        Timestamp modifyTimestamp = resultSet.getTimestamp("modify_date");
+
+        return FeePolicyVO.builder()
+                .policyId(resultSet.getInt("policy_id"))
+                .gracePeriod(resultSet.getInt("grace_period"))
+                .defaultTime(resultSet.getInt("default_time"))
+                .defaultFee(resultSet.getInt("default_fee"))
+                .extraTime(resultSet.getInt("extra_time"))
+                .extraFee(resultSet.getInt("extra_fee"))
+                .lightDiscount(resultSet.getDouble("light_discount"))
+                .disabledDiscount(resultSet.getDouble("disabled_discount"))
+                .subscribedFee(resultSet.getInt("subscribed_fee"))
+                .maxDailyFee(resultSet.getInt("max_daily_fee"))
+                .isActive(resultSet.getBoolean("is_active"))
+                .modifyDate(modifyTimestamp == null ? null : modifyTimestamp.toLocalDateTime())
+                .build();
     }
 }
