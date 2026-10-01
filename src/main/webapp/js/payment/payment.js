@@ -44,7 +44,6 @@ function showReceipt() {
     // 체크박스가 선택되지 않은 경우 바로 결제(제출)
     else {
         if (confirm("영수증 없이 정산을 진행하시겠습니까?")) {
-            alert("정산이 완료되었습니다. 대시보드로 이동합니다.");
             form.submit();
         }
     }
@@ -57,7 +56,6 @@ function handleConfirm() {
     }
 
     setTimeout(function() {
-        alert("정산이 완료되었습니다. 대시보드로 이동합니다.");
         const form = document.forms['payment'];
         if (form) {
             form.submit();

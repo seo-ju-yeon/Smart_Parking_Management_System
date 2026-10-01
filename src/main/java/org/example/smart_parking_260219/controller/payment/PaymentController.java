@@ -64,6 +64,12 @@ public class PaymentController extends HttpServlet {
 
             log.info("결제 및 출차 처리 완료 - parkingId={}", parkingId);
 
+            // 트랜잭션 커밋 이후에만 대시보드에서 일회성 성공 메시지를 표시함
+            req.getSession().setAttribute(
+                    "successMessage",
+                    "정산이 완료되었습니다."
+            );
+
             resp.sendRedirect(req.getContextPath() + "/dashboard");
         } catch (IllegalArgumentException e) {
             log.warn("유효하지 않은 결제 요청 - parkingId={}", parkingId);
