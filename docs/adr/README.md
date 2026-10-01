@@ -19,6 +19,7 @@
 4. [Docker Compose와 Flyway로 로컬 데이터베이스 환경 구성](004-use-docker-compose-and-flyway-for-local-database.md)
 5. [로컬 이메일 확인에 Mailpit 사용](005-use-mailpit-for-local-email-testing.md)
 6. [관리자 역할 단순화와 권한 검사 공통화](006-centralize-manager-authorization.md)
+7. [서버 계산과 단일 트랜잭션으로 결제·출차 정합성 개선](007-ensure-payment-exit-transaction-consistency.md)
 
 ## 상태
 
