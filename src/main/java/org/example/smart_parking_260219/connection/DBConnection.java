@@ -50,6 +50,11 @@ public enum DBConnection {
         return dataSource.getConnection();
     }
 
+    // 롤백이나 설정 복원에 실패한 연결을 풀에서 제거하여 다음 요청의 재사용을 막음
+    public void evictConnection(Connection connection) {
+        dataSource.evictConnection(connection);
+    }
+
     /**
      * 애플리케이션 종료 시 HikariCP 커넥션 풀을 종료합니다.
      */

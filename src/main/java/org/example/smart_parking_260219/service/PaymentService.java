@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -46,11 +47,18 @@ public enum PaymentService {
             int parkingId,
             int paymentType
     ) {
-        try (Connection connection = DBConnection.INSTANCE.getConnection()) {
-            boolean originalAutoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
+        try {
+            Connection connection = DBConnection.INSTANCE.getConnection();
+            boolean originalAutoCommit = true;
+            boolean transactionStarted = false;
+            // 업무 성공 여부가 아니라 커밋·롤백으로 트랜잭션이 끝났는지를 기록함
+            boolean transactionCompleted = false;
 
             try {
+                originalAutoCommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+                transactionStarted = true;
+
                 PaymentDTO paymentDTO = processPaymentAndExit(
                         connection,
                         parkingId,
@@ -59,10 +67,13 @@ public enum PaymentService {
 
                 // 세 상태 변경이 모두 성공한 경우에만 DB에 최종 반영함
                 connection.commit();
+                transactionCompleted = true;
 
                 return paymentDTO;
             } catch (Exception e) {
-                rollback(connection, e);
+                if (transactionStarted) {
+                    transactionCompleted = rollback(connection, e);
+                }
 
                 if (e instanceof RuntimeException runtimeException) {
                     throw runtimeException;
@@ -72,7 +83,13 @@ public enum PaymentService {
                         e
                 );
             } finally {
-                restoreAutoCommit(connection, originalAutoCommit);
+                // 정상 연결은 close()로 반환하고, 실패 연결은 제거만 하여 중복 정리를 피함
+                finishTransaction(
+                        connection,
+                        originalAutoCommit,
+                        transactionCompleted,
+                        DBConnection.INSTANCE::evictConnection
+                );
             }
         } catch (SQLException e) {
             log.error("결제 트랜잭션 연결 처리 중 오류 발생", e);
@@ -312,28 +329,42 @@ public enum PaymentService {
         }
     }
 
-    // 처리 중 오류가 발생하면 현재 Connection에서 수행한 변경을 모두 취소함
-    private void rollback(
+    // 롤백 성공 여부를 반환하며, 실패 원인은 최초 처리 예외에 함께 보관함
+    static boolean rollback(
             Connection connection,
             Exception cause
     ) {
         try {
             connection.rollback();
+            return true;
         } catch (SQLException rollbackException) {
             cause.addSuppressed(rollbackException);
             log.error("결제 트랜잭션 롤백 중 오류 발생", rollbackException);
+            return false;
         }
     }
 
-    // 커넥션 풀에 반환하기 전에 기존 자동 커밋 설정으로 복원함
-    private void restoreAutoCommit(
+    // 커밋 또는 롤백이 끝난 연결만 설정을 복원하고, 실패 연결은 풀에서 제거함
+    // 제거 동작을 전달받아 실제 DB 없이도 예외 처리 순서를 검증할 수 있게 함
+    static void finishTransaction(
             Connection connection,
-            boolean originalAutoCommit
+            boolean originalAutoCommit,
+            boolean transactionCompleted,
+            Consumer<Connection> evictConnection
     ) {
+        if (!transactionCompleted) {
+            // 시작 또는 롤백 실패 후에는 남은 변경 여부를 확신할 수 없어 설정을 복원하지 않음
+            evictConnection.accept(connection);
+            return;
+        }
+
         try {
             connection.setAutoCommit(originalAutoCommit);
+            connection.close();
         } catch (SQLException e) {
-            log.warn("결제 트랜잭션 Connection 설정 복원 실패", e);
+            log.warn("결제 트랜잭션 Connection 설정 복원 또는 반환 실패", e);
+            // 설정 복원이나 반환에 실패한 연결도 다음 요청에서 재사용하지 않도록 제거함
+            evictConnection.accept(connection);
         }
     }
 
