@@ -74,6 +74,26 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
+            ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");
+
+            // 1차 로그인 직후에만 계정 역할에 맞는 2차 인증 화면을 허용
+            if (!Boolean.TRUE.equals(session.getAttribute("awaitingSecondAuth"))) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            if ("/login/verifyEmail".equals(servletPath)
+                    && managerVO.getRole() != ManagerRole.NORMAL) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            if ("/login/verifyEmailOtp".equals(servletPath)
+                    && managerVO.getRole() != ManagerRole.ADMIN) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             // 세션이 있으면 요청한 2차 인증 페이지로 이동
             log.info("2차 인증 페이지로 이동");
 
@@ -84,8 +104,7 @@ public class LoginController extends HttpServlet {
                 ).forward(request, response);
             } else {
                 // POST에서 임시 저장한 OTP 오류 메시지를 이번 GET 요청으로 전달
-                String flashError =
-                        (String) session.getAttribute("loginOtpFlashError");
+                String flashError = (String) session.getAttribute("loginOtpFlashError");
 
                 if (flashError != null) {
                     request.setAttribute("error", flashError);
@@ -94,14 +113,11 @@ public class LoginController extends HttpServlet {
                     session.removeAttribute("loginOtpFlashError");
                 }
 
-                String loginOtp =
-                        (String) session.getAttribute("loginOtp");
+                String loginOtp = (String) session.getAttribute("loginOtp");
 
-                String verifiedEmail =
-                        (String) session.getAttribute("otpVerifiedEmail");
+                String verifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
 
-                Long generatedTime =
-                        (Long) session.getAttribute("otpGeneratedTime");
+                Long generatedTime = (Long) session.getAttribute("otpGeneratedTime");
 
                 boolean loginOtpActive =
                         loginOtp != null
@@ -111,11 +127,9 @@ public class LoginController extends HttpServlet {
                 int remainingSeconds = 0;
 
                 if (loginOtpActive) {
-                    long elapsedTime =
-                            System.currentTimeMillis() - generatedTime;
+                    long elapsedTime = System.currentTimeMillis() - generatedTime;
 
-                    long remainingMillis =
-                            LOGIN_OTP_VALIDITY_MILLIS - elapsedTime;
+                    long remainingMillis = LOGIN_OTP_VALIDITY_MILLIS - elapsedTime;
 
                     if (remainingMillis <= 0) {
                         clearLoginOtpState(session);
@@ -130,21 +144,14 @@ public class LoginController extends HttpServlet {
                         }
                     } else {
                         // 남은 시간이 1초 미만이어도 1초로 표시되도록 밀리초를 초 단위로 올림
-                        remainingSeconds =
-                                (int) ((remainingMillis + 999) / 1000);
+                        remainingSeconds = (int) ((remainingMillis + 999) / 1000);
                     }
                 }
 
                 // JSP가 OTP 입력 영역과 타이머를 복원할 수 있도록 전달
-                request.setAttribute(
-                        "loginOtpActive",
-                        loginOtpActive
-                );
+                request.setAttribute("loginOtpActive", loginOtpActive);
 
-                request.setAttribute(
-                        "loginOtpRemainingSeconds",
-                        remainingSeconds
-                );
+                request.setAttribute("loginOtpRemainingSeconds", remainingSeconds);
 
                 request.getRequestDispatcher(
                         "/WEB-INF/views/auth/login_email_otp.jsp"
@@ -250,6 +257,14 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
+            // 역할을 확인할 수 없는 계정은 2차 인증 경로로 보내지 않음
+            if (managerVO.getRole() != ManagerRole.ADMIN
+                    && managerVO.getRole() != ManagerRole.NORMAL) {
+                log.warn("역할 정보가 없는 관리자 로그인 차단 - ID: {}", managerId);
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             log.info("1차 인증 성공: {}, 권한: {}", managerId, managerVO.getRole());
 
             // 1차 인증 성공 후 기존 세션을 조회하고, 없으면 새 세션을 생성
@@ -317,12 +332,25 @@ public class LoginController extends HttpServlet {
         }
 
         // 세션에 저장된 관리자 정보 확인
-        ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");  // 1차 로그인 성공 시 doPost에 저장했던 loginManager 객체
+        ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");
 
         if (managerVO == null) {
             log.warn("세션에 loginManager 정보 없음");
             request.setAttribute("error", "세션 정보가 없습니다. 다시 로그인해주세요.");
             request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
+            return;
+        }
+
+        // 이메일 확인은 NORMAL 계정만 사용할 수 있음. ADMIN은 OTP 인증을 거쳐야 함
+        if (managerVO.getRole() != ManagerRole.NORMAL) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        // 새로운 1차 로그인 후 2차 인증을 기다리는 상태에서만 처리
+        if (!Boolean.TRUE.equals(session.getAttribute("awaitingSecondAuth"))
+                || Boolean.TRUE.equals(session.getAttribute("fullyAuthenticated"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
@@ -388,6 +416,16 @@ public class LoginController extends HttpServlet {
             }
 
             ManagerVO manager = (ManagerVO) session.getAttribute("loginManager");
+
+            // OTP 발송은 2차 인증을 기다리는 ADMIN 계정에만 허용
+            if (manager.getRole() != ManagerRole.ADMIN
+                    || !Boolean.TRUE.equals(session.getAttribute("awaitingSecondAuth"))
+                    || Boolean.TRUE.equals(session.getAttribute("fullyAuthenticated"))) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.print("{\"success\":false,\"message\":\"현재 계정에서 사용할 수 없는 인증 요청입니다.\"}");
+                return;
+            }
+
             String inputEmail = request.getParameter("email");
 
             log.info("OTP 발송 요청 - ID: {}", manager.getManagerId());
@@ -468,6 +506,14 @@ public class LoginController extends HttpServlet {
 
         ManagerVO managerVO = (ManagerVO) session.getAttribute("loginManager");
 
+        // OTP 확인은 2차 인증을 기다리는 ADMIN 계정에만 허용
+        if (managerVO.getRole() != ManagerRole.ADMIN
+                || !Boolean.TRUE.equals(session.getAttribute("awaitingSecondAuth"))
+                || Boolean.TRUE.equals(session.getAttribute("fullyAuthenticated"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         // 사용자가 입력한 이메일과 OTP
         String inputEmail = request.getParameter("email");
         String inputOtp = request.getParameter("otp");
@@ -485,20 +531,13 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 세션에 저장된 OTP 정보 확인
-        String sessionOtp
-                = (String) session.getAttribute("loginOtp");
-        String otpVerifiedEmail
-                = (String) session.getAttribute("otpVerifiedEmail");
-        Long otpGeneratedTime
-                = (Long) session.getAttribute("otpGeneratedTime");
+        // 세션에 저장된 OTP 정보 확인 (세션에서 가져온 원본 값이므로 Null일 수 있음)
+        String sessionOtp = (String) session.getAttribute("loginOtp");
+        String otpVerifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
+        Long otpGeneratedTime = (Long) session.getAttribute("otpGeneratedTime");
+        Integer attemptCount = (Integer) session.getAttribute("loginOtpAttemptCount");
 
-        Integer attemptCount =
-                // 세션에서 가져온 원본 값이므로 Null일 수 있음
-                (Integer) session.getAttribute("loginOtpAttemptCount");
-
-        int failedAttempts =
-                attemptCount == null ? 0 : attemptCount;
+        int failedAttempts = attemptCount == null ? 0 : attemptCount;
 
         if (sessionOtp == null || otpVerifiedEmail == null || otpGeneratedTime == null) {
             log.warn("OTP 정보 없음 - 먼저 인증번호를 발송받아야 함");
@@ -510,6 +549,7 @@ public class LoginController extends HttpServlet {
         // OTP 유효 시간 확인
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - otpGeneratedTime;
+
         if (elapsedTime > LOGIN_OTP_VALIDITY_MILLIS) {
             log.warn("OTP 만료 - 경과 시간: {}ms", elapsedTime);
 
@@ -560,8 +600,7 @@ public class LoginController extends HttpServlet {
                     updatedAttempts
             );
 
-            int remainingAttempts
-                    = MAX_LOGIN_OTP_ATTEMPTS - updatedAttempts;
+            int remainingAttempts = MAX_LOGIN_OTP_ATTEMPTS - updatedAttempts;
 
             redirectToLoginOtpWithError(
                     request,
@@ -615,10 +654,6 @@ public class LoginController extends HttpServlet {
 
     /**
      * OTP 인증 메일 HTML 본문을 생성합니다.
-     *
-     * @param managerName 관리자 이름
-     * @param otp         발송할 OTP
-     * @return OTP 이메일 HTML 본문
      */
     private String buildOtpEmailContent(String managerName, String otp) {
         return "<!DOCTYPE html>" +
