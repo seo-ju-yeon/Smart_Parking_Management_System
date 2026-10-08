@@ -1,4 +1,6 @@
 <%@ page import="org.example.smart_parking_260219.dto.FeePolicyDTO" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     FeePolicyDTO policy = (FeePolicyDTO) request.getAttribute("policy");
@@ -7,6 +9,12 @@
     String keyword = (request.getParameter("keyword") != null) ? request.getParameter("keyword") : "";
 
     if (pageNum == null) pageNum = "1";
+
+    // 목록으로 돌아갈 때 사용할 조회 조건을 URL에 안전하게 담음
+    String applyUrl = request.getContextPath() + "/view/policy/apply"
+            + "?pageNum=" + URLEncoder.encode(pageNum, StandardCharsets.UTF_8)
+            + "&items=" + URLEncoder.encode(items, StandardCharsets.UTF_8)
+            + "&keyword=" + URLEncoder.encode(keyword, StandardCharsets.UTF_8);
 %>
 <html>
 <head>
@@ -68,10 +76,12 @@
 
         <div class="btn-group-custom">
             <% if (!policy.isActive()) { %>
-            <button type="button" class="btn btn-success btn-custom apply-policy-button"
-                    data-url="${pageContext.request.contextPath}/view/policy/apply?id=<%= policy.getPolicyId()%>&pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>">
-                <i class="fas fa-play mr-1"></i> 정책 적용하기
-            </button>
+            <form id="applyPolicyForm" action="<%= applyUrl.replace("&", "&amp;") %>" method="post">
+                <input type="hidden" name="id" value="<%= policy.getPolicyId() %>">
+                <button type="submit" class="btn btn-success btn-custom">
+                    <i class="fas fa-play mr-1"></i> 정책 적용하기
+                </button>
+            </form>
             <% } %>
 
             <button type="button" class="btn btn-outline-primary btn-custom navigation-button"

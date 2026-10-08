@@ -16,7 +16,7 @@ public class FeePolicyApplyController extends HttpServlet {
     private final FeePolicyService feePolicyService = FeePolicyService.getInstance();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idParam = req.getParameter("id");
         String pageNum = req.getParameter("pageNum");
         String items = req.getParameter("items");

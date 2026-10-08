@@ -1,10 +1,7 @@
-// 1. 회원 삭제 함수
-function deleteMember(carNum) {
-    if (confirm('정말 삭제하시겠습니까?\n차량번호: ' + carNum)) {
-        location.href = '/member/member_delete?carNum=' + encodeURIComponent(carNum);
+const deleteMemberForm = document.getElementById('deleteMemberForm');
+deleteMemberForm.addEventListener('submit', function (event) {
+    const carNum = this.elements.carNum.value;
+    if (!window.confirm('정말 삭제하시겠습니까?\n차량번호: ' + carNum)) {
+        event.preventDefault();
     }
-}
-
-document.getElementById('deleteMemberButton').addEventListener('click', function () {
-    deleteMember(this.dataset.carNum);
 });

@@ -21,11 +21,8 @@ import java.io.IOException;
 @WebServlet(name = "logoutController", value = {"/logout"})
 public class LogoutController extends HttpServlet {
 
-    /**
-     * GET 방식의 로그아웃 요청을 처리합니다.
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         // 기존 세션만 조회
@@ -40,15 +37,5 @@ public class LogoutController extends HttpServlet {
         }
         // 로그아웃 후 로그인 페이지로 이동
         response.sendRedirect(request.getContextPath() + "/login");
-    }
-
-    /**
-     * POST 방식의 로그아웃 요청도 GET과 동일하게 처리합니다.
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        doGet(request, response);
     }
 }

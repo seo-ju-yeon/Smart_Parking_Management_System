@@ -61,7 +61,11 @@
         <li><a href="${pageContext.request.contextPath}/member/member_search">회원 조회</a></li>
         <li><a href="${pageContext.request.contextPath}/view/policy/list">요금 부과 정책</a></li>
         <li><a href="${pageContext.request.contextPath}/statistics/statistics">매출 통계</a></li>
-        <li><a href="${pageContext.request.contextPath}/logout" class="confirm-logout">로그아웃</a></li>
+        <li>
+            <form action="${pageContext.request.contextPath}/logout" method="post" class="confirm-logout">
+                <button type="submit" class="menu-logout-button">로그아웃</button>
+            </form>
+        </li>
     </ul>
 </nav>
 <script src="${pageContext.request.contextPath}/js/common/menu.js"></script>

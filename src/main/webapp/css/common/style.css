@@ -93,6 +93,22 @@ nav ul li a:hover {
     color: #cccccc;        /* 마우스 오버 시 약간 회색으로 변경 */
 }
 
+nav ul li .menu-logout-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 0;
+    background: none;
+    color: #ffffff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+nav ul li .menu-logout-button:hover {
+    color: #cccccc;
+}
+
 /* 관리자 하위 메뉴 */
 .dropdown-content {
     display: none;

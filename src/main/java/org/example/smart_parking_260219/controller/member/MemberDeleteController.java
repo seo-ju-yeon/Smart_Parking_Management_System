@@ -17,8 +17,8 @@ public class MemberDeleteController extends HttpServlet {
     private final MemberService memberService = MemberService.INSTANCE;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        log.info("=== /member/member_delete GET 요청 ===");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
 
         try {
             String carNum = req.getParameter("carNum");
@@ -26,7 +26,7 @@ public class MemberDeleteController extends HttpServlet {
             // 파라미터 검증
             if (carNum == null || carNum.trim().isEmpty()) {
                 log.error("차량번호 파라미터 누락");
-                resp.sendRedirect("/member/member_list?error=missing");
+                resp.sendRedirect(req.getContextPath() + "/member/member_list?error=missing");
                 return;
             }
 
@@ -34,11 +34,11 @@ public class MemberDeleteController extends HttpServlet {
             memberService.removeMember(carNum);
 
             // 성공 시 목록으로 리다이렉트
-            resp.sendRedirect("/member/member_list?success=delete");
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?success=delete");
 
         } catch (Exception e) {
             log.error("회원 삭제 중 오류 발생", e);
-            resp.sendRedirect("/member/member_list?error=deleteFail");
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?error=deleteFail");
         }
     }
 }

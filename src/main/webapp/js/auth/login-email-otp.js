@@ -10,7 +10,7 @@ const sendOtpBtn = document.getElementById('sendOtpBtn');
 const otpGroup = document.getElementById('otpGroup');
 const otpInput = document.getElementById('otp');
 const submitBtn = document.getElementById('submitBtn');
-const cancelBtn = document.getElementById('cancelBtn');
+const cancelLoginForm = document.getElementById('cancelLoginForm');
 const otpForm = document.getElementById('otpForm');
 const timerDiv = document.getElementById('timer');
 const timeLeftSpan = document.getElementById('timeLeft');
@@ -235,13 +235,14 @@ otpForm.addEventListener('submit', function (e) {
 });
 
 // 인증 취소 시 브라우저와 서버의 로그인 상태를 모두 초기화
-cancelBtn.addEventListener('click', function () {
-    if (confirm('로그인을 취소하시겠습니까?')) {
-        clearInterval(timerInterval);
-        sessionStorage.removeItem('loginOtpEmail');
-
-        window.location.href = contextPath + '/logout';
+cancelLoginForm.addEventListener('submit', function (event) {
+    if (!confirm('로그인을 취소하시겠습니까?')) {
+        event.preventDefault();
+        return;
     }
+
+    clearInterval(timerInterval);
+    sessionStorage.removeItem('loginOtpEmail');
 });
 
 // 뒤로가기로 BFCache의 인증 화면이 복원되면 서버에 현재 인증 상태를 다시 확인

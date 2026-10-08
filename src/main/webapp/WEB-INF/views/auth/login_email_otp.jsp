@@ -74,7 +74,9 @@
             <button type="submit" class="btn btn-primary" id="submitBtn">로그인</button>
         </div>
 
-        <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+    </form>
+    <form id="cancelLoginForm" action="${pageContext.request.contextPath}/logout" method="post">
+        <button type="submit" class="btn btn-secondary" id="cancelBtn">취소</button>
     </form>
 </div>
 

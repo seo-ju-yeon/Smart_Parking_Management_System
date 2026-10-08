@@ -9,6 +9,12 @@
   String listPage = (String) request.getAttribute("page");
   if (listPage == null || listPage.isEmpty()) listPage = "1";
   String listUrl = "/member/member_list?page=" + listPage;
+  String deleteCarNum = member.getCarNum()
+          .replace("&", "&amp;")
+          .replace("\"", "&quot;")
+          .replace("<", "&lt;")
+          .replace(">", "&gt;")
+          .replace("'", "&#39;");
 %>
 <html>
 <head>
@@ -114,27 +120,11 @@
          class="btn btn-warning flex-fill mr-2 text-white">수정</a>
       <a href="<%= listUrl %>"
          class="btn btn-secondary flex-fill mr-2">목록</a>
-      <button type="button" id="deleteMemberButton" class="btn btn-danger flex-fill"
-              data-car-num="<%= member.getCarNum() %>">삭제</button>
-    </div>
-
-    <!-- 삭제 확인 모달 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title">회원 삭제</h5>
-          </div>
-          <div class="modal-body">
-            정말 삭제하시겠습니까?<br>
-            <strong id="deleteCarNum"></strong>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
-            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">삭제</button>
-          </div>
-        </div>
-      </div>
+      <form id="deleteMemberForm" action="${pageContext.request.contextPath}/member/member_delete"
+            method="post" class="flex-fill">
+        <input type="hidden" name="carNum" value="<%= deleteCarNum %>">
+        <button type="submit" class="btn btn-danger w-100">삭제</button>
+      </form>
     </div>
 
   </div>

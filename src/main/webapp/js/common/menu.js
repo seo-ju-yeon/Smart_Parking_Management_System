@@ -49,9 +49,9 @@ if (addManagerLink) {
     });
 }
 
-const logoutLink = document.querySelector('.confirm-logout');
-if (logoutLink) {
-    logoutLink.addEventListener('click', function (event) {
+const logoutForm = document.querySelector('.confirm-logout');
+if (logoutForm) {
+    logoutForm.addEventListener('submit', function (event) {
         if (!confirmLogout()) event.preventDefault();
     });
 }

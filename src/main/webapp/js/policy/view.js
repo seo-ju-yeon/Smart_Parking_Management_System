@@ -4,12 +4,12 @@ document.querySelectorAll('.navigation-button').forEach(button => {
     });
 });
 
-const applyPolicyButton = document.querySelector('.apply-policy-button');
-if (applyPolicyButton) {
-    applyPolicyButton.addEventListener('click', function () {
+const applyPolicyForm = document.getElementById('applyPolicyForm');
+if (applyPolicyForm) {
+    applyPolicyForm.addEventListener('submit', function (event) {
         const message = '이 정책을 현재 주차 요금 정책으로 즉시 적용하시겠습니까?';
-        if (window.confirm(message)) {
-            window.location.href = this.dataset.url;
+        if (!window.confirm(message)) {
+            event.preventDefault();
         }
     });
 }
