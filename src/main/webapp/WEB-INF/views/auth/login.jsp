@@ -30,6 +30,7 @@
 
     <%-- 로그인 정보 전송 --%>
     <form action="${pageContext.request.contextPath}/login" method="post">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <div class="form-group">
             <label for="id">아이디</label>
             <input type="text" id="id" name="id" required autofocus>

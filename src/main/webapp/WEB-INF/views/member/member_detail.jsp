@@ -122,6 +122,7 @@
          class="btn btn-secondary flex-fill mr-2">목록</a>
       <form id="deleteMemberForm" action="${pageContext.request.contextPath}/member/member_delete"
             method="post" class="flex-fill">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <input type="hidden" name="carNum" value="<%= deleteCarNum %>">
         <button type="submit" class="btn btn-danger w-100">삭제</button>
       </form>

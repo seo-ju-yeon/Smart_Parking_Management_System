@@ -1,5 +1,6 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
+const csrfToken = document.body.dataset.csrfToken;
 
 // 비밀번호 찾기 진행 상태
 // 아이디 확인이 끝난 뒤 이메일 인증 요청에 함께 사용할 값
@@ -207,7 +208,10 @@ function submitStep1() {
     // 입력한 아이디가 DB에 등록되어 있는지 컨트롤러에 확인 요청을 보냄
     fetch(contextPath + '/forgot-password/checkId', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: 'managerId=' + encodeURIComponent(id)
     })
         .then(r => r.json())
@@ -244,7 +248,10 @@ function sendOtp() {
     // 확인된 아이디와 입력한 이메일이 같은 관리자 정보인지 서버에서 검증한 뒤 OTP를 발송
     fetch(contextPath + '/forgot-password/sendOtp', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: 'managerId=' + encodeURIComponent(foundManagerId)
             + '&email=' + encodeURIComponent(email)
     })
@@ -299,7 +306,10 @@ function verifyOtp() {
     // 서버에서 OTP를 검증하고, 성공 시 세션에 비밀번호 변경 권한을 발급
     fetch(contextPath + '/forgot-password/verify', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: 'managerId=' + encodeURIComponent(foundManagerId)
             + '&email=' + encodeURIComponent(email)
             + '&otp=' + encodeURIComponent(otp)
@@ -390,7 +400,10 @@ function submitNewPassword() {
 
     fetch(contextPath + '/forgot-password/reset', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: new URLSearchParams({
             newPassword: newPassword,
             confirmPassword: confirmPassword

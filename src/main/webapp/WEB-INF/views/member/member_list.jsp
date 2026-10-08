@@ -153,6 +153,7 @@
                 <td class="member-action-cell">
                     <% if (isExpired) { %>
                     <form action="/member/member_list" method="post" class="renew-form">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="renew">
                         <input type="hidden" name="carNum" value="<%= m.getCarNum() %>">
                         <button type="submit" class="renew-button"

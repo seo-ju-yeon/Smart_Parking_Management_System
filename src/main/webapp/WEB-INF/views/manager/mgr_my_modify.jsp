@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/manager/my-modify.css">
 </head>
-<body data-context-path="${pageContext.request.contextPath}">
+<body data-context-path="${pageContext.request.contextPath}" data-csrf-token="${csrfToken}">
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 
 <div class="main-content">
@@ -42,6 +42,7 @@
         %>
         <%-- 본인 수정 정보 전송 --%>
         <form id="modifyForm" action="${pageContext.request.contextPath}/mgr/my_modify" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
 
             <%-- 아이디는 읽기 전용으로 표시하고 hidden 값으로 전송 --%>
             <div class="form-group">

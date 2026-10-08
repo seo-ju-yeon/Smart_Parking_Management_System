@@ -63,6 +63,7 @@
         <li><a href="${pageContext.request.contextPath}/statistics/statistics">매출 통계</a></li>
         <li>
             <form action="${pageContext.request.contextPath}/logout" method="post" class="confirm-logout">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <button type="submit" class="menu-logout-button">로그아웃</button>
             </form>
         </li>

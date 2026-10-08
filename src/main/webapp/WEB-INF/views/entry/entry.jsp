@@ -32,6 +32,7 @@
         <h2>입차</h2>
         <%-- [버그수정] ../input 상대경로 → contextPath 기준 절대경로 --%>
         <form action="${pageContext.request.contextPath}/input" method="post" class="form-horizontal">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <div class="form-group">
                 <label>주차 자리</label>
                 <input type="text" id="parkingSlot" placeholder="A1 - A20" name="spaceId"

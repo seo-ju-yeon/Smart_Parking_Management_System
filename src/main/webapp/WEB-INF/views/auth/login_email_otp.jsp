@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/auth/login-email-otp.css">
 </head>
 <body data-context-path="${pageContext.request.contextPath}"
+      data-csrf-token="${csrfToken}"
       data-otp-active="<%= loginOtpActive %>"
       data-remaining-seconds="<%= initialRemainingSeconds %>">
 <div class="auth-container">
@@ -50,6 +51,7 @@
 
     <%-- 이메일과 OTP 인증 정보 전송 --%>
     <form id="otpForm" action="${pageContext.request.contextPath}/login/verifyEmailOtp" method="post">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <!-- 이메일 입력 및 인증번호 발송 영역 -->
         <div class="form-group">
             <label for="email">이메일 주소</label>
@@ -76,6 +78,7 @@
 
     </form>
     <form id="cancelLoginForm" action="${pageContext.request.contextPath}/logout" method="post">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <button type="submit" class="btn btn-secondary" id="cancelBtn">취소</button>
     </form>
 </div>

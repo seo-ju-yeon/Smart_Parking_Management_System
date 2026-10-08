@@ -14,6 +14,7 @@
 <div class="main-content">
     <div id="exit" class="page">
         <form action="${pageContext.request.contextPath}/nonMember" method="post" class="form-horizontal">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <%-- 이전 단계에서 확인한 차량과 공간도 최종 POST에서 서버가 다시 검증함 --%>
             <input type="hidden" id="id" name="id" value="<%=(space != null) ? space : ""%>">
             <input type="hidden" id="carNum" name="carNum" value="<%=(carNum != null) ? carNum : ""%>">

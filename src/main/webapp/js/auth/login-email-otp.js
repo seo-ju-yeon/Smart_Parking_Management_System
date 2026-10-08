@@ -1,6 +1,7 @@
 // JSP가 body의 data-* 속성으로 전달한 경로와 OTP 상태를 외부 JavaScript에서 읽는다.
 const pageData = document.body.dataset;
 const contextPath = pageData.contextPath;
+const csrfToken = pageData.csrfToken;
 const initialOtpActive = pageData.otpActive === 'true';
 const initialRemainingSeconds = Number(pageData.remainingSeconds);
 
@@ -139,6 +140,7 @@ sendOtpBtn.addEventListener('click', function () {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken,
         },
         body: body
     })

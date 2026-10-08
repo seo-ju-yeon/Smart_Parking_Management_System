@@ -43,6 +43,7 @@
 
         <!-- 회원 정보 수정 폼 -->
         <form id="memberModifyForm" action="/member/member_modify" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action"    value="modify">
             <input type="hidden" name="memberId"  value="<%= member.getMemberId() %>">
             <input type="hidden" name="carNum"    value="<%= member.getCarNum() %>">
@@ -132,6 +133,7 @@
 
                 <!-- 1개월 갱신 폼 -->
                 <form action="/member/member_modify" method="post">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="renew">
                     <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
                     <input type="hidden" name="page"   value="<%= listPage %>">

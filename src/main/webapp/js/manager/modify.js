@@ -1,5 +1,6 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
+const csrfToken = document.body.dataset.csrfToken;
 
 // 관리자 수정 OTP 인증 상태 저장
 let isEmailVerified = false;
@@ -191,6 +192,7 @@ document.getElementById('sendEmailBtn').addEventListener('click', function() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken,
         },
         body: 'email=' + encodeURIComponent(email)
             + '&purpose=MODIFY_MANAGER'
@@ -240,6 +242,7 @@ document.getElementById('verifyBtn').addEventListener('click', function() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken,
         },
         body: 'email=' + encodeURIComponent(email)
             + '&code=' + encodeURIComponent(code)

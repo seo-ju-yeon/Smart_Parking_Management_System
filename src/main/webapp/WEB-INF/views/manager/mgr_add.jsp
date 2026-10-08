@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/manager/add.css">
 </head>
-<body data-context-path="${pageContext.request.contextPath}">
+<body data-context-path="${pageContext.request.contextPath}" data-csrf-token="${csrfToken}">
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 
 <div class="main-content">
@@ -25,6 +25,7 @@
 
         <%-- 신규 관리자 정보 전송 --%>
         <form id="managerForm" action="${pageContext.request.contextPath}/mgr/add" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <div class="form-group">
                 <label for="id">아이디 <span class="required">*</span></label>
                 <input type="text" id="id" name="id"

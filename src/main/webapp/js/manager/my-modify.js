@@ -1,5 +1,6 @@
 // 외부 JavaScript에서는 JSP 표현식을 직접 사용할 수 없어 body의 data-* 속성에서 경로를 읽는다.
 const contextPath = document.body.dataset.contextPath;
+const csrfToken = document.body.dataset.csrfToken;
 
 const managerModifyForm = document.getElementById('modifyForm');
 
@@ -132,7 +133,10 @@ document.getElementById('sendEmailBtn').addEventListener('click', function () {
 
     fetch(contextPath + '/auth/sendCode', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: 'email=' + encodeURIComponent(email)
             + '&purpose=MODIFY_MANAGER'
             + '&managerId=' + encodeURIComponent(managerId)
@@ -170,7 +174,10 @@ document.getElementById('verifyBtn').addEventListener('click', function () {
 
     fetch(contextPath + '/auth/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': csrfToken
+        },
         body: 'email=' + encodeURIComponent(email)
             + '&code=' + encodeURIComponent(code)
             + '&managerId=' + encodeURIComponent(managerId)

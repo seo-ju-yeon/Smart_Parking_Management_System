@@ -81,6 +81,7 @@
             <% if (manager.isActive()) { %>
             <%-- 관리자 계정 비활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="false">
                 <button type="submit" class="btn btn-danger full-width-button account-state-button"
@@ -91,6 +92,7 @@
             <% } else { %>
             <%-- 관리자 계정 활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
                 <input type="hidden" name="active" value="true">
                 <button type="submit" class="btn btn-success full-width-button account-state-button"

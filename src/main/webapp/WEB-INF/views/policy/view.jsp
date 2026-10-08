@@ -77,6 +77,7 @@
         <div class="btn-group-custom">
             <% if (!policy.isActive()) { %>
             <form id="applyPolicyForm" action="<%= applyUrl.replace("&", "&amp;") %>" method="post">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="id" value="<%= policy.getPolicyId() %>">
                 <button type="submit" class="btn btn-success btn-custom">
                     <i class="fas fa-play mr-1"></i> 정책 적용하기

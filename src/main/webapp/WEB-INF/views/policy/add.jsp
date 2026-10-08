@@ -21,6 +21,7 @@
                 </div>
 
                 <form name="frmFeePolicy" action="${pageContext.request.contextPath}/view/policy/add" method="post">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
 
                     <div class="section-title">
                         <i class="fas fa-stopwatch"></i> 기본 및 추가 설정

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/auth/find-password.css">
 </head>
-<body data-context-path="${pageContext.request.contextPath}">
+<body data-context-path="${pageContext.request.contextPath}" data-csrf-token="${csrfToken}">
 <div class="container">
     <h2>🔑 비밀번호 찾기</h2>
     <p class="subtitle">아이디와 이메일로 본인을 인증해주세요</p>

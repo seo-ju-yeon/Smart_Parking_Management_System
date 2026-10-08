@@ -27,6 +27,7 @@
     <div id="exit" class="page">
         <%-- [버그수정] ../output 상대경로 → contextPath 기준 절대경로 --%>
         <form action="${pageContext.request.contextPath}/output" method="post" class="form-horizontal">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" id="exitSpaceId" name="id" value="<%=(space != null) ? space : ""%>">
             <h2>출차</h2>
             <div class="form-group">

@@ -56,6 +56,7 @@
     <div id="register" class="page">
         <h2>정산</h2>
         <form name="payment" action="${pageContext.request.contextPath}/payment/payment" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <%-- 결제 요청에서는 차량번호 대신 주차 기록 ID를 대상 식별값으로 사용함 --%>
             <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">

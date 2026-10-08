@@ -11,7 +11,13 @@
         </listener-class>
     </listener>
 
-    <!-- 로그인과 2차 인증 완료 여부를 먼저 확인함 -->
+    <!-- 상태 변경 요청의 CSRF 토큰을 컨트롤러 실행 전에 검사함 -->
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>org.example.smart_parking_260219.filter.CsrfFilter</filter-class>
+    </filter>
+
+    <!-- 로그인과 2차 인증 완료 여부를 확인함 -->
     <filter>
         <filter-name>LoginCheckFilter</filter-name>
         <filter-class>org.example.smart_parking_260219.filter.LoginCheckFilter</filter-class>
@@ -24,6 +30,12 @@
     </filter>
 
     <!-- filter-mapping 작성 순서가 실제 필터 실행 순서가 됨 -->
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
     <filter-mapping>
         <filter-name>LoginCheckFilter</filter-name>
         <url-pattern>/*</url-pattern>

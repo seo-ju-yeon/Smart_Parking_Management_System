@@ -43,6 +43,7 @@
     <div id="register" class="page">
         <h2>출차</h2>
         <form action="${pageContext.request.contextPath}/get" method="post" class="form-horizontal">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <%-- 화면에 표시된 값 대신 주차 기록 ID로 결제 대상을 전달함 --%>
             <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">

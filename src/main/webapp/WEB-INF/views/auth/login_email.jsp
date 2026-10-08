@@ -26,6 +26,7 @@
 
     <%-- 이메일 인증 정보 전송 --%>
     <form id="emailForm" action="${pageContext.request.contextPath}/login/verifyEmail" method="post">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <div class="form-group">
             <label for="email">이메일 주소</label>
             <input type="email" id="email" name="email" placeholder="example@email.com" required autofocus>

@@ -68,6 +68,7 @@
         <div class="card">
             <div class="card-body">
                 <form id="memberRegisterForm" action="/member/member_add" method="post">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="register">
 
                     <div class="form-group">
@@ -230,6 +231,7 @@
         </div>
 
         <form action="${pageContext.request.contextPath}/member/member_add" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action" value="renew">
             <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
             <div class="d-flex">
