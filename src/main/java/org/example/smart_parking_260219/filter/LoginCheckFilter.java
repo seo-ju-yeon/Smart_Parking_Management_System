@@ -8,8 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 /**
  * 로그인 여부를 확인하여 미인증 사용자의 접근을 제한하는 필터입니다.
@@ -28,16 +27,15 @@ import java.util.List;
 public class LoginCheckFilter implements Filter {
 
     /**
-     * 로그인 검사를 제외할 경로 목록입니다.
+     * 로그인 검사를 제외할 공개 엔드포인트입니다.
      */
-    private static final List<String> EXCLUDE_URLS = Arrays.asList(
+    // Set.of로 공개 경로를 중복과 변경이 허용되지 않는 집합으로 관리함
+    private static final Set<String> PUBLIC_PATHS = Set.of(
             "/login",
             "/login/verifyEmail", "/login/sendLoginOtp", "/login/verifyEmailOtp",  // 로그인 2차 인증
             "/logout",
-            "/resources",
-            "/css/",
-            "/js/",
-            "/forgot-password"  // 비밀번호 찾기
+            "/forgot-password", "/forgot-password/checkId", "/forgot-password/sendOtp",
+            "/forgot-password/verify", "/forgot-password/reset"  // 비밀번호 찾기
     );
 
     /**
@@ -120,11 +118,9 @@ public class LoginCheckFilter implements Filter {
      * @return 제외 대상이면 true, 로그인 검사가 필요하면 false
      */
     private boolean isExcluded(String path) {
-        if (path.equals("/")) return false; // 루트(/)는 대시보드로 가야 하므로 검사 대상
-
-        for (String exclude : EXCLUDE_URLS) {
-            if (path.startsWith(exclude)) return true;
-        }
-        return false;
+        // 공개 URL은 목록에 있는 경로만 허용하고, CSS/JS는 해당 폴더 안의 파일도 허용함
+        return PUBLIC_PATHS.contains(path)
+                || path.startsWith("/css/")
+                || path.startsWith("/js/");
     }
 }
