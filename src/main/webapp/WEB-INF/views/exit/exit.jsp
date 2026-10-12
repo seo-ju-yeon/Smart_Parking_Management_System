@@ -40,6 +40,5 @@
         </form>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 </body>
 </html>

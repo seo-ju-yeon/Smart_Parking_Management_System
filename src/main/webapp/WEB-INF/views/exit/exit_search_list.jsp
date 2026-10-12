@@ -71,7 +71,6 @@
         </form>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script src="${pageContext.request.contextPath}/js/exit/search-list.js"></script>
 </body>
 </html>

@@ -187,6 +187,5 @@
     </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script src="${pageContext.request.contextPath}/js/manager/list.js"></script>
 </html>

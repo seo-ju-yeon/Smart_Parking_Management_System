@@ -196,7 +196,6 @@
         </div>
     </div>
 </div>
-<script src="${pageContext.request.contextPath}/js/common/function.js"></script>
 <script src="${pageContext.request.contextPath}/js/payment/payment.js"></script>
 </body>
 </html>
