@@ -2,6 +2,7 @@
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.util.List" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     MemberDTO       member         = (MemberDTO)       request.getAttribute("member");
     List<MemberDTO> matchedMembers = (List<MemberDTO>) request.getAttribute("matchedMembers");
@@ -62,7 +63,7 @@
         <h2 class="mb-4">신규 회원 등록</h2>
 
         <div class="alert alert-success">
-            <strong>확인 완료!</strong> '<%= searchCarNum %>'은(는) 등록되지 않은 차량입니다.
+            <strong>확인 완료!</strong> '<%= Encode.forHtmlContent(searchCarNum) %>'은(는) 등록되지 않은 차량입니다.
         </div>
 
         <div class="card">
@@ -135,7 +136,7 @@
         <h2 class="mb-4">회원 등록</h2>
 
         <div class="alert alert-warning">
-            '<%= searchCarNum %>'로 검색된 차량이 <%= matchedMembers.size() %>건 있습니다.
+            '<%= Encode.forHtmlContent(searchCarNum) %>'로 검색된 차량이 <%= matchedMembers.size() %>건 있습니다.
             해당 차량을 선택하면 월정액을 갱신합니다.
         </div>
 
@@ -145,11 +146,11 @@
                class="list-group-item list-group-item-action">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1 font-weight-bold"><%= m.getCarNum() %></h6>
-                        <small class="text-muted"><%= m.getName() %> · <%= m.getPhone() %></small>
+                        <h6 class="mb-1 font-weight-bold"><%= Encode.forHtmlContent(m.getCarNum()) %></h6>
+                        <small class="text-muted"><%= Encode.forHtmlContent(m.getName()) %> · <%= Encode.forHtmlContent(m.getPhone()) %></small>
                     </div>
                     <div class="text-right">
-                        <span class="badge badge-primary"><%= m.CarTypeText() %></span>
+                        <span class="badge badge-primary"><%= Encode.forHtmlContent(m.CarTypeText()) %></span>
                         <% if (m.isSubscribed()) { %>
                         <span class="badge badge-success">구독중</span>
                         <% } else { %>

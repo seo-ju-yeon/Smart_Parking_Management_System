@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
   String error        = request.getParameter("error");
   String searchCarNum = (String) request.getAttribute("searchCarNum");
@@ -19,7 +20,7 @@
 
     <% if ("notFound".equals(error)) { %>
     <div class="alert alert-warning">
-      '<%= searchCarNum %>'로 검색된 회원이 없습니다.
+      '<%= Encode.forHtmlContent(searchCarNum) %>'로 검색된 회원이 없습니다.
     </div>
     <% } else if ("fail".equals(error)) { %>
     <div class="alert alert-danger">검색 중 오류가 발생했습니다.</div>

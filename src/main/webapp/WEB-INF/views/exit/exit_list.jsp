@@ -4,6 +4,7 @@
 <%@ page import="org.example.smart_parking_260219.service.MemberService" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.sql.SQLException" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     List<ParkingSpotDTO> dtoList = (List<ParkingSpotDTO>) request.getAttribute("dtoList");
@@ -67,10 +68,10 @@
                 %>
                 <tr class="click-row" data-url="${pageContext.request.contextPath}/get?id=<%=parkingSpotDTO.getSpaceId()%>&carNum=<%=parkingSpotDTO.getCarNum()%>">
                     <td>
-                        <%=parkingSpotDTO.getSpaceId()%>
+                        <%=Encode.forHtmlContent(parkingSpotDTO.getSpaceId())%>
                     </td>
                     <td>
-                        <%=parkingSpotDTO.getCarNum()%>
+                        <%=Encode.forHtmlContent(parkingSpotDTO.getCarNum())%>
                     </td>
                     <td class="time">
                         <%=parkingSpotDTO.getLastUpdate()%>

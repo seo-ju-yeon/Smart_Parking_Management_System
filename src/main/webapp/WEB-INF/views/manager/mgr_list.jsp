@@ -2,6 +2,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.ManagerDTO" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <html>
 <head>
@@ -86,24 +87,24 @@
                 <tr class="<%= mgr.getRole() == ManagerRole.ADMIN ? "row-admin" : "" %>">
                     <td><%= mgr.getManagerNo() %>
                     </td>
-                    <td><%= mgr.getManagerId() %>
+                    <td><%= Encode.forHtmlContent(mgr.getManagerId()) %>
                     </td>
                     <td>
                         <% if (mgr.getRole() == ManagerRole.ADMIN) { %>
                         <%-- 최고관리자는 상세/수정 진입 대신 안내 모달 표시 --%>
                         <a href="#" class="role-link open-admin-modal">
-                            <%= mgr.getManagerName() %>
+                            <%= Encode.forHtmlContent(mgr.getManagerName()) %>
                         </a>
                         <span class="badge-admin">최고관리자</span>
                         <% } else { %>
                         <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
                         <a href="${pageContext.request.contextPath}/mgr/view?id=<%= mgr.getManagerId() %>"
                            class="normal-manager-link">
-                            <%= mgr.getManagerName() %>
+                            <%= Encode.forHtmlContent(mgr.getManagerName()) %>
                         </a>
                         <% } %>
                     </td>
-                    <td><%= mgr.getEmail() %>
+                    <td><%= Encode.forHtmlContent(mgr.getEmail()) %>
                     </td>
                     <td>
                             <span class="<%= mgr.isActive() ? "status-active" : "status-inactive" %>">

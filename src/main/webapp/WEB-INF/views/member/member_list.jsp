@@ -2,6 +2,7 @@
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="org.example.smart_parking_260219.service.MemberService" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
@@ -136,10 +137,10 @@
             <tr class="member-row <%= isExpired ? "table-secondary" : "" %>"
                 data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= m.getCarNum() %>&page=<%= currentPage %>">
                 <td><%= displayNo-- %></td>
-                <td><%= m.getCarNum() %></td>
-                <td><%= m.CarTypeText() %></td>
-                <td><%= m.getName() %></td>
-                <td><%= m.getPhone() %></td>
+                <td><%= Encode.forHtmlContent(m.getCarNum()) %></td>
+                <td><%= Encode.forHtmlContent(m.CarTypeText()) %></td>
+                <td><%= Encode.forHtmlContent(m.getName()) %></td>
+                <td><%= Encode.forHtmlContent(m.getPhone()) %></td>
                 <td><%= m.getCreateDate() != null ? m.getCreateDate() : "-" %></td>
                 <td><%= m.getEndDate() != null ? m.getEndDate() : "-" %></td>
                 <td>

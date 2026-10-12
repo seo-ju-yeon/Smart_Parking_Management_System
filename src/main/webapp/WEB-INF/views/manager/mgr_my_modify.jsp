@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,13 +26,13 @@
         <%-- 성공 메시지 표시 --%>
         <% String successMsg = (String) session.getAttribute("successMessage");
            if (successMsg != null) { session.removeAttribute("successMessage"); %>
-        <div class="message success-message"><%= successMsg %></div>
+        <div class="message success-message"><%= Encode.forHtmlContent(successMsg) %></div>
         <% } %>
 
         <%-- 수정 실패 메시지 표시 --%>
         <% String error = (String) request.getAttribute("error");
            if (error != null) { %>
-        <div class="message error-message"><%= error %></div>
+        <div class="message error-message"><%= Encode.forHtmlContent(error) %></div>
         <% } %>
 
         <%

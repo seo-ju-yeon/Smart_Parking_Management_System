@@ -69,6 +69,9 @@ dependencies {
     //암호화 기능
     // Source: https://mvnrepository.com/artifact/org.mindrot/jbcrypt
     implementation 'org.mindrot:jbcrypt:0.4'
+
+    // XSS 방지를 위한 출력 위치별(HTML 태그 사이/속성값/URL 등 값이 들어오는 곳) 인코딩
+    implementation 'org.owasp.encoder:encoder:1.5.0'
 }
 
 test {

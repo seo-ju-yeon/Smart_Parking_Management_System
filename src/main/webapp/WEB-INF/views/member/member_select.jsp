@@ -1,5 +1,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
   List<MemberDTO> matchedMembers = (List<MemberDTO>) request.getAttribute("matchedMembers");
@@ -25,7 +26,7 @@
     <h2 class="mb-4">회원 선택</h2>
 
     <div class="alert alert-info">
-      '<%= searchCarNum %>'로 검색된 회원이 <%= matchedMembers.size() %>건 있습니다. 선택해주세요.
+      '<%= Encode.forHtmlContent(searchCarNum) %>'로 검색된 회원이 <%= matchedMembers.size() %>건 있습니다. 선택해주세요.
     </div>
 
     <div class="list-group">
@@ -34,11 +35,11 @@
          class="list-group-item list-group-item-action">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1 font-weight-bold"><%= m.getCarNum() %></h6>
-            <small class="text-muted"><%= m.getName() %> · <%= m.getPhone() %></small>
+            <h6 class="mb-1 font-weight-bold"><%= Encode.forHtmlContent(m.getCarNum()) %></h6>
+            <small class="text-muted"><%= Encode.forHtmlContent(m.getName()) %> · <%= Encode.forHtmlContent(m.getPhone()) %></small>
           </div>
           <div class="text-right">
-            <span class="badge badge-primary"><%= m.CarTypeText() %></span>
+            <span class="badge badge-primary"><%= Encode.forHtmlContent(m.CarTypeText()) %></span>
             <% if (m.isSubscribed()) { %>
             <span class="badge badge-success">구독중</span>
             <% } else { %>

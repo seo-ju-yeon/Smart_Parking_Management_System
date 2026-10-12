@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,16 +17,15 @@
         if (logoutMessage != null) {
             session.removeAttribute("logoutMessage"); %>
     <div class="logout-message">
-        <%= logoutMessage %>
+        <%= Encode.forHtmlContent(logoutMessage) %>
     </div>
     <% } %>
 
     <%-- 로그인 실패 메시지 표시 --%>
     <% String error = (String) request.getAttribute("error");
         if (error != null) { %>
-    <div class="error-message">
-        <%= error %>
-    </div>
+    <%-- 기존 오류 문구의 <br> 표시는 줄바꿈으로 유지하고, 문구 전체는 텍스트로 출력 --%>
+    <div class="error-message"><%= Encode.forHtmlContent(error.replace("<br>", "\n")) %></div>
     <% } %>
 
     <%-- 로그인 정보 전송 --%>

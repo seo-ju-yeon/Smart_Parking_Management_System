@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,7 +22,7 @@
             if (successMessage != null) {
                 session.removeAttribute("successMessage"); %>
         <div class="message success-message">
-            <%= successMessage %>
+            <%= Encode.forHtmlContent(successMessage) %>
         </div>
         <% } %>
 
@@ -31,7 +32,7 @@
             if (error != null) {
                 session.removeAttribute("error"); %>
         <div class="message error-message">
-            <%= error %>
+            <%= Encode.forHtmlContent(error) %>
         </div>
         <% } %>
 
@@ -44,15 +45,15 @@
         <div class="info-section">
             <div class="info-row">
                 <div class="info-label">아이디</div>
-                <div class="info-value"><%= manager.getManagerId() %></div>
+                <div class="info-value"><%= Encode.forHtmlContent(manager.getManagerId()) %></div>
             </div>
             <div class="info-row">
                 <div class="info-label">이름</div>
-                <div class="info-value"><%= manager.getManagerName() %></div>
+                <div class="info-value"><%= Encode.forHtmlContent(manager.getManagerName()) %></div>
             </div>
             <div class="info-row">
                 <div class="info-label">이메일</div>
-                <div class="info-value"><%= manager.getEmail() %></div>
+                <div class="info-value"><%= Encode.forHtmlContent(manager.getEmail()) %></div>
             </div>
             <div class="info-row">
                 <div class="info-label">계정 상태</div>

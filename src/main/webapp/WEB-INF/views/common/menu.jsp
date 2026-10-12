@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <nav>
     <h1>주차장 관리 시스템</h1>
 
@@ -20,7 +21,7 @@
         if (loginManager != null && mName != null) {
     %>
     <div class="sidebar-manager-info">
-        관리자 : <span class="sidebar-manager-name"><%= mName %></span> 님
+        관리자 : <span class="sidebar-manager-name"><%= Encode.forHtmlContent(mName) %></span> 님
     </div>
     <div id="liveClock" class="sidebar-live-clock">
         0000-00-00 00:00:00

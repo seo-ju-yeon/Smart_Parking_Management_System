@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,7 +21,7 @@
     <% String error = (String) request.getAttribute("error");
         if (error != null && !error.isEmpty()) { %>
     <div class="error-message">
-        <%= error %>
+        <%= Encode.forHtmlContent(error) %>
     </div>
     <% } %>
 

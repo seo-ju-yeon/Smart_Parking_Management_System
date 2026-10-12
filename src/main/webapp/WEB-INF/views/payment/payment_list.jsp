@@ -1,6 +1,7 @@
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="org.example.smart_parking_260219.dto.PaymentDTO" %>
 <%@ page import="java.util.List" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     String targetDate = (String) request.getAttribute("targetDate");
@@ -16,7 +17,7 @@
 <%@ include file="/WEB-INF/views/common/menu.jsp" %>
 <div class="main-content">
     <div id="entry" class="page">
-        <h2> <%=targetDate%> 정산 목록 </h2>
+        <h2> <%=Encode.forHtmlContent(targetDate)%> 정산 목록 </h2>
         <div class="form-group">
             <div class="table-container">
                 <table>
@@ -60,7 +61,7 @@
                     %>
                     <tr>
                         <td><%= rowNum++ %></td>
-                        <td><%= paymentDTO.getCarNum() %></td>
+                        <td><%= Encode.forHtmlContent(paymentDTO.getCarNum()) %></td>
                         <td><span class="badge"><%= typeName %></span></td>
                         <td><%= paymentDTO.getTotalTime()%>분</td>
                         <td><%= paymentDTO.getDiscountAmount() %>원</td>

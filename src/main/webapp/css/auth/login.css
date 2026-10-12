@@ -79,6 +79,7 @@ input:focus {
     margin-bottom: 20px;
     border: 1px solid #f5c6cb;
     text-align: center;
+    white-space: pre-line;
 }
 
 .checkbox-group {

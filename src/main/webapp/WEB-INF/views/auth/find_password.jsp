@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +16,7 @@
     <%-- 컨트롤러에서 전달한 오류 메시지가 있으면 표시 --%>
     <% String serverError = (String) request.getAttribute("error");
         if (serverError != null) { %>
-    <div class="msg msg-error show"><%= serverError %>
+    <div class="msg msg-error show"><%= Encode.forHtmlContent(serverError) %>
     </div>
     <% } %>
 

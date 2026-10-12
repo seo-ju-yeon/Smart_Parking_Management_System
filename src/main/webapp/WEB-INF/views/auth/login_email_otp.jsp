@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <%
     Boolean loginOtpActiveAttribute =
@@ -46,7 +47,7 @@
     <div id="otpStatusMessage"
          class="<%= hasError ? "error-message" : "" %>"
          <%= hasError ? "" : "hidden" %>>
-        <%= hasError ? error : "" %>
+        <%= hasError ? Encode.forHtmlContent(error) : "" %>
     </div>
 
     <%-- 이메일과 OTP 인증 정보 전송 --%>

@@ -5,6 +5,7 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="org.example.smart_parking_260219.service.ParkingSpotService" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     // 미정산(paid=false) 주차 기록만 Map으로 구성 (spaceId → ParkingDTO)
@@ -43,7 +44,7 @@
             if (successMessage != null) {
         %>
         <div class="flash-message success">
-            <%= successMessage %>
+            <%= Encode.forHtmlContent(successMessage) %>
         </div>
         <%
             }
@@ -85,7 +86,7 @@
                 <% if (isEmpty) { %>
                 <div class="slot-status">공차</div>
                 <% } else { %>
-                <div class="slot-status"><%= carNum %></div>
+                <div class="slot-status"><%= Encode.forHtmlContent(carNum) %></div>
                 <div class="slot-time"><%= entryTime %> 입차</div>
                 <% } %>
             </div>
