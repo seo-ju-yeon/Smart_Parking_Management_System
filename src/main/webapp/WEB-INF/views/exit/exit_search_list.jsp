@@ -1,5 +1,6 @@
 <%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     // Controller가 대상 검증을 마친 주차 기록만 화면에 표시함
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
@@ -49,12 +50,12 @@
             <div class="form-group">
                 <label>주차 구역</label>
                 <input type="text" id="spaceId" placeholder="주차 구역"
-                       value="<%=parkingDTO.getSpaceId()%>" readonly>
+                       value="<%=Encode.forHtmlAttribute(parkingDTO.getSpaceId())%>" readonly>
             </div>
             <div class="form-group">
                 <label>차량 번호</label>
                 <input type="text" id="regCarNum" placeholder="차량번호 8자리" maxlength="8"
-                       value="<%=parkingDTO.getCarNum()%>" readonly>
+                       value="<%=Encode.forHtmlAttribute(parkingDTO.getCarNum())%>" readonly>
             </div>
             <div class="form-group">
                 <label>차량 타입</label>

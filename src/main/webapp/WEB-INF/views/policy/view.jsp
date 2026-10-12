@@ -2,6 +2,7 @@
 <%@ page import="java.net.URLEncoder" %>
 <%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     FeePolicyDTO policy = (FeePolicyDTO) request.getAttribute("policy");
     String pageNum = request.getParameter("pageNum");
@@ -76,7 +77,7 @@
 
         <div class="btn-group-custom">
             <% if (!policy.isActive()) { %>
-            <form id="applyPolicyForm" action="<%= applyUrl.replace("&", "&amp;") %>" method="post">
+            <form id="applyPolicyForm" action="<%= Encode.forHtmlAttribute(applyUrl) %>" method="post">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="id" value="<%= policy.getPolicyId() %>">
                 <button type="submit" class="btn btn-success btn-custom">
@@ -86,7 +87,7 @@
             <% } %>
 
             <button type="button" class="btn btn-outline-primary btn-custom navigation-button"
-                    data-url="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=pageNum%>&items=<%=items%>&keyword=<%=keyword%>">
+                    data-url="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=Encode.forHtmlAttribute(pageNum)%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>">
                 <i class="fas fa-list mr-1"></i> 목록으로
             </button>
         </div>

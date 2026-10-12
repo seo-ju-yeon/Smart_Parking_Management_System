@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
   MemberDTO member = (MemberDTO) request.getAttribute("member");
   if (member == null) {
@@ -9,12 +10,6 @@
   String listPage = (String) request.getAttribute("page");
   if (listPage == null || listPage.isEmpty()) listPage = "1";
   String listUrl = "/member/member_list?page=" + listPage;
-  String deleteCarNum = member.getCarNum()
-          .replace("&", "&amp;")
-          .replace("\"", "&quot;")
-          .replace("<", "&lt;")
-          .replace(">", "&gt;")
-          .replace("'", "&#39;");
 %>
 <html>
 <head>
@@ -37,28 +32,28 @@
           <label class="col-4 col-form-label font-weight-bold">차량 번호</label>
           <div class="col-8">
             <input type="text" class="form-control bg-light"
-                   value="<%= member.getCarNum() %>" readonly>
+                   value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>" readonly>
           </div>
         </div>
         <div class="form-group row">
           <label class="col-4 col-form-label font-weight-bold">차량 종류</label>
           <div class="col-8">
             <input type="text" class="form-control bg-light"
-                   value="<%= member.CarTypeText() %>" readonly>
+                   value="<%= Encode.forHtmlAttribute(member.CarTypeText()) %>" readonly>
           </div>
         </div>
         <div class="form-group row">
           <label class="col-4 col-form-label font-weight-bold">회원 이름</label>
           <div class="col-8">
             <input type="text" class="form-control bg-light"
-                   value="<%= member.getName() %>" readonly>
+                   value="<%= Encode.forHtmlAttribute(member.getName()) %>" readonly>
           </div>
         </div>
         <div class="form-group row">
           <label class="col-4 col-form-label font-weight-bold">전화번호</label>
           <div class="col-8">
             <input type="text" class="form-control bg-light"
-                   value="<%= member.getPhone() %>" readonly>
+                   value="<%= Encode.forHtmlAttribute(member.getPhone()) %>" readonly>
           </div>
         </div>
         <% if (member.getCreateDate() != null) { %>
@@ -116,14 +111,14 @@
 
     <!-- 버튼 -->
     <div class="d-flex mt-3">
-      <a href="/member/member_modify?carNum=<%= member.getCarNum() %>&page=<%= listPage %>"
+      <a href="/member/member_modify?carNum=<%= Encode.forHtmlAttribute(member.getCarNum()) %>&amp;page=<%= Encode.forHtmlAttribute(listPage) %>"
          class="btn btn-warning flex-fill mr-2 text-white">수정</a>
-      <a href="<%= listUrl %>"
+      <a href="<%= Encode.forHtmlAttribute(listUrl) %>"
          class="btn btn-secondary flex-fill mr-2">목록</a>
       <form id="deleteMemberForm" action="${pageContext.request.contextPath}/member/member_delete"
             method="post" class="flex-fill">
         <input type="hidden" name="_csrf" value="${csrfToken}">
-        <input type="hidden" name="carNum" value="<%= deleteCarNum %>">
+        <input type="hidden" name="carNum" value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>">
         <button type="submit" class="btn btn-danger w-100">삭제</button>
       </form>
     </div>

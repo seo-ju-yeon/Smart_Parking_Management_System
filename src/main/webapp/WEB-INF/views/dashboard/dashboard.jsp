@@ -79,7 +79,7 @@
             <div class="slot-item <%= (isEmpty) ? "empty" : "occupied" %>"
                  data-id="<%= id %>"
                  data-empty="<%= (isEmpty) %>"
-                 data-carnum="<%= carNum %>">
+                 data-carnum="<%= Encode.forHtmlAttribute(String.valueOf(carNum)) %>">
 
                 <div class="slot-title"><%= id %></div>
 

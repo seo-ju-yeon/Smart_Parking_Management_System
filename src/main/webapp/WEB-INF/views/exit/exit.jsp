@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     String space = request.getParameter("id");
     String carNum = request.getParameter("carNum");
@@ -28,12 +29,12 @@
         <%-- [버그수정] ../output 상대경로 → contextPath 기준 절대경로 --%>
         <form action="${pageContext.request.contextPath}/output" method="post" class="form-horizontal">
             <input type="hidden" name="_csrf" value="${csrfToken}">
-            <input type="hidden" id="exitSpaceId" name="id" value="<%=(space != null) ? space : ""%>">
+            <input type="hidden" id="exitSpaceId" name="id" value="<%=Encode.forHtmlAttribute((space != null) ? space : "")%>">
             <h2>출차</h2>
             <div class="form-group">
                 <label>차량 번호</label>
                 <input type="text" id="exitCarNum" placeholder="차량번호 8자리" name="carNum"
-                       value="<%=(carNum != null) ? carNum : ""%>">
+                       value="<%=Encode.forHtmlAttribute((carNum != null) ? carNum : "")%>">
             </div>
             <button>정산</button>
         </form>

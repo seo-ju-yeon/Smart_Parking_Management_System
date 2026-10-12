@@ -98,7 +98,7 @@
                         <span class="badge-admin">최고관리자</span>
                         <% } else { %>
                         <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
-                        <a href="${pageContext.request.contextPath}/mgr/view?id=<%= mgr.getManagerId() %>"
+                        <a href="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(mgr.getManagerId()) %>"
                            class="normal-manager-link">
                             <%= Encode.forHtmlContent(mgr.getManagerName()) %>
                         </a>

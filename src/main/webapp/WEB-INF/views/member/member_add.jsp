@@ -45,7 +45,7 @@
                     <div class="form-group">
                         <label>차량번호 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="carNum" id="carNum"
-                               value="<%= searchCarNum %>"
+                               value="<%= Encode.forHtmlAttribute(searchCarNum) %>"
                                placeholder="예: 123가4567">
                         <small class="text-muted">전체 차량번호를 입력해주세요.</small>
                     </div>
@@ -75,7 +75,7 @@
                     <div class="form-group">
                         <label>차량 번호</label>
                         <input type="text" class="form-control bg-light" name="carNum"
-                               value="<%= searchCarNum %>" readonly>
+                               value="<%= Encode.forHtmlAttribute(searchCarNum) %>" readonly>
                     </div>
 
                     <div class="form-group" hidden="hidden">
@@ -142,7 +142,7 @@
 
         <div class="list-group mb-3">
             <% for (MemberDTO m : matchedMembers) { %>
-            <a href="/member/member_add?step=renew&carNum=<%= m.getCarNum() %>"
+            <a href="/member/member_add?step=renew&carNum=<%= Encode.forHtmlAttribute(m.getCarNum()) %>"
                class="list-group-item list-group-item-action">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -176,14 +176,14 @@
                     <label class="col-4 col-form-label font-weight-bold">차량번호</label>
                     <div class="col-8">
                         <input type="text" class="form-control bg-light"
-                               value="<%= member.getCarNum() %>" readonly>
+                               value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>" readonly>
                     </div>
                 </div>
                 <div class="form-group row mb-2">
                     <label class="col-4 col-form-label font-weight-bold">이름</label>
                     <div class="col-8">
                         <input type="text" class="form-control bg-light"
-                               value="<%= member.getName() %>" readonly>
+                               value="<%= Encode.forHtmlAttribute(member.getName()) %>" readonly>
                     </div>
                 </div>
                 <div class="form-group row mb-0">
@@ -234,7 +234,7 @@
         <form action="${pageContext.request.contextPath}/member/member_add" method="post">
             <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action" value="renew">
-            <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
+            <input type="hidden" name="carNum" value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>">
             <div class="d-flex">
                 <button type="submit" id="renewMemberButton"
                         class="btn btn-warning flex-fill mr-2 text-white">

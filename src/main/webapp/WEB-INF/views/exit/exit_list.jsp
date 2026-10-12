@@ -66,7 +66,7 @@
                     for (ParkingSpotDTO parkingSpotDTO : dtoList) {
                         if (!parkingSpotDTO.getEmpty()) {
                 %>
-                <tr class="click-row" data-url="${pageContext.request.contextPath}/get?id=<%=parkingSpotDTO.getSpaceId()%>&carNum=<%=parkingSpotDTO.getCarNum()%>">
+                <tr class="click-row" data-url="${pageContext.request.contextPath}/get?id=<%=Encode.forHtmlAttribute(parkingSpotDTO.getSpaceId())%>&amp;carNum=<%=Encode.forHtmlAttribute(parkingSpotDTO.getCarNum())%>">
                     <td>
                         <%=Encode.forHtmlContent(parkingSpotDTO.getSpaceId())%>
                     </td>

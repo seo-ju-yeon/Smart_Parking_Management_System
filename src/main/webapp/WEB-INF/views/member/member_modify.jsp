@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.time.LocalDate" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     MemberDTO member = (MemberDTO) request.getAttribute("member");
     LocalDate newStart = (LocalDate) request.getAttribute("newStart");
@@ -46,8 +47,8 @@
             <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action"    value="modify">
             <input type="hidden" name="memberId"  value="<%= member.getMemberId() %>">
-            <input type="hidden" name="carNum"    value="<%= member.getCarNum() %>">
-            <input type="hidden" name="page"      value="<%= listPage %>">
+            <input type="hidden" name="carNum"    value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>">
+            <input type="hidden" name="page"      value="<%= Encode.forHtmlAttribute(listPage) %>">
             <input type="hidden" name="startDate" value="<%= startDateVal %>">
             <input type="hidden" name="endDate"   value="<%= endDateVal %>">
 
@@ -57,25 +58,25 @@
                     <div class="form-group">
                         <label>차량 번호</label>
                         <input type="text" class="form-control bg-light"
-                               value="<%= member.getCarNum() %>" readonly>
+                               value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>" readonly>
                         <small class="text-muted">차량번호는 수정할 수 없습니다.</small>
                     </div>
                     <div class="form-group">
                         <label>회원 이름 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name"
-                               value="<%= member.getName() %>" required>
+                               value="<%= Encode.forHtmlAttribute(member.getName()) %>" required>
                     </div>
                     <div class="form-group mb-0">
                         <label>전화번호 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="phone" name="phone"
-                               value="<%= member.getPhone() %>" required>
+                               value="<%= Encode.forHtmlAttribute(member.getPhone()) %>" required>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex mb-4">
                 <button type="submit" class="btn btn-primary flex-fill mr-2">수정 완료</button>
-                <a href="<%= listUrl %>" class="btn btn-secondary flex-fill">취소</a>
+                <a href="<%= Encode.forHtmlAttribute(listUrl) %>" class="btn btn-secondary flex-fill">취소</a>
             </div>
         </form>
 
@@ -135,11 +136,11 @@
                 <form action="/member/member_modify" method="post">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="renew">
-                    <input type="hidden" name="carNum" value="<%= member.getCarNum() %>">
-                    <input type="hidden" name="page"   value="<%= listPage %>">
+                    <input type="hidden" name="carNum" value="<%= Encode.forHtmlAttribute(member.getCarNum()) %>">
+                    <input type="hidden" name="page"   value="<%= Encode.forHtmlAttribute(listPage) %>">
                     <button type="submit" id="renewSubscriptionButton"
                             class="btn btn-warning btn-block text-white"
-                            data-confirm-message="<%= renewConfirmMsg %>">
+                            data-confirm-message="<%= Encode.forHtmlAttribute(renewConfirmMsg) %>">
                         1개월 갱신
                     </button>
                 </form>

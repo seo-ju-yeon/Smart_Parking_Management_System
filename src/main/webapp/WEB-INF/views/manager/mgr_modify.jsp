@@ -50,15 +50,15 @@
             <!-- 수정 불가 아이디 영역 -->
             <div class="form-group">
                 <label for="id">아이디 <span class="required">*</span></label>
-                <input type="text" id="id" name="id" value="<%= manager.getManagerId() %>" readonly>
-                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
+                <input type="text" id="id" name="id" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>" readonly>
+                <input type="hidden" name="managerId" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                 <div class="field-hint">최고 관리자 아이디는 변경할 수 없습니다</div>
             </div>
 
             <!-- 이름 입력 영역 -->
             <div class="form-group">
                 <label for="name">이름 <span class="required">*</span></label>
-                <input type="text" id="name" name="name" value="<%= manager.getManagerName() %>"
+                <input type="text" id="name" name="name" value="<%= Encode.forHtmlAttribute(manager.getManagerName()) %>"
                        maxlength="20" required>
                 <div class="field-hint">최대 20자</div>
                 <div class="field-error" id="nameError"></div>
@@ -84,7 +84,7 @@
             <div class="form-group">
                 <label for="email">이메일 <span class="required">*</span></label>
                 <div class="email-input-row">
-                    <input type="email" id="email" name="email" value="<%= manager.getEmail() %>"
+                    <input type="email" id="email" name="email" value="<%= Encode.forHtmlAttribute(manager.getEmail()) %>"
                            maxlength="100" placeholder="example@email.com" required class="email-input">
                     <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>
                 </div>
@@ -108,7 +108,7 @@
             <!-- 처리 버튼 영역 -->
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary navigation-button"
-                        data-url="${pageContext.request.contextPath}/mgr/view?id=<%= manager.getManagerId() %>">
+                        data-url="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                     취소
                 </button>
                 <button type="submit" id="submitBtn" class="btn btn-primary">

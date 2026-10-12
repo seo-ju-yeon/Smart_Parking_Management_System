@@ -108,21 +108,21 @@
             <thead>
             <tr>
                 <%-- 메뉴 선택시 정렬 (번호는 내림차순 우선으로 변경 안됨)--%>
-                <th><a href="<%= getSortUrl("memberId", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("memberId", sortColumn, sortOrder, currentPage)) %>">
                     번호<span class="sort-icon"><%= getArrow("memberId", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("carNum", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("carNum", sortColumn, sortOrder, currentPage)) %>">
                     차량 번호<span class="sort-icon"><%= getArrow("carNum", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("carType", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("carType", sortColumn, sortOrder, currentPage)) %>">
                     차량 종류<span class="sort-icon"><%= getArrow("carType", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("name", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("name", sortColumn, sortOrder, currentPage)) %>">
                     회원 이름<span class="sort-icon"><%= getArrow("name", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("phone", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("phone", sortColumn, sortOrder, currentPage)) %>">
                     전화번호<span class="sort-icon"><%= getArrow("phone", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("createDate", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("createDate", sortColumn, sortOrder, currentPage)) %>">
                     구독 가입일<span class="sort-icon"><%= getArrow("createDate", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("endDate", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("endDate", sortColumn, sortOrder, currentPage)) %>">
                     구독 만기일<span class="sort-icon"><%= getArrow("endDate", sortColumn, sortOrder) %></span></a></th>
-                <th><a href="<%= getSortUrl("status", sortColumn, sortOrder, currentPage) %>">
+                <th><a href="<%= Encode.forHtmlAttribute(getSortUrl("status", sortColumn, sortOrder, currentPage)) %>">
                     상태<span class="sort-icon"><%= getArrow("status", sortColumn, sortOrder) %></span></a></th>
                 <th>관리</th>
             </tr>
@@ -135,7 +135,7 @@
                     boolean isExpired = !m.isSubscribed();
             %>
             <tr class="member-row <%= isExpired ? "table-secondary" : "" %>"
-                data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= m.getCarNum() %>&page=<%= currentPage %>">
+                data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= Encode.forHtmlAttribute(m.getCarNum()) %>&amp;page=<%= currentPage %>">
                 <td><%= displayNo-- %></td>
                 <td><%= Encode.forHtmlContent(m.getCarNum()) %></td>
                 <td><%= Encode.forHtmlContent(m.CarTypeText()) %></td>
@@ -156,9 +156,9 @@
                     <form action="/member/member_list" method="post" class="renew-form">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="renew">
-                        <input type="hidden" name="carNum" value="<%= m.getCarNum() %>">
+                        <input type="hidden" name="carNum" value="<%= Encode.forHtmlAttribute(m.getCarNum()) %>">
                         <button type="submit" class="renew-button"
-                                data-car-num="<%= m.getCarNum() %>">갱신</button>
+                                data-car-num="<%= Encode.forHtmlAttribute(m.getCarNum()) %>">갱신</button>
                     </form>
                     <% } else { %>
                     <button type="button" class="renew-button renew-button-disabled" disabled>갱신</button>
@@ -173,14 +173,14 @@
         <!-- 페이징 -->
         <div class="pagination">
             <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&sort=<%= sortColumn %>&order=<%= sortOrder %>">
+            <a href="?page=<%= currentPage - 1 %>&amp;sort=<%= Encode.forHtmlAttribute(sortColumn) %>&amp;order=<%= Encode.forHtmlAttribute(sortOrder) %>">
                 <button>◀ 이전</button></a>
             <% } else { %>
             <button disabled>◀ 이전</button>
             <% } %>
             <span id="pageInfo"><%= currentPage %> / <%= totalPages %></span>
             <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&sort=<%= sortColumn %>&order=<%= sortOrder %>">
+            <a href="?page=<%= currentPage + 1 %>&amp;sort=<%= Encode.forHtmlAttribute(sortColumn) %>&amp;order=<%= Encode.forHtmlAttribute(sortOrder) %>">
                 <button>다음 ▶</button></a>
             <% } else { %>
             <button disabled>다음 ▶</button>

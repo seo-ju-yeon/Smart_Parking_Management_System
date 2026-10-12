@@ -1,7 +1,10 @@
 <%@ page import="org.example.smart_parking_260219.dto.StatisticsDTO" %>
 <%@ page import="java.util.List" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
+    String targetDate = (String) request.getAttribute("targetDate");
+    if (targetDate == null) targetDate = "";
     // 1. 숫자 포맷터 설정
     java.text.DecimalFormat df = new java.text.DecimalFormat("#,###");
 
@@ -57,7 +60,7 @@
             <form action="${pageContext.request.contextPath}/payment/payment_list" method="get" class="control-bar" id="dateForm">
                 <div class="selector-box">
                     <div class="btn-label">조회 기준일</div>
-                    <input type="date" id="statisticsDate" name="targetDate" value="${targetDate}">
+                    <input type="date" id="statisticsDate" name="targetDate" value="<%= Encode.forHtmlAttribute(targetDate) %>">
                     <button type="submit" class="btn-search">조회</button>
                 </div>
             </form>
@@ -66,7 +69,7 @@
         <div class="stats-wrapper">
             <div class="section-card">
                 <div class="control-bar">
-                    <div class="btn-label">시간대별 통계(일별) (${targetDate})</div>
+                    <div class="btn-label">시간대별 통계(일별) (<%= Encode.forHtmlContent(targetDate) %>)</div>
                     <div class="total-price-tag">일 총 매출: <%= formattedDayTotal %>원</div>
                 </div>
                 <div class="chart-area">
@@ -102,22 +105,22 @@
 <div id="statisticsData" hidden>
     <div data-series="hourly-sales">
         <% for (StatisticsDTO dto : hSalesList) { %>
-        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <span data-label="<%= Encode.forHtmlAttribute(dto.getLabel()) %>" data-value="<%= dto.getValue() %>"></span>
         <% } %>
     </div>
     <div data-series="hourly-counts">
         <% for (StatisticsDTO dto : hCountsList) { %>
-        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <span data-label="<%= Encode.forHtmlAttribute(dto.getLabel()) %>" data-value="<%= dto.getValue() %>"></span>
         <% } %>
     </div>
     <div data-series="daily-sales">
         <% for (StatisticsDTO dto : dSalesList) { %>
-        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <span data-label="<%= Encode.forHtmlAttribute(dto.getLabel()) %>" data-value="<%= dto.getValue() %>"></span>
         <% } %>
     </div>
     <div data-series="car-types">
         <% for (StatisticsDTO dto : carTypeStatsList) { %>
-        <span data-label="<%= dto.getLabel() %>" data-value="<%= dto.getValue() %>"></span>
+        <span data-label="<%= Encode.forHtmlAttribute(dto.getLabel()) %>" data-value="<%= dto.getValue() %>"></span>
         <% } %>
     </div>
 </div>

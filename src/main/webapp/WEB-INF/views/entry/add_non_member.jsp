@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <html>
 <head>
     <title>비회원 등록</title>
@@ -16,8 +17,8 @@
         <form action="${pageContext.request.contextPath}/nonMember" method="post" class="form-horizontal">
             <input type="hidden" name="_csrf" value="${csrfToken}">
             <%-- 이전 단계에서 확인한 차량과 공간도 최종 POST에서 서버가 다시 검증함 --%>
-            <input type="hidden" id="id" name="id" value="<%=(space != null) ? space : ""%>">
-            <input type="hidden" id="carNum" name="carNum" value="<%=(carNum != null) ? carNum : ""%>">
+            <input type="hidden" id="id" name="id" value="<%=Encode.forHtmlAttribute((space != null) ? space : "")%>">
+            <input type="hidden" id="carNum" name="carNum" value="<%=Encode.forHtmlAttribute((carNum != null) ? carNum : "")%>">
             <h2>비회원 입차</h2>
             <div class="form-group">
                 <label>연락처</label>

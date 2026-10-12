@@ -2,6 +2,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.FeePolicyDTO" %>
 <%@ page import="org.example.smart_parking_260219.dto.PageResponseDto" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     PageResponseDto pageResponseDto = (PageResponseDto) request.getAttribute("pageResponseDto");
 
@@ -66,7 +67,7 @@
                             String activeClass = dto.isActive() ? "active-row" : "";
                             String detailUrl = request.getContextPath() + "/view/policy?id=" + dto.getPolicyId() + "&pageNum=" + pageNum;
                 %>
-                <tr class="policy-row <%= activeClass %>" data-url="<%= detailUrl %>">
+                <tr class="policy-row <%= activeClass %>" data-url="<%= Encode.forHtmlAttribute(detailUrl) %>">
                     <td>
                         <i class="far fa-clock mr-1"></i>
                         <%= dto.getDefaultTime() %>분 /
@@ -123,14 +124,14 @@
                 for (int i = firstPage; i <= lastPage; i++) {
                     String activeBtn = (pageNum == i) ? "btn-primary" : "btn-outline-secondary";
             %>
-            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=i%>&items=<%=items%>&keyword=<%=keyword%>"
+            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=i%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>"
                class="btn btn-sm <%= activeBtn %>">
                 <%= i %>
             </a>
             <% } %>
 
             <% if (lastPage < totalPage) { %>
-            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=(lastPage + 1)%>&items=<%=items%>&keyword=<%=keyword%>"
+            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=(lastPage + 1)%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>"
                class="btn btn-sm btn-outline-secondary">다음</a>
             <% } %>
         </div>

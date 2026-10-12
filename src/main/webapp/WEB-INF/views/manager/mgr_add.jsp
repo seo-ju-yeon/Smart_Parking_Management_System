@@ -1,5 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%
+    String enteredManagerId = (String) request.getAttribute("managerId");
+    String enteredManagerName = (String) request.getAttribute("managerName");
+    String enteredEmail = (String) request.getAttribute("email");
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,7 +35,7 @@
             <div class="form-group">
                 <label for="id">아이디 <span class="required">*</span></label>
                 <input type="text" id="id" name="id"
-                       value="<%= request.getAttribute("managerId") != null ? request.getAttribute("managerId") : "" %>"
+                       value="<%= Encode.forHtmlAttribute(enteredManagerId != null ? enteredManagerId : "") %>"
                        maxlength="50"
                        required>
                 <div class="field-hint">영문, 숫자 조합 4-50자</div>
@@ -40,7 +45,7 @@
             <div class="form-group">
                 <label for="name">이름 <span class="required">*</span></label>
                 <input type="text" id="name" name="name"
-                       value="<%= request.getAttribute("managerName") != null ? request.getAttribute("managerName") : "" %>"
+                       value="<%= Encode.forHtmlAttribute(enteredManagerName != null ? enteredManagerName : "") %>"
                        maxlength="20"
                        required>
                 <div class="field-hint">최대 20자</div>
@@ -65,7 +70,7 @@
                 <label for="email">이메일 <span class="required">*</span></label>
                 <div class="email-input-row">
                     <input type="email" id="email" name="email"
-                           value="<%= request.getAttribute("email") != null ? request.getAttribute("email") : "" %>"
+                           value="<%= Encode.forHtmlAttribute(enteredEmail != null ? enteredEmail : "") %>"
                            maxlength="100"
                            placeholder="example@email.com" required class="email-input">
                     <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>

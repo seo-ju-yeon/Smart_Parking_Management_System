@@ -35,7 +35,7 @@
           <div class="form-group">
             <label>차량번호 뒤 4자리 <span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="carNum" id="carNum"
-                   value="<%= searchCarNum %>"
+                   value="<%= Encode.forHtmlAttribute(searchCarNum) %>"
                    placeholder="예: 4567" maxlength="4">
             <small class="text-muted">숫자 4자리를 입력해주세요.</small>
           </div>

@@ -31,7 +31,7 @@
 
     <div class="list-group">
       <% for (MemberDTO m : matchedMembers) { %>
-      <a href="/member/member_detail?carNum=<%= m.getCarNum() %>"
+      <a href="/member/member_detail?carNum=<%= Encode.forHtmlAttribute(m.getCarNum()) %>"
          class="list-group-item list-group-item-action">
         <div class="d-flex justify-content-between align-items-center">
           <div>

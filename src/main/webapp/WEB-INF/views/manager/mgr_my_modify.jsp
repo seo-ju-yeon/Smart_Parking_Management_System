@@ -48,8 +48,8 @@
             <%-- 아이디는 읽기 전용으로 표시하고 hidden 값으로 전송 --%>
             <div class="form-group">
                 <label for="managerIdDisplay">아이디</label>
-                <input type="text" id="managerIdDisplay" value="<%= manager.getManagerId() %>" readonly>
-                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
+                <input type="text" id="managerIdDisplay" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>" readonly>
+                <input type="hidden" name="managerId" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                 <div class="field-hint">아이디는 변경할 수 없습니다.</div>
             </div>
 
@@ -57,7 +57,7 @@
             <div class="form-group">
                 <label for="name">이름 <span class="required">*</span></label>
                 <input type="text" id="name" name="name"
-                       value="<%= manager.getManagerName() %>" maxlength="20" required>
+                       value="<%= Encode.forHtmlAttribute(manager.getManagerName()) %>" maxlength="20" required>
                 <div class="field-hint">최대 20자</div>
                 <div class="field-error" id="nameError"></div>
             </div>
@@ -83,7 +83,7 @@
                 <label for="email">이메일 <span class="required">*</span></label>
                 <div class="email-input-row">
                     <input type="email" id="email" name="email"
-                           value="<%= manager.getEmail() %>" maxlength="100"
+                           value="<%= Encode.forHtmlAttribute(manager.getEmail()) %>" maxlength="100"
                            placeholder="example@email.com" required class="email-input">
                     <button type="button" id="sendEmailBtn" class="btn btn-secondary send-email-button">인증요청</button>
                 </div>

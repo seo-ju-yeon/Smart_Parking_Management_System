@@ -1,6 +1,7 @@
 <%@ page import="org.example.smart_parking_260219.dto.ParkingDTO" %>
 <%@ page import="java.time.LocalDateTime" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 <%
     ParkingDTO parkingDTO = (ParkingDTO) request.getAttribute("parkingDTO");
     Integer calculatedFee = (Integer) request.getAttribute("calculatedFee");
@@ -42,8 +43,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/payment/modal.css">
 </head>
 <body data-context-path="${pageContext.request.contextPath}"
-      data-entry-time="<%=entryTimeStr%>"
-      data-exit-time="<%=exitTimeStr%>">
+      data-entry-time="<%=Encode.forHtmlAttribute(entryTimeStr)%>"
+      data-exit-time="<%=Encode.forHtmlAttribute(exitTimeStr)%>">
 <div id="customModal" class="modal-overlay receipt-modal-overlay">
     <div class="modal-content receipt-modal-content">
         <div id="modalBody" class="modal-body receipt-modal-body">
@@ -61,7 +62,7 @@
             <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">
                 <label>차량 번호</label>
-                <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=carNum%>" readonly>
+                <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=Encode.forHtmlAttribute(carNum)%>" readonly>
             </div>
             <div class="form-group">
                 <label>결제 타입</label>

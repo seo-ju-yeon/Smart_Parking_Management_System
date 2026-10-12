@@ -75,7 +75,7 @@
             </button>
 
             <button type="button" class="btn btn-primary flex-button navigation-button"
-                    data-url="${pageContext.request.contextPath}/mgr/modify_normal?id=<%= manager.getManagerId() %>">
+                    data-url="${pageContext.request.contextPath}/mgr/modify_normal?id=<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                 정보 수정
             </button>
 
@@ -83,7 +83,7 @@
             <%-- 관리자 계정 비활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
-                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
+                <input type="hidden" name="managerId" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                 <input type="hidden" name="active" value="false">
                 <button type="submit" class="btn btn-danger full-width-button account-state-button"
                         data-confirm-message="이 관리자 계정을 비활성화 하시겠습니까?">
@@ -94,7 +94,7 @@
             <%-- 관리자 계정 활성화 요청 전송 --%>
             <form action="${pageContext.request.contextPath}/mgr/toggleActive" method="post" class="flex-form">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
-                <input type="hidden" name="managerId" value="<%= manager.getManagerId() %>">
+                <input type="hidden" name="managerId" value="<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
                 <input type="hidden" name="active" value="true">
                 <button type="submit" class="btn btn-success full-width-button account-state-button"
                         data-confirm-message="이 관리자 계정을 활성화 하시겠습니까?">
