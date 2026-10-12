@@ -36,9 +36,10 @@ function showReceipt() {
         document.getElementById("p-finalFee").innerText = Number(finalFee).toLocaleString() + "원";
         document.getElementById("p-finalFee-total").innerText = Number(finalFee).toLocaleString() + "원";
 
-        // 모달 표시
-        const receiptDesign = document.getElementById("printArea").innerHTML;
-        document.getElementById("modalBody").innerHTML = receiptDesign;
+        // 영수증 DOM을 복사해 모달에 표시한다. 복사본의 ID는 원본과 중복되지 않게 제거한다.
+        const receiptCopy = document.querySelector("#printArea .receipt-paper").cloneNode(true);
+        receiptCopy.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
+        document.getElementById("modalBody").replaceChildren(receiptCopy);
         document.getElementById("customModal").style.display = "flex";
     }
     // 체크박스가 선택되지 않은 경우 바로 결제(제출)
@@ -69,14 +70,18 @@ function closeModal() {
 // 인쇄 실행 함수
 function printReceipt() {
     const printWindow = window.open('', '_blank', 'width=450,height=700');
-    printWindow.document.write('<html><head><title>영수증 인쇄</title>');
-    // 인쇄 창에서도 화면과 같은 영수증 스타일을 사용한다.
-    printWindow.document.write('<link rel="stylesheet" href="' + contextPath + '/css/payment/modal.css">');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(document.getElementById("printArea").innerHTML);
-    printWindow.document.write('</body></html>');
+    const printDocument = printWindow.document;
+    printDocument.title = '영수증 인쇄';
 
-    printWindow.document.close();
+    // 인쇄 창에서도 화면과 같은 영수증 스타일을 사용한다.
+    const stylesheet = printDocument.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = contextPath + '/css/payment/modal.css';
+    printDocument.head.appendChild(stylesheet);
+
+    const receiptPaper = document.querySelector('#printArea .receipt-paper');
+    printDocument.body.appendChild(printDocument.importNode(receiptPaper, true));
+
     printWindow.focus();
 
     setTimeout(function() {
