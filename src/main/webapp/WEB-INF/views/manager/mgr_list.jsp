@@ -3,6 +3,8 @@
 <%@ page import="org.example.smart_parking_260219.dto.ManagerDTO" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerRole" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 
 <html>
 <head>
@@ -98,7 +100,9 @@
                         <span class="badge-admin">최고관리자</span>
                         <% } else { %>
                         <%-- 일반관리자는 상세 조회 화면으로 이동 --%>
-                        <a href="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(mgr.getManagerId()) %>"
+                        <a href="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(
+                                URLEncoder.encode(mgr.getManagerId(), StandardCharsets.UTF_8)
+                        ) %>"
                            class="normal-manager-link">
                             <%= Encode.forHtmlContent(mgr.getManagerName()) %>
                         </a>

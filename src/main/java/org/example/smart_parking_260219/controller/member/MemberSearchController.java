@@ -10,6 +10,8 @@ import org.example.smart_parking_260219.dto.MemberDTO;
 import org.example.smart_parking_260219.service.MemberService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Log4j2
@@ -47,7 +49,8 @@ public class MemberSearchController extends HttpServlet {
             // 1건이면 바로 상세 페이지로
             if (matchedMembers.size() == 1) {
                 log.info("검색 결과 1건 - 상세 페이지로 이동");
-                resp.sendRedirect("/member/member_detail?carNum=" + matchedMembers.get(0).getCarNum());
+                resp.sendRedirect("/member/member_detail?carNum="
+                        + URLEncoder.encode(matchedMembers.get(0).getCarNum(), StandardCharsets.UTF_8));
                 return;
             }
 

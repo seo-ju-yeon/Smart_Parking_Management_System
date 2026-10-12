@@ -1,6 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -75,7 +77,9 @@
             </button>
 
             <button type="button" class="btn btn-primary flex-button navigation-button"
-                    data-url="${pageContext.request.contextPath}/mgr/modify_normal?id=<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
+                    data-url="${pageContext.request.contextPath}/mgr/modify_normal?id=<%= Encode.forHtmlAttribute(
+                            URLEncoder.encode(manager.getManagerId(), StandardCharsets.UTF_8)
+                    ) %>">
                 정보 수정
             </button>
 

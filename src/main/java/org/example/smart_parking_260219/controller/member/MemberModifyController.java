@@ -11,6 +11,8 @@ import org.example.smart_parking_260219.dto.MemberDTO;
 import org.example.smart_parking_260219.service.MemberService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 @Log4j2
@@ -67,12 +69,13 @@ public class MemberModifyController extends HttpServlet {
         String action = req.getParameter("action");
         String page   = req.getParameter("page");
         if (page == null || page.isEmpty()) page = "1";
+        String encodedPage = URLEncoder.encode(page, StandardCharsets.UTF_8);
 
         try {
             // 1개월 갱신
             if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
-                resp.sendRedirect("/member/member_list?success=renew&page=" + page);
+                resp.sendRedirect("/member/member_list?success=renew&page=" + encodedPage);
                 return;
             }
 
@@ -108,11 +111,11 @@ public class MemberModifyController extends HttpServlet {
                     .build();
 
             memberService.modifyMember(memberDTO);
-            resp.sendRedirect("/member/member_list?success=modify&page=" + page);
+            resp.sendRedirect("/member/member_list?success=modify&page=" + encodedPage);
 
         } catch (Exception e) {
             log.error("회원 수정 오류", e);
-            resp.sendRedirect("/member/member_list?error=modifyFail&page=" + page);
+            resp.sendRedirect("/member/member_list?error=modifyFail&page=" + encodedPage);
         }
     }
 }

@@ -12,6 +12,8 @@ import org.example.smart_parking_260219.vo.ManagerRole;
 import org.example.smart_parking_260219.vo.ManagerVO;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 관리자 수정 관련 요청을 처리하는 컨트롤러.
@@ -1046,7 +1048,8 @@ public class ManagerModifyController extends HttpServlet {
             String statusText = active ? "활성화" : "비활성화";
             session.setAttribute("successMessage", targetId + " 계정이 " + statusText + " 되었습니다.");
 
-            response.sendRedirect(request.getContextPath() + "/mgr/view?id=" + targetId);
+            response.sendRedirect(request.getContextPath() + "/mgr/view?id="
+                    + URLEncoder.encode(targetId, StandardCharsets.UTF_8));
 
         } catch (Exception e) {
             log.error("관리자 계정 상태 변경 중 오류 발생", e);

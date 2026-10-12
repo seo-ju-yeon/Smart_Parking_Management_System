@@ -1,6 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%
   MemberDTO member = (MemberDTO) request.getAttribute("member");
   if (member == null) {
@@ -9,7 +11,7 @@
   }
   String listPage = (String) request.getAttribute("page");
   if (listPage == null || listPage.isEmpty()) listPage = "1";
-  String listUrl = "/member/member_list?page=" + listPage;
+  String listUrl = "/member/member_list?page=" + URLEncoder.encode(listPage, StandardCharsets.UTF_8);
 %>
 <html>
 <head>
@@ -111,7 +113,11 @@
 
     <!-- 버튼 -->
     <div class="d-flex mt-3">
-      <a href="/member/member_modify?carNum=<%= Encode.forHtmlAttribute(member.getCarNum()) %>&amp;page=<%= Encode.forHtmlAttribute(listPage) %>"
+      <a href="/member/member_modify?carNum=<%= Encode.forHtmlAttribute(
+              URLEncoder.encode(member.getCarNum(), StandardCharsets.UTF_8)
+      ) %>&amp;page=<%= Encode.forHtmlAttribute(
+              URLEncoder.encode(listPage, StandardCharsets.UTF_8)
+      ) %>"
          class="btn btn-warning flex-fill mr-2 text-white">수정</a>
       <a href="<%= Encode.forHtmlAttribute(listUrl) %>"
          class="btn btn-secondary flex-fill mr-2">목록</a>

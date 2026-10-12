@@ -1,6 +1,8 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
   List<MemberDTO> matchedMembers = (List<MemberDTO>) request.getAttribute("matchedMembers");
@@ -31,7 +33,9 @@
 
     <div class="list-group">
       <% for (MemberDTO m : matchedMembers) { %>
-      <a href="/member/member_detail?carNum=<%= Encode.forHtmlAttribute(m.getCarNum()) %>"
+      <a href="/member/member_detail?carNum=<%= Encode.forHtmlAttribute(
+              URLEncoder.encode(m.getCarNum(), StandardCharsets.UTF_8)
+      ) %>"
          class="list-group-item list-group-item-action">
         <div class="d-flex justify-content-between align-items-center">
           <div>

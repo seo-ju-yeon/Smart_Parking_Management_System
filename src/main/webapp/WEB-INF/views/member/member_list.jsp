@@ -3,6 +3,8 @@
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="org.example.smart_parking_260219.service.MemberService" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
@@ -135,7 +137,9 @@
                     boolean isExpired = !m.isSubscribed();
             %>
             <tr class="member-row <%= isExpired ? "table-secondary" : "" %>"
-                data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= Encode.forHtmlAttribute(m.getCarNum()) %>&amp;page=<%= currentPage %>">
+                data-url="${pageContext.request.contextPath}/member/member_detail?carNum=<%= Encode.forHtmlAttribute(
+                        URLEncoder.encode(m.getCarNum(), StandardCharsets.UTF_8)
+                ) %>&amp;page=<%= currentPage %>">
                 <td><%= displayNo-- %></td>
                 <td><%= Encode.forHtmlContent(m.getCarNum()) %></td>
                 <td><%= Encode.forHtmlContent(m.CarTypeText()) %></td>
@@ -173,14 +177,22 @@
         <!-- 페이징 -->
         <div class="pagination">
             <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&amp;sort=<%= Encode.forHtmlAttribute(sortColumn) %>&amp;order=<%= Encode.forHtmlAttribute(sortOrder) %>">
+            <a href="?page=<%= currentPage - 1 %>&amp;sort=<%= Encode.forHtmlAttribute(
+                    URLEncoder.encode(sortColumn, StandardCharsets.UTF_8)
+            ) %>&amp;order=<%= Encode.forHtmlAttribute(
+                    URLEncoder.encode(sortOrder, StandardCharsets.UTF_8)
+            ) %>">
                 <button>◀ 이전</button></a>
             <% } else { %>
             <button disabled>◀ 이전</button>
             <% } %>
             <span id="pageInfo"><%= currentPage %> / <%= totalPages %></span>
             <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&amp;sort=<%= Encode.forHtmlAttribute(sortColumn) %>&amp;order=<%= Encode.forHtmlAttribute(sortOrder) %>">
+            <a href="?page=<%= currentPage + 1 %>&amp;sort=<%= Encode.forHtmlAttribute(
+                    URLEncoder.encode(sortColumn, StandardCharsets.UTF_8)
+            ) %>&amp;order=<%= Encode.forHtmlAttribute(
+                    URLEncoder.encode(sortOrder, StandardCharsets.UTF_8)
+            ) %>">
                 <button>다음 ▶</button></a>
             <% } else { %>
             <button disabled>다음 ▶</button>

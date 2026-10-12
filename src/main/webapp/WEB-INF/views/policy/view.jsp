@@ -87,7 +87,13 @@
             <% } %>
 
             <button type="button" class="btn btn-outline-primary btn-custom navigation-button"
-                    data-url="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=Encode.forHtmlAttribute(pageNum)%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>">
+                    data-url="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=Encode.forHtmlAttribute(
+                            URLEncoder.encode(pageNum, StandardCharsets.UTF_8)
+                    )%>&amp;items=<%=Encode.forHtmlAttribute(
+                            URLEncoder.encode(items, StandardCharsets.UTF_8)
+                    )%>&amp;keyword=<%=Encode.forHtmlAttribute(
+                            URLEncoder.encode(keyword, StandardCharsets.UTF_8)
+                    )%>">
                 <i class="fas fa-list mr-1"></i> 목록으로
             </button>
         </div>

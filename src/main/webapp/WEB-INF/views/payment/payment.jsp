@@ -62,7 +62,8 @@
             <input type="hidden" name="parkingId" value="<%=parkingDTO.getParkingId()%>">
             <div class="form-group">
                 <label>차량 번호</label>
-                <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8" value="<%=Encode.forHtmlAttribute(carNum)%>" readonly>
+                <input type="text" id="carNum" placeholder="차량번호 8자리" maxlength="8"
+                       value="<%=Encode.forHtmlAttribute(carNum)%>" readonly>
             </div>
             <div class="form-group">
                 <label>결제 타입</label>

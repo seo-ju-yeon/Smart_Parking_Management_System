@@ -3,6 +3,8 @@
 <%@ page import="org.example.smart_parking_260219.dto.FeePolicyDTO" %>
 <%@ page import="org.example.smart_parking_260219.dto.PageResponseDto" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%
     PageResponseDto pageResponseDto = (PageResponseDto) request.getAttribute("pageResponseDto");
 
@@ -124,14 +126,22 @@
                 for (int i = firstPage; i <= lastPage; i++) {
                     String activeBtn = (pageNum == i) ? "btn-primary" : "btn-outline-secondary";
             %>
-            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=i%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>"
+            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=i%>&amp;items=<%=Encode.forHtmlAttribute(
+                    URLEncoder.encode(items, StandardCharsets.UTF_8)
+            )%>&amp;keyword=<%=Encode.forHtmlAttribute(
+                    URLEncoder.encode(keyword, StandardCharsets.UTF_8)
+            )%>"
                class="btn btn-sm <%= activeBtn %>">
                 <%= i %>
             </a>
             <% } %>
 
             <% if (lastPage < totalPage) { %>
-            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=(lastPage + 1)%>&amp;items=<%=Encode.forHtmlAttribute(items)%>&amp;keyword=<%=Encode.forHtmlAttribute(keyword)%>"
+            <a href="${pageContext.request.contextPath}/view/policy/list?pageNum=<%=(lastPage + 1)%>&amp;items=<%=Encode.forHtmlAttribute(
+                    URLEncoder.encode(items, StandardCharsets.UTF_8)
+            )%>&amp;keyword=<%=Encode.forHtmlAttribute(
+                    URLEncoder.encode(keyword, StandardCharsets.UTF_8)
+            )%>"
                class="btn btn-sm btn-outline-secondary">다음</a>
             <% } %>
         </div>

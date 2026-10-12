@@ -5,11 +5,12 @@
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.sql.SQLException" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     List<ParkingSpotDTO> dtoList = (List<ParkingSpotDTO>) request.getAttribute("dtoList");
     // 전체 입차 차량 수
-//    int no = ParkingSpotService.INSTANCE.getAllParkingSpot().size() - ParkingSpotService.INSTANCE.getEmptyParkingSpot().size();
     MemberService memberService = MemberService.INSTANCE;
 %>
 <html>
@@ -35,29 +36,29 @@
                 <tr>
                     <th>
                         주차 구역
-                        <a href="${pageContext.request.contextPath}/list?sort=space&order=asc">
+                        <a href="${pageContext.request.contextPath}/list?sort=space&amp;order=asc">
                              ▲
                         </a>
-                        <a href="${pageContext.request.contextPath}/list?sort=space&order=desc">
+                        <a href="${pageContext.request.contextPath}/list?sort=space&amp;order=desc">
                              ▼
                         </a>
                     </th>
                     <th>차량 번호</th>
                     <th>
                         입차 시간
-                        <a href="${pageContext.request.contextPath}/list?sort=time&order=asc">
+                        <a href="${pageContext.request.contextPath}/list?sort=time&amp;order=asc">
                             ▲
                         </a>
-                        <a href="${pageContext.request.contextPath}/list?sort=time&order=desc">
+                        <a href="${pageContext.request.contextPath}/list?sort=time&amp;order=desc">
                             ▼
                         </a>
                     </th>
                     <th>
                         구독 여부
-                        <a href="${pageContext.request.contextPath}/list?sort=subscribe&order=asc">
+                        <a href="${pageContext.request.contextPath}/list?sort=subscribe&amp;order=asc">
                             ▲
                         </a>
-                        <a href="${pageContext.request.contextPath}/list?sort=subscribe&order=desc">
+                        <a href="${pageContext.request.contextPath}/list?sort=subscribe&amp;order=desc">
                             ▼
                         </a>
                     </th>
@@ -66,7 +67,12 @@
                     for (ParkingSpotDTO parkingSpotDTO : dtoList) {
                         if (!parkingSpotDTO.getEmpty()) {
                 %>
-                <tr class="click-row" data-url="${pageContext.request.contextPath}/get?id=<%=Encode.forHtmlAttribute(parkingSpotDTO.getSpaceId())%>&amp;carNum=<%=Encode.forHtmlAttribute(parkingSpotDTO.getCarNum())%>">
+                <tr class="click-row"
+                    data-url="${pageContext.request.contextPath}/get?id=<%= Encode.forHtmlAttribute(
+                                URLEncoder.encode(parkingSpotDTO.getSpaceId(), StandardCharsets.UTF_8)
+                    ) %>&amp;carNum=<%= Encode.forHtmlAttribute(
+                                URLEncoder.encode(parkingSpotDTO.getCarNum(), StandardCharsets.UTF_8)
+                    ) %>">
                     <td>
                         <%=Encode.forHtmlContent(parkingSpotDTO.getSpaceId())%>
                     </td>

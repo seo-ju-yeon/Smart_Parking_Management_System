@@ -9,6 +9,8 @@ import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.service.FeePolicyService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Log4j2
 @WebServlet(name = "FeePolicyApplyController", value = "/view/policy/apply")
@@ -37,6 +39,8 @@ public class FeePolicyApplyController extends HttpServlet {
         if (keyword == null) keyword = "";
 
         // 처리가 끝나면 다시 목록이나 해당 상세페이지로 이동
-        resp.sendRedirect("/view/policy/list?pageNum=" + pageNum + "&items=" + items + "&keyword=" + keyword);
+        resp.sendRedirect("/view/policy/list?pageNum=" + URLEncoder.encode(pageNum, StandardCharsets.UTF_8)
+                + "&items=" + URLEncoder.encode(items, StandardCharsets.UTF_8)
+                + "&keyword=" + URLEncoder.encode(keyword, StandardCharsets.UTF_8));
     }
 }

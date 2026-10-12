@@ -1,6 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="org.example.smart_parking_260219.vo.ManagerVO" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -108,7 +110,9 @@
             <!-- 처리 버튼 영역 -->
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary navigation-button"
-                        data-url="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(manager.getManagerId()) %>">
+                        data-url="${pageContext.request.contextPath}/mgr/view?id=<%= Encode.forHtmlAttribute(
+                                URLEncoder.encode(manager.getManagerId(), StandardCharsets.UTF_8)
+                        ) %>">
                     취소
                 </button>
                 <button type="submit" id="submitBtn" class="btn btn-primary">

@@ -2,6 +2,8 @@
 <%@ page import="org.example.smart_parking_260219.dto.MemberDTO" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%
     MemberDTO member = (MemberDTO) request.getAttribute("member");
     LocalDate newStart = (LocalDate) request.getAttribute("newStart");
@@ -14,7 +16,7 @@
     String modifyError = request.getParameter("error");
     String listPage = (String) request.getAttribute("page");
     if (listPage == null || listPage.isEmpty()) listPage = "1";
-    String listUrl = "/member/member_list?page=" + listPage;
+    String listUrl = "/member/member_list?page=" + URLEncoder.encode(listPage, StandardCharsets.UTF_8);
 
     // JSP 스크립틀릿에서 미리 계산 (value 속성 내 따옴표 충돌 방지)
     String startDateVal = (member.getStartDate() != null) ? member.getStartDate().toString() : "";
