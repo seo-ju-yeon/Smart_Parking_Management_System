@@ -34,7 +34,7 @@ public class MemberDetailController extends HttpServlet {
             MemberDTO member = memberService.getOneMember(carNum.trim());
 
             if (member == null) {
-                resp.sendRedirect("/member/member_list?error=notFound");
+                resp.sendRedirect(req.getContextPath() + "/member/member_list?error=notFound");
                 return;
             }
 

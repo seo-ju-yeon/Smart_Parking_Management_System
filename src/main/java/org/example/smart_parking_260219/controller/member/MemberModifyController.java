@@ -28,12 +28,12 @@ public class MemberModifyController extends HttpServlet {
         try {
             String carNum = req.getParameter("carNum");
             if (carNum == null || carNum.trim().isEmpty()) {
-                resp.sendRedirect("/member/member_list?error=missing");
+                resp.sendRedirect(req.getContextPath() + "/member/member_list?error=missing");
                 return;
             }
             MemberDTO member = memberService.getOneMember(carNum.trim());
             if (member == null) {
-                resp.sendRedirect("/member/member_list?error=notFound");
+                resp.sendRedirect(req.getContextPath() + "/member/member_list?error=notFound");
                 return;
             }
 
@@ -56,7 +56,7 @@ public class MemberModifyController extends HttpServlet {
 
         } catch (Exception e) {
             log.error("수정 페이지 오류", e);
-            resp.sendRedirect("/member/member_list?error=fail");
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?error=fail");
         }
     }
 
@@ -75,7 +75,7 @@ public class MemberModifyController extends HttpServlet {
             // 1개월 갱신
             if ("renew".equals(action)) {
                 memberService.renewSubscription(carNum);
-                resp.sendRedirect("/member/member_list?success=renew&page=" + encodedPage);
+                resp.sendRedirect(req.getContextPath() + "/member/member_list?success=renew&page=" + encodedPage);
                 return;
             }
 
@@ -111,11 +111,11 @@ public class MemberModifyController extends HttpServlet {
                     .build();
 
             memberService.modifyMember(memberDTO);
-            resp.sendRedirect("/member/member_list?success=modify&page=" + encodedPage);
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?success=modify&page=" + encodedPage);
 
         } catch (Exception e) {
             log.error("회원 수정 오류", e);
-            resp.sendRedirect("/member/member_list?error=modifyFail&page=" + encodedPage);
+            resp.sendRedirect(req.getContextPath() + "/member/member_list?error=modifyFail&page=" + encodedPage);
         }
     }
 }
