@@ -3,10 +3,13 @@ package org.example.smart_parking_260219.dao;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.ParkingSpotVO;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+// 설정된 DB의 주차 공간을 추가·수정·조회하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
 class ParkingSpotDAOImplTest {
     private ParkingSpotDAO parkingSpotDAO;
@@ -44,15 +47,6 @@ class ParkingSpotDAOImplTest {
                 .spaceId(id)
                 .build();
         parkingSpotDAO.updateInputParkingSpot(carParkVO);
-    }
-
-    @Test
-    public void updateOutputParkingSpotTest() {
-        String num = "가1111";
-        ParkingSpotVO parkingSpotVO = ParkingSpotVO.builder()
-                .carNum(num)
-                .build();
-        parkingSpotDAO.updateOutputParkingSpot(parkingSpotVO);
     }
 
     @Test

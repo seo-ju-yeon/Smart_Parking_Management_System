@@ -3,15 +3,18 @@ package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.FeePolicyDTO;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-
+// 설정된 DB에 요금 정책을 추가하고 조회하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
 class FeePolicyServiceTest {
+
     private FeePolicyService feePolicyService = FeePolicyService.getInstance();
 
     @Test
@@ -48,11 +51,7 @@ class FeePolicyServiceTest {
 
         log.info("정책 상세 조회 결과: {}", feePolicyDTO);
 
-        assertNotNull(feePolicyDTO);   // 활성 정책이 반드시 1개 존재해야 함
+        assertNotNull(feePolicyDTO);
     }
-
-
-
-
 
 }

@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.example.smart_parking_260219.util.AppConfig;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -12,7 +13,10 @@ import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// 설정된 DB에 직접 연결하므로 통합 테스트로 분류함
+@Tag("integration")
 class DBConnectionTest {
+
     @Test
     public void connectionTest() {
         try {
@@ -23,7 +27,6 @@ class DBConnectionTest {
             String passwd = AppConfig.get("db.password");
 
             Connection connection = DriverManager.getConnection(url, user, passwd);
-            // 변수가 null이 아닌지 확인 -> null이 아니면 객체를 참조하고 있음.
             Assertions.assertNotNull(connection);
             connection.close();
         } catch (ClassNotFoundException | SQLException e) {
@@ -46,7 +49,6 @@ class DBConnectionTest {
         HikariDataSource dataSource = new HikariDataSource(config);
         try (Connection connection = dataSource.getConnection()) {
             System.out.println("Connection success : " + connection);
-            // 변수가 null이 아닌지 확인 -> null이 아니면 객체를 참조하고 있음.
             Assertions.assertNotNull(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);

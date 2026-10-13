@@ -75,5 +75,8 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+    // 기본 테스트는 DB와 Mailpit 연결 없이 실행함
+    useJUnitPlatform {
+        excludeTags 'integration', 'mail-integration'
+    }
 }

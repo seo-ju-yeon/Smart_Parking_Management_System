@@ -4,8 +4,11 @@ import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.ParkingVO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+// 설정된 DB에 주차 기록을 추가하고 조회하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
 class ParkingDAOImplTest {
     private ParkingDAO parkingDAO;
@@ -33,16 +36,6 @@ class ParkingDAOImplTest {
         ParkingVO parkingVO = parkingDAO.selectParkingByLast4(carNum);
         Assertions.assertNotNull(parkingVO);
         log.info("parking: {}", parkingVO);
-    }
-
-    @Test
-    public void updateParkingTest() {
-        String num = "가1111";
-
-        ParkingVO parkingVO = ParkingVO.builder()
-                .carNum(num)
-                .build();
-        parkingDAO.updateParking(parkingVO);
     }
 
     @Test

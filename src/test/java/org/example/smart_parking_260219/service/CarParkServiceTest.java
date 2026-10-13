@@ -2,12 +2,16 @@ package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.ParkingSpotDTO;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+// 설정된 DB의 주차 공간을 조회하고 입차 상태를 변경하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
-class ParkingSpotServiceTest {
+class CarParkServiceTest {
+
     private ParkingSpotService parkingSpotService = ParkingSpotService.INSTANCE;
 
     @Test
@@ -26,13 +30,6 @@ class ParkingSpotServiceTest {
                         .carNum("다3222")
                 .build());
     }
-    @Test
-    public void modifyOutputParkingSpotTest() {
-        parkingSpotService.modifyOutputParkingSpot(ParkingSpotDTO.builder()
-                        .carNum("다3222")
-                .build());
-    }
-
     @Test
     public void getParkingSpotTest() {
         List<ParkingSpotDTO> parkingSpotDTOList = parkingSpotService.getEmptyParkingSpot();

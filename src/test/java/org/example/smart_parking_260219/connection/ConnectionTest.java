@@ -1,16 +1,20 @@
-package org.example.smart_parking_260219;
+package org.example.smart_parking_260219.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.example.smart_parking_260219.util.AppConfig;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+// 설정된 DB에 직접 연결하므로 통합 테스트로 분류함
+@Tag("integration")
 public class ConnectionTest {
+
     @Test
     public void connectionTest() {
         try {
@@ -21,7 +25,6 @@ public class ConnectionTest {
             String pass = AppConfig.get("db.password");
 
             Connection connection = DriverManager.getConnection(url, user, pass);
-            // 변수가 null이 아닌지 확인 -> null이 아니면 객체를 참조
             Assertions.assertNotNull(connection);
             connection.close();
         } catch (ClassNotFoundException | SQLException e) {
@@ -45,7 +48,6 @@ public class ConnectionTest {
 
         try (Connection connection = dataSource.getConnection()) {
             System.out.println("Connection success: " + connection);
-            // 변수가 null이 아닌지 확인 -> null이 아니면 객체를 참조
             Assertions.assertNotNull(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);

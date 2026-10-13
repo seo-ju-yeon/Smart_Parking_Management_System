@@ -2,12 +2,15 @@ package org.example.smart_parking_260219.dao;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.FeePolicyVO;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// 설정된 DB에 직접 접근하고 데이터를 변경하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
 class FeePolicyDAOTest {
     private final FeePolicyDAO feePolicyDAO = FeePolicyDAO.getInstance();
@@ -63,8 +66,7 @@ class FeePolicyDAOTest {
 
         log.info("조회 결과: {}", vo);
 
-        assertNotNull(vo);          // 활성 정책은 반드시 1개 존재
-        assertTrue(vo.isActive());  // active = true 확인
+        assertNotNull(vo);
+        assertTrue(vo.isActive());
     }
 }
-

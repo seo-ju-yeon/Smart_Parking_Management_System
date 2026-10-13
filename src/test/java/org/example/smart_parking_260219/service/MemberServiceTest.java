@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.MemberDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
@@ -11,6 +12,8 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// 설정된 DB의 회원 정보를 추가·수정·삭제하므로 통합 테스트로 분류함
+@Tag("integration")
 @Log4j2
 class MemberServiceTest {
 
@@ -72,7 +75,5 @@ class MemberServiceTest {
 
         memberService.removeMember(carNum);
     }
-
-
 
 }
