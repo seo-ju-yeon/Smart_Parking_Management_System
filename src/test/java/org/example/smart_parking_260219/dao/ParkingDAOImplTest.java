@@ -2,10 +2,7 @@ package org.example.smart_parking_260219.dao;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.ParkingVO;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 // 설정된 DB에 주차 기록을 추가하고 조회하므로 통합 테스트로 분류함
 @Tag("integration")
@@ -19,6 +16,7 @@ class ParkingDAOImplTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void insertParkingTest() {
         ParkingVO parkingVO = ParkingVO.builder()
                 .memberId(6)

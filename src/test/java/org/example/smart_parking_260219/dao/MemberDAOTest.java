@@ -3,6 +3,7 @@ package org.example.smart_parking_260219.dao;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.MemberVO;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,7 @@ class MemberDAOTest {
     private final MemberDAO memberDAO = MemberDAO.getInstance();
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void insertTest() {
         try {
             MemberVO memberVO = MemberVO.builder()
@@ -33,25 +35,6 @@ class MemberDAOTest {
             memberDAO.insertMember(memberVO);
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    // 페이징 확인용 회원 9건을 설정된 DB에 삽입함
-    @Test
-    public void memberDummy() throws SQLException {
-        for (int i = 0; i < 9; i++) {
-            MemberVO memberVO = MemberVO.builder()
-                    .carNum((i+1) + "33다1234")
-                    .carType(2)
-                    .name("test")
-                    .phone("010-1111-2222")
-                    .subscribed(true)
-                    .startDate(LocalDate.now())
-                    .endDate(LocalDate.now().plusMonths(1))
-                    .subscribedFee(100000)
-                    .createDate(LocalDate.from(LocalDateTime.now().plusDays(i)))
-                    .build();
-            memberDAO.insertMember(memberVO);
         }
     }
 
@@ -76,6 +59,7 @@ class MemberDAOTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void updateTest() throws SQLException {
         String carNum = "12341234";
 
@@ -103,6 +87,7 @@ class MemberDAOTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void deleteTest() throws SQLException {
         String carNum = "12341234";
         memberDAO.deleteMember(carNum);

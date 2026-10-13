@@ -3,6 +3,7 @@ package org.example.smart_parking_260219.dao;
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.vo.ManagerVO;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,7 @@ class ManagerDAOTest {
     private ManagerDAO managerDAO = ManagerDAO.getInstance();
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void insertManagerTest() {
         ManagerVO vo = ManagerVO.builder()
                 .managerId("test03")
@@ -53,6 +55,7 @@ class ManagerDAOTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void updateActiveTest() {
         String managerId = "test01";
         boolean targetStatus = false;

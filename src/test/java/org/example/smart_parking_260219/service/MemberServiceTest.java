@@ -2,10 +2,7 @@ package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.example.smart_parking_260219.dto.MemberDTO;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -25,6 +22,7 @@ class MemberServiceTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void addTest() throws SQLException {
         MemberDTO memberDTO = MemberDTO.builder()
                 .carNum("12341234")
@@ -55,6 +53,7 @@ class MemberServiceTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void modify() throws SQLException {
         MemberDTO memberDTO = MemberDTO.builder()
                 .carType(3)
@@ -70,6 +69,7 @@ class MemberServiceTest {
     }
 
     @Test
+    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
     public void remove() throws SQLException {
         String carNum = "12341234";
 
