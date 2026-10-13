@@ -45,4 +45,5 @@ bin/
 
 ### Local application secrets ###
 .env
+.env.test
 src/main/resources/application.properties

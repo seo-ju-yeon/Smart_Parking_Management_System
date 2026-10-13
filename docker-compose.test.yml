@@ -1,0 +1,5 @@
+# Use with docker-compose.yml, .env.test, and the smart-parking-test project name.
+services:
+  flyway:
+    environment:
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql/migration
