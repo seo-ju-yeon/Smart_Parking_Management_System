@@ -11,7 +11,7 @@ import java.util.List;
 public class ParkingSpotDAOImpl implements ParkingSpotDAO {
     // 지정한 차량이 사용 중인 주차 공간만 빈 상태로 변경함
     private static final String UPDATE_PARKING_SPOT_FOR_EXIT_SQL =
-            "UPDATE smart_parking_team2.parking_spot "
+            "UPDATE parking_spot "
                     + "SET `empty` = true, car_num = null, last_update = now() "
                     // 해당 차량이 실제로 사용 중인 공간만 반환함
                     + "WHERE space_id = ? AND car_num = ? AND `empty` = false";
@@ -29,7 +29,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
 
     @Override
     public void insertParkingSpot(ParkingSpotVO parkingSpotVO) {
-        String sql = "INSERT INTO smart_parking_team2.parking_spot (space_id, `empty`, last_update) VALUES (?, true ,now())";
+        String sql = "INSERT INTO parking_spot (space_id, `empty`, last_update) VALUES (?, true ,now())";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -42,7 +42,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
 
     @Override
     public List<ParkingSpotVO> selectAllParkingSpot() {
-        String sql = "SELECT * FROM smart_parking_team2.parking_spot";
+        String sql = "SELECT * FROM parking_spot";
         List<ParkingSpotVO> ParkingSpotVOList = new ArrayList<>();
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
@@ -66,7 +66,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
 
     @Override
     public void updateInputParkingSpot(ParkingSpotVO parkingSpotVO) {
-        String sql = "UPDATE smart_parking_team2.parking_spot SET `empty` = false, car_num =?, last_update = now() WHERE space_id = ?";
+        String sql = "UPDATE parking_spot SET `empty` = false, car_num =?, last_update = now() WHERE space_id = ?";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -98,7 +98,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
 
     @Override
     public List<ParkingSpotVO> selectEmptyParkingSpot() {
-        String sql = "SELECT * FROM smart_parking_team2.parking_spot WHERE `empty` = true";
+        String sql = "SELECT * FROM parking_spot WHERE `empty` = true";
         List<ParkingSpotVO> ParkingSpotVOList = new ArrayList<>();
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
@@ -121,7 +121,7 @@ public class ParkingSpotDAOImpl implements ParkingSpotDAO {
 
     @Override
     public ParkingSpotVO selectParkingSpotBySpaceId(String spaceId) {
-        String sql = "SELECT * FROM smart_parking_team2.parking_spot WHERE space_id = ?";
+        String sql = "SELECT * FROM parking_spot WHERE space_id = ?";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);

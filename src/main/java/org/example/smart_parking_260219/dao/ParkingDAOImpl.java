@@ -13,7 +13,7 @@ public class ParkingDAOImpl implements ParkingDAO {
 
     // parkingId로 결제 및 출차 대상이 되는 주차 기록을 조회함
     private static final String SELECT_PARKING_BY_ID_SQL =
-            "SELECT * FROM smart_parking_team2.parking WHERE parking_id = ?";
+            "SELECT * FROM parking WHERE parking_id = ?";
 
     // 정산 트랜잭션이 끝날 때까지 조회한 행을 잠가 동일 기록의 동시 결제를 방지함
     private static final String SELECT_PARKING_FOR_UPDATE_SQL =
@@ -21,7 +21,7 @@ public class ParkingDAOImpl implements ParkingDAO {
 
     // 미정산 기록에만 출차 정보를 반영하고 paid를 true로 변경함
     private static final String UPDATE_PARKING_FOR_PAYMENT_SQL =
-            "UPDATE smart_parking_team2.parking "
+            "UPDATE parking "
                     + "SET exit_time = ?, car_type = ?, total_time = ?, paid = true "
                     // 이미 결제된 주차 기록을 다시 출차 처리하지 않음
                     + "WHERE parking_id = ? AND paid = false";
@@ -40,7 +40,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     // 신규 입차 기록 저장
     @Override
     public void insertParking(ParkingVO parkingVO) {
-        String sql = "INSERT INTO smart_parking_team2.parking (car_num, space_id, entry_time, car_type) VALUES (?, ?, now(), ?)";
+        String sql = "INSERT INTO parking (car_num, space_id, entry_time, car_type) VALUES (?, ?, now(), ?)";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -57,7 +57,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     // 차량번호 뒤 4자리로 주차 기록 조회
     @Override
     public ParkingVO selectParkingByLast4(String last4) {
-        String sql = "SELECT * FROM smart_parking_team2.parking WHERE RIGHT(car_num, 4) = ?";
+        String sql = "SELECT * FROM parking WHERE RIGHT(car_num, 4) = ?";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -84,7 +84,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     // 차량번호로 차량 유형을 포함한 미정산 주차 기록 조회
     @Override
     public ParkingVO selectParkingByCarNum(String carNum) {
-        String sql = "SELECT * FROM smart_parking_team2.parking WHERE car_num = ? AND paid = false";
+        String sql = "SELECT * FROM parking WHERE car_num = ? AND paid = false";
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
             @Cleanup PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -160,7 +160,7 @@ public class ParkingDAOImpl implements ParkingDAO {
     // 전체 주차 기록을 최근 입차 순으로 조회
     @Override
     public List<ParkingVO> selectAllParking() {
-        String sql = "SELECT * FROM smart_parking_team2.parking ORDER BY entry_time DESC";
+        String sql = "SELECT * FROM parking ORDER BY entry_time DESC";
         List<ParkingVO> ParkingVOList = new ArrayList<>();
         try {
             @Cleanup Connection connection = DBConnection.INSTANCE.getConnection();
