@@ -1,92 +1,160 @@
 package org.example.smart_parking_260219.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.example.smart_parking_260219.connection.DBConnection;
+import org.example.smart_parking_260219.dao.ManagerDAO;
 import org.example.smart_parking_260219.dto.ManagerDTO;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
+import org.example.smart_parking_260219.util.AppConfig;
+import org.example.smart_parking_260219.util.PasswordUtil;
+import org.example.smart_parking_260219.vo.ManagerRole;
+import org.example.smart_parking_260219.vo.ManagerVO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-// 설정된 DB에 관리자를 추가하고 조회하므로 통합 테스트로 분류함
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+// 테스트 DB에 관리자를 추가하고 인증과 목록 조회를 확인하므로 통합 테스트로 분류함
 @Tag("integration")
 @Log4j2
 class ManagerServiceTest {
 
+    private static final String TEST_PASSWORD = "test-password-123";
     private final ManagerService managerService = ManagerService.INSTANCE;
+    private final ManagerDAO managerDAO = ManagerDAO.getInstance();
+    private String testManagerId;
+
+    @BeforeEach
+    void setUp() {
+        // IDE에서 직접 실행해도 개발 DB에 관리자를 추가하지 않도록 확인함
+        assertEquals("jdbc:mariadb://localhost:3308/smart_parking_test", AppConfig.get("db.url"));
+        assertEquals("parking_test", AppConfig.get("db.username"));
+
+        testManagerId = "it_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        log.info("--- 관리자 서비스 테스트 준비: managerId={} ---", testManagerId);
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        if (testManagerId == null) {
+            return;
+        }
+
+        // 이번 테스트에서 사용한 관리자 ID만 삭제함
+        try (Connection connection = DBConnection.INSTANCE.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "DELETE FROM manager WHERE manager_id = ?")) {
+            statement.setString(1, testManagerId);
+            int deletedCount = statement.executeUpdate();
+            log.info("--- 관리자 서비스 테스트 정리: managerId={}, 삭제 {}건 ---",
+                    testManagerId, deletedCount);
+        }
+    }
 
     @Test
-    @Disabled("전용 테스트 DB와 검증 코드가 준비될 때까지 실행하지 않음")
-    public void testAddManager() {
-        ManagerDTO managerDTO = ManagerDTO.builder()
-                .managerId("testAdmin")
+    void addManagerTest() {
+        ManagerDTO input = ManagerDTO.builder()
+                .managerId(testManagerId)
                 .managerName("테스트관리자")
-                .password("1234")
-                .email("test@parking.com")
+                .password(TEST_PASSWORD)
+                .email(testManagerId + "@smartparking.local")
                 .build();
 
-        log.info("등록 시도 데이터: {}", managerDTO);
+        managerService.addManager(input);
+        ManagerVO saved = managerDAO.selectOne(testManagerId);
 
-        managerService.addManager(managerDTO);
+        log.info("--- 관리자 등록 결과: managerId={}, 관리자={} ---", testManagerId, saved);
+        assertNotNull(saved);
+        assertEquals(testManagerId, saved.getManagerId());
+        assertEquals("테스트관리자", saved.getManagerName());
+        assertEquals(testManagerId + "@smartparking.local", saved.getEmail());
+        assertTrue(PasswordUtil.checkPassword(TEST_PASSWORD, saved.getPassword()));
+        assertTrue(saved.isActive());
+        assertEquals(ManagerRole.NORMAL, saved.getRole());
+        assertTrue(managerService.isAuth(testManagerId, TEST_PASSWORD));
     }
 
     @Test
-    public void testIsAuthSuccess() {
-        String id = "testAdmin";
-        String pw = "1234";
+    void isAuthSuccessTest() throws SQLException {
+        insertTestManager(true);
 
-        // 사전 등록된 활성 관리자 계정을 전제로 검증함
-        boolean result = managerService.isAuth(id, pw);
+        boolean authenticated = managerService.isAuth(testManagerId, TEST_PASSWORD);
 
-        log.info("정상 로그인 확인 결과: {}", result);
-        Assertions.assertTrue(result);
+        log.info("--- 활성 관리자 로그인 결과: managerId={}, 인증={} ---", testManagerId, authenticated);
+        assertTrue(authenticated);
     }
 
     @Test
-    public void testIsAuthFailPassword() {
-        String id = "testAdmin";
-        String pw = "wrong_password";
+    void isAuthWrongPasswordTest() throws SQLException {
+        insertTestManager(true);
 
-        boolean result = managerService.isAuth(id, pw);
+        boolean authenticated = managerService.isAuth(testManagerId, "wrong-password");
 
-        log.info("비밀번호 틀림 인증 결과: {}", result);
-        Assertions.assertFalse(result);
+        log.info("--- 잘못된 비밀번호 로그인 결과: managerId={}, 인증={} ---",
+                testManagerId, authenticated);
+        assertFalse(authenticated);
     }
 
     @Test
-    public void testIsAuthFailId() {
-        String id = "non_existent_id";
-        String pw = "1234";
+    void isAuthUnknownIdTest() {
+        // 생성하지 않은 임시 ID로 존재하지 않는 관리자 인증을 확인함
+        boolean authenticated = managerService.isAuth(testManagerId, TEST_PASSWORD);
 
-        boolean result = managerService.isAuth(id, pw);
-
-        log.info("존재하지 않는 아이디 인증 결과: {}", result);
-        Assertions.assertFalse(result);
+        log.info("--- 존재하지 않는 관리자 로그인 결과: managerId={}, 인증={} ---",
+                testManagerId, authenticated);
+        assertFalse(authenticated);
     }
 
     @Test
-    public void testIsAuthDeactivateAccount() {
-        // 비활성 상태로 준비된 기존 관리자 계정을 사용함
-        String id = "Test01";
-        String pw = "1234";
+    void isAuthInactiveAccountTest() throws SQLException {
+        insertTestManager(false);
 
-        boolean result = managerService.isAuth(id, pw);
+        boolean authenticated = managerService.isAuth(testManagerId, TEST_PASSWORD);
 
-        log.info("비활성화 계정 인증 결과: " + result);
-        Assertions.assertFalse(result, "비활성화 계정 = false(0)");
+        log.info("--- 비활성 관리자 로그인 결과: managerId={}, 인증={} ---", testManagerId, authenticated);
+        assertFalse(authenticated);
     }
 
     @Test
-    public void testGetAllManagers() {
-        log.info("=== 전체 관리자 목록 조회(Service) 테스트 ===");
+    void getAllManagersTest() throws SQLException {
+        insertTestManager(true);
 
-        java.util.List<ManagerDTO> dtoList = managerService.getAllManagers();
+        List<ManagerDTO> managers = managerService.getAllManagers();
+        ManagerDTO found = managers.stream()
+                .filter(manager -> testManagerId.equals(manager.getManagerId()))
+                .findFirst()
+                .orElse(null);
 
-        Assertions.assertNotNull(dtoList);
+        log.info("--- 관리자 목록 조회 결과: 전체 {}명, 테스트 관리자={} ---", managers.size(), found);
+        assertNotNull(found);
+        assertEquals(testManagerId, found.getManagerId());
+        assertEquals("테스트관리자", found.getManagerName());
+        assertTrue(found.isActive());
+        assertEquals(ManagerRole.NORMAL, found.getRole());
+    }
 
-        // 사전 등록된 관리자가 최소 1명 있다는 전제로 검증함
-        Assertions.assertTrue(dtoList.size() > 0, "조회된 관리자 DTO 목록이 비어있습니다.");
-
-        dtoList.forEach(dto -> log.info("조회된 DTO: {}", dto));
-        log.info("총 관리자 수: {}", dtoList.size());
+    // 인증과 목록 조회 테스트가 사용할 관리자는 서비스 등록 메서드와 별개로 직접 준비함
+    private void insertTestManager(boolean active) throws SQLException {
+        try (Connection connection = DBConnection.INSTANCE.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO manager (manager_id, manager_name, password, email, active) "
+                             + "VALUES (?, ?, ?, ?, ?)")) {
+            statement.setString(1, testManagerId);
+            statement.setString(2, "테스트관리자");
+            statement.setString(3, PasswordUtil.hashPassword(TEST_PASSWORD));
+            statement.setString(4, testManagerId + "@smartparking.local");
+            statement.setBoolean(5, active);
+            assertEquals(1, statement.executeUpdate());
+        }
     }
 }
