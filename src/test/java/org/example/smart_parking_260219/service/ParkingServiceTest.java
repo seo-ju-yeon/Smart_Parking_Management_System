@@ -50,7 +50,7 @@ class ParkingServiceTest {
         }
 
         testSpaceId = newSpaceId;
-        testCarNum = "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        testCarNum = findCarNumWithUnusedLast4();
         log.info("--- 주차 서비스 테스트 데이터 준비: spaceId={}, carNum={} ---", testSpaceId, testCarNum);
     }
 
@@ -161,6 +161,25 @@ class ParkingServiceTest {
         assertEquals(3, found.getCarType());
         assertFalse(found.isPaid());
         assertNull(parkingService.getParkingByCarNum(null));
+    }
+
+    // 뒤 4자리가 기존 주차 기록과 겹치면 다른 차량을 조회할 수 있어 중복을 피함
+    private String findCarNumWithUnusedLast4() throws SQLException {
+        try (Connection connection = DBConnection.INSTANCE.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT 1 FROM parking WHERE RIGHT(car_num, 4) = ? LIMIT 1")) {
+            while (true) {
+                String candidate = "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+                String last4 = candidate.substring(candidate.length() - 4);
+                statement.setString(1, last4);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return candidate;
+                    }
+                }
+            }
+        }
     }
 
     // 조회 테스트가 사용할 주차 기록은 서비스 등록 메서드와 별개로 직접 준비함
