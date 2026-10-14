@@ -14,8 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,7 +128,7 @@ class FeePolicyServiceTest {
 
     @Test
     void getPolicyListTest() throws SQLException {
-        int policyId = insertTestPolicy(false, LocalDateTime.now());
+        int policyId = insertTestPolicy();
 
         List<FeePolicyDTO> policies = feePolicyService.getPolicyList();
         FeePolicyDTO found = policies.stream()
@@ -146,8 +144,8 @@ class FeePolicyServiceTest {
 
     @Test
     void getPolicyTest() throws SQLException {
-        // 최신 활성 정책 조회를 검증하기 위해 테스트 정책의 수정 시각을 미래로 지정
-        int policyId = insertTestPolicy(true, LocalDateTime.now().plusYears(1));
+        int policyId = insertTestPolicy();
+        activateOnlyTestPolicy(policyId);
 
         FeePolicyDTO found = feePolicyService.getPolicy();
 
@@ -156,11 +154,12 @@ class FeePolicyServiceTest {
         assertEquals(policyId, found.getPolicyId());
         assertEquals(testDefaultFee.intValue(), found.getDefaultFee());
         assertTrue(found.isActive());
+        assertEquals(Set.of(policyId), readActivePolicyIds());
     }
 
     @Test
     void getPolicyByIdTest() throws Exception {
-        int policyId = insertTestPolicy(false, LocalDateTime.now());
+        int policyId = insertTestPolicy();
 
         FeePolicyDTO found = feePolicyService.getPolicyById(policyId);
 
@@ -174,7 +173,7 @@ class FeePolicyServiceTest {
 
     @Test
     void applyPolicyTest() throws Exception {
-        int policyId = insertTestPolicy(false, LocalDateTime.now().plusYears(1));
+        int policyId = insertTestPolicy();
 
         feePolicyService.applyPolicy(policyId);
 
@@ -207,20 +206,29 @@ class FeePolicyServiceTest {
     }
 
     // 조회 테스트가 사용할 정책은 서비스 등록 메서드와 별개로 직접 준비함
-    private int insertTestPolicy(boolean active, LocalDateTime modifyDate) throws SQLException {
+    private int insertTestPolicy() throws SQLException {
         try (Connection connection = DBConnection.INSTANCE.getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                     "INSERT INTO fee_policy (default_fee, is_active, modify_date) VALUES (?, ?, ?)",
+                     "INSERT INTO fee_policy (default_fee, is_active) VALUES (?, false)",
                      Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, testDefaultFee);
-            statement.setBoolean(2, active);
-            statement.setTimestamp(3, Timestamp.valueOf(modifyDate));
             assertEquals(1, statement.executeUpdate());
 
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 assertTrue(keys.next());
                 return keys.getInt(1);
             }
+        }
+    }
+
+    // 활성 정책 조회를 검증하기 위해 이번 테스트에서 만든 정책만 활성화함
+    private void activateOnlyTestPolicy(int policyId) throws SQLException {
+        try (Connection connection = DBConnection.INSTANCE.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE fee_policy SET is_active = "
+                             + "CASE WHEN policy_id = ? THEN true ELSE false END")) {
+            statement.setInt(1, policyId);
+            statement.executeUpdate();
         }
     }
 
