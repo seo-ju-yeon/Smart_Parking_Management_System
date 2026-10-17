@@ -13,10 +13,10 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 ### 구현 및 확인한 내용
 
 - ID/PW 확인 후 `NORMAL`은 등록 이메일 일치 여부를 확인하고, `ADMIN`은 이메일 OTP를 확인하도록 추가 인증 흐름을 나눴습니다.
-- `LoginCheckFilter`는 추가 인증 완료 여부를 검사하고, `AuthorizationFilter`는 인증된 관리자의 역할에 따라 요청 경로를 제한합니다.
+- `CsrfFilter`는 상태 변경 요청의 토큰을 검사하고, `LoginCheckFilter`와 `AuthorizationFilter`는 추가 인증 완료 여부와 역할별 접근 권한을 검사합니다.
 - BCrypt 기반 비밀번호 해싱을 적용하고, 이중 해싱으로 인한 로그인 실패 문제를 분석해 수정했습니다.
-- Java 17 Toolchain을 적용해 빌드에 사용하는 Java 버전을 고정했습니다.
-- JSP와 CSS·JavaScript 파일을 기능별 디렉터리로 분류하고 참조 경로를 통일했습니다.
+- Java 17 Toolchain을 적용해 컴파일에 사용하는 Java 버전을 지정했습니다.
+- JSP와 CSS·JavaScript 파일을 기능별 디렉터리로 분류하고 주요 참조 경로를 정리했습니다.
 - 결제 금액을 서버에서 계산하고, 결제 저장·출차 처리·공간 반환을 하나의 JDBC 트랜잭션으로 묶었습니다.
 
 ## 2. 기술 스택
@@ -29,13 +29,13 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 | Database | MariaDB 12.3.3 |
 | Database Migration | Flyway 13.7.0 |
 | Data Access | JDBC, HikariCP, PreparedStatement |
-| Security | Session, BCrypt, Email OTP |
+| Security | Session, BCrypt, Email OTP, CSRF 토큰, OWASP Java Encoder |
 | Logging | Log4j2, SLF4J Bridge |
 | Mail | Jakarta Mail API, Angus Mail, Mailpit (로컬), SMTP (외부 환경) |
 | Library | Lombok, ModelMapper |
 | Build/Runtime | Gradle Wrapper 8.8, WAR Plugin, Tomcat |
 | Local Infrastructure | Docker Compose |
-| Test | JUnit 5 |
+| Test | JUnit 5, Mockito |
 
 ## 3. 프로젝트 전체 기능
 
@@ -74,7 +74,7 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 
 ### 역할별 접근 제어
 
-- `web.xml`에서 `LoginCheckFilter` 다음에 `AuthorizationFilter`가 실행되도록 순서를 고정
+- `web.xml`에서 `CsrfFilter`, `LoginCheckFilter`, `AuthorizationFilter` 순서로 실행되도록 등록
 - `/mgr/**`는 ADMIN 전용으로 처리하되, `/mgr/my_modify`는 NORMAL 본인 수정 경로로 분리
 - 요금 정책 조회는 두 역할에 허용하고 `/view/policy/add`, `/view/policy/apply`는 ADMIN만 허용
 - JSP의 메뉴 노출 조건은 화면 표시 목적으로만 사용하고, 실제 접근 허용 여부는 필터와 Controller에서 판단
@@ -104,7 +104,8 @@ JSP/Servlet 기반의 주차장 관리자용 웹 시스템입니다. 차량 입�
 ### 요청 흐름
 
 ```text
-Browser / JSP
+Browser의 요청
+  -> CsrfFilter
   -> LoginCheckFilter
   -> AuthorizationFilter
   -> Servlet Controller
@@ -128,7 +129,7 @@ Controller / Service -> MailService -> SMTP
 - JDBC `PreparedStatement`를 사용해 SQL 파라미터 바인딩
 - BCrypt 기반 관리자 비밀번호 해시 검증
 - Session 기반 로그인 상태 관리
-- 인증 여부와 역할별 경로 권한을 분리한 두 단계 필터 구성
+- CSRF 토큰, 로그인 완료 여부, 역할별 경로 권한을 각각 검사하는 필터 구성
 - Controller에서 수정·조회 대상 ID와 역할을 다시 확인
 - Jakarta Mail 기반 이메일/OTP 인증
 - 민감 설정값은 `application.properties`로 분리하고, Git에는 예시 파일만 포함
@@ -145,7 +146,7 @@ src/main/java/org/example/smart_parking_260219
 ├── controller      # Servlet Controller
 ├── dao             # JDBC 기반 DB 접근 계층
 ├── dto             # 화면/서비스 전달 객체
-├── filter          # 로그인 상태와 역할별 경로 접근 제어 필터
+├── filter          # CSRF 토큰, 로그인 상태, 역할별 경로 접근 제어 필터
 ├── mail            # 이메일 발송 설정 및 서비스
 ├── service         # 비즈니스 로직
 ├── util            # 설정, 비밀번호, OTP 생성, 매핑 유틸
@@ -188,7 +189,7 @@ src/main/webapp
         └── statistics  # 통계 화면
 ```
 
-JSP는 브라우저에서 직접 접근하지 않도록 `WEB-INF/views` 아래에 두고 기능별 디렉터리로 구분했습니다. CSS와 JavaScript도 동일한 기능 단위로 분류했으며, 디렉터리명과 파일 참조 경로는 소문자로 통일했습니다. 정적 리소스를 참조할 때는 애플리케이션의 Context Path를 기준으로 경로를 생성합니다.
+JSP는 브라우저에서 직접 접근하지 않도록 `WEB-INF/views` 아래에 두고 기능별 디렉터리로 구분했습니다. CSS와 JavaScript도 동일한 기능 단위로 분류했으며, 디렉터리명과 파일 참조 경로는 소문자로 통일했습니다. 정적 리소스에는 애플리케이션의 Context Path를 붙여 참조합니다. 일부 회원 화면의 링크와 폼에는 `/member/...`로 시작하는 경로가 남아 있어, 애플리케이션을 `/parking`처럼 별도 경로에 배포할 때 추가 확인이 필요합니다.
 
 JSP에 있던 인라인 스타일과 `onclick`, `onsubmit`, `onchange` 이벤트는 화면별 CSS·JavaScript 파일로 이동했습니다. JSP나 Servlet이 JavaScript 코드를 직접 생성하던 알림 응답은 공통 알림 JSP에 메시지와 이동 정보만 전달하도록 변경했고, 결제 시간과 통계 값처럼 JavaScript에서 필요한 서버 값은 HTML의 `data-*` 속성을 통해 전달합니다.
 
@@ -209,7 +210,7 @@ JSP에 있던 인라인 스타일과 `onclick`, `onsubmit`, `onchange` 이벤트
 ### 실행 환경
 
 - Java 17
-- Tomcat 10.x (Jakarta Servlet 6.0 기준)
+- Tomcat 10.1.x (Jakarta Servlet 6.0 기준)
 - Docker Desktop 및 Docker Compose
 - MariaDB 12.3.3, Flyway 13.7.0 (Docker Compose로 실행)
 - Gradle Wrapper 8.8
@@ -335,11 +336,46 @@ docker compose logs flyway
 
 ### 빌드와 검증 범위
 
+Gradle을 실행하는 JVM도 Java 17인지 확인합니다. Toolchain은 컴파일에 사용할 Java 17을 지정하지만 Gradle 자체를 실행하는 JDK의 호환성까지 보장하지는 않습니다.
+
 ```bash
+./gradlew --version
 ./gradlew clean war
 ```
 
-생성된 WAR 파일은 `build/libs`에서 확인할 수 있습니다. Gradle Java Toolchain을 Java 17로 고정해 실행 중인 로컬 JDK와 관계없이 같은 Java 버전을 기준으로 컴파일합니다.
+`./gradlew --version` 출력의 JVM이 Java 17인지 확인합니다. 생성된 WAR 파일은 `build/libs`에서 확인할 수 있습니다. 이 프로젝트는 Java 17 Toolchain을 사용해 애플리케이션 코드를 컴파일합니다.
+
+로컬 Tomcat 10.1.x에 WAR 파일을 배포한 뒤 애플리케이션의 배포 경로에 맞는 주소로 접속합니다. Tomcat의 배포 경로를 `/`로 설정했다면 `http://localhost:8080/login`, `/parking`으로 설정했다면 `http://localhost:8080/parking/login`입니다. 포트가 8080이 아니라면 실제 Tomcat 포트로 바꿉니다. `application.properties`를 복사하고 로컬 설정을 채운 뒤 WAR를 빌드해야 해당 설정이 빌드 결과에 포함됩니다.
+
+| 명령 | 실행하는 테스트 | 필요한 환경 |
+| --- | --- | --- |
+| `./gradlew test` | DB·Mailpit이 필요 없는 단위 테스트와 필터 테스트 | Java 17 |
+| `./gradlew integrationTest` | DAO·서비스의 DB 통합 테스트 | 아래의 전용 테스트 DB와 접속 환경변수 |
+
+메일 발송 테스트에는 `mail-integration` 태그가 붙어 있습니다. 현재 `test`와 `integrationTest`는 이 태그를 제외하며, 메일 테스트만 실행하는 별도 Gradle 작업은 아직 없습니다. 따라서 두 명령의 성공을 메일 발송 검증까지 완료한 결과로 보지 않습니다.
+
+DB 통합 테스트는 개발 DB와 분리한 Compose 프로젝트에서 실행합니다. `.env.test`가 아직 없을 때만 `.env.test.example`을 복사하고 비밀번호를 변경합니다.
+
+```bash
+cp -n .env.test.example .env.test
+docker compose -p smart-parking-test --env-file .env.test \
+  -f docker-compose.yml -f docker-compose.test.yml up -d db flyway
+docker compose -p smart-parking-test --env-file .env.test \
+  -f docker-compose.yml -f docker-compose.test.yml ps -a
+```
+
+`db`가 `Up (healthy)`, `flyway`가 `Exited (0)`인지 확인합니다. 다음 명령은 macOS 기본 셸인 zsh에서 실행하는 예입니다. 비밀번호 입력값은 `.env.test`의 `MARIADB_PASSWORD`와 같아야 합니다.
+
+```zsh
+export DB_URL='jdbc:mariadb://localhost:3308/smart_parking_test'
+export DB_USERNAME='parking_test'
+read -s 'DB_PASSWORD?테스트 DB 비밀번호: '
+echo
+export DB_PASSWORD
+./gradlew integrationTest
+```
+
+`integrationTest`는 URL이 `localhost:3308/smart_parking_test`이고 사용자 이름이 `parking_test`인지 확인하며, 비밀번호가 비어 있으면 테스트를 실행하지 않습니다. 기본 `./gradlew test` 실행에는 DB와 Mailpit이 필요하지 않습니다.
 
 Java 17 WAR 빌드 성공과 주요 인증 흐름의 수동 검증을 확인했습니다. 결제·출차 개선은 로컬 환경에서 다음 항목을 수동 검증했습니다.
 
@@ -347,9 +383,7 @@ Java 17 WAR 빌드 성공과 주요 인증 흐름의 수동 검증을 확인했�
 - 강제 실패: 공간 반환 조건을 불일치시킨 뒤 결제 내역 0건, `paid = false`, `exit_time = NULL`로 롤백 확인 후 원래 값 복구 및 재결제 확인
 - 중복 저장: V4 적용 후 같은 `parking_id`의 직접 INSERT가 UNIQUE 제약으로 거부되는 것을 확인
 
-`./gradlew clean war`는 애플리케이션 컴파일과 WAR 생성을 확인하는 명령이며, 테스트 코드 컴파일·JUnit 실행이나 JSP 실행 결과까지 검증하지는 않습니다. 위 수동 검증은 동시 결제 요청이나 모든 요금 구간의 자동 회귀 검증을 의미하지 않습니다.
-
-테스트 코드는 JUnit 5 기반이지만 일부는 로컬 MariaDB와 초기 데이터에 의존합니다. 또한 기존 테스트 3곳에 제거된 개별 출차 처리 메서드 호출이 남아 있어 수정이 필요합니다. 자동 테스트 정비와 회귀 검증은 아직 완료하지 않았습니다.
+`./gradlew clean war`는 애플리케이션 컴파일과 WAR 생성을 확인하는 명령이며, JUnit 실행이나 JSP 화면 동작까지 검증하지는 않습니다. DB 통합 테스트에는 결제 성공, 처리 중 실패 시 롤백, 중복 결제 요청 결과를 확인하는 테스트가 포함됩니다. 위 수동·자동 검증만으로 동시 요청의 모든 상황이나 모든 요금 구간을 검증했다고 보지는 않습니다.
 
 ## 7. 담당 기능 흐름
 
@@ -396,11 +430,11 @@ Java 17 WAR 빌드 성공과 주요 인증 흐름의 수동 검증을 확인했�
 
 ### Java 17 Toolchain 고정
 
-개발 환경마다 사용하는 JDK 버전이 달라 빌드 결과가 달라지는 문제를 줄이기 위해 Gradle Java Toolchain을 Java 17로 고정했습니다. 프로젝트가 요구하는 Java 버전을 빌드 설정에 명시해 동일한 기준으로 컴파일할 수 있도록 했습니다.
+애플리케이션을 Java 17 기준으로 컴파일하기 위해 Gradle Java Toolchain을 설정했습니다. Gradle 자체를 실행하는 JVM은 별도로 확인해야 하며, 로컬에서는 Java 17로 실행했습니다.
 
 ### JSP와 정적 리소스 구조 통일
 
-여러 경로에 나뉘어 있던 JSP를 `WEB-INF/views` 아래의 기능별 디렉터리로 정리했습니다. CSS와 JavaScript도 소문자 디렉터리와 기능별 구조로 통일하고, Servlet과 JSP의 화면 이동 경로 및 정적 리소스 참조 경로를 함께 수정했습니다.
+여러 경로에 나뉘어 있던 JSP를 `WEB-INF/views` 아래의 기능별 디렉터리로 정리했습니다. CSS와 JavaScript도 소문자 디렉터리와 기능별 구조로 통일하고, Servlet의 리다이렉트와 주요 정적 리소스 참조 경로에 Context Path를 반영했습니다. 일부 회원 JSP의 링크와 폼 경로는 추가 정리가 필요합니다.
 
 - JSP는 서버 데이터 출력과 화면 구조를 담당합니다.
 - CSS는 화면별 스타일을 담당하며 JSP의 인라인 `style` 속성을 사용하지 않습니다.
@@ -410,12 +444,15 @@ Java 17 WAR 빌드 성공과 주요 인증 흐름의 수동 검증을 확인했�
 
 ### 인증 및 보안 개선
 
-기존 팀 프로젝트를 개인 포트폴리오로 개선하면서 인증 흐름을 다음과 같이 보완했습니다.
+기존 팀 프로젝트를 개인 포트폴리오로 개선하면서 인증과 보안 관련 요청 처리를 다음과 같이 보완했습니다.
 
 - 시연 편의를 위해 존재했던 고정 OTP와 인증 우회 기능을 제거했습니다.
 - 별도 기능이 없어진 `SUPER` 역할을 `ADMIN`으로 통합하고 역할 값을 `NORMAL`, `ADMIN`으로 단순화했습니다.
 - 아이디와 비밀번호 인증뿐만 아니라 권한별 2차 인증까지 완료해야 보호된 관리자 기능에 접근할 수 있도록 변경했습니다.
+- 세션별 CSRF 토큰을 발급하고, 상태 변경 요청의 폼 값 또는 `X-CSRF-Token` 헤더를 `CsrfFilter`가 확인하도록 했습니다.
+- 요금 정책 적용·회원 삭제·로그아웃처럼 상태를 바꾸는 GET 요청을 POST 요청으로 변경했습니다.
 - 인증 완료 여부는 `LoginCheckFilter`, 역할별 URL 접근은 `AuthorizationFilter`, 실제 수정 대상 권한은 Controller가 확인하도록 책임을 구분했습니다.
+- JSP에 표시하는 동적 문자열은 들어가는 위치에 맞춰 HTML 본문·속성에서 인코딩하고, URL 파라미터도 인코딩했습니다. 결제 화면에서 JavaScript로 HTML을 만들 때는 DOM API로 텍스트와 요소를 추가하도록 수정했습니다.
 - 관리자 등록 시 JavaScript의 인증 결과만 신뢰하지 않고, 최종 등록 요청에서도 서버가 인증된 이메일인지 다시 확인합니다.
 - 관리자 수정 시 OTP 인증 결과를 대상 관리자 ID와 이메일에 연결하고 최종 POST에서 다시 확인합니다.
 - OTP 생성에 `SecureRandom`을 사용하여 예측 가능성을 낮췄습니다.
