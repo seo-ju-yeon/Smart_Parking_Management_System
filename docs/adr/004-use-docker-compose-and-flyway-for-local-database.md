@@ -133,6 +133,12 @@ docker compose logs flyway
 - Java 17 환경에서 `./gradlew clean war`가 성공했습니다.
 - 새 볼륨에 생성된 데이터베이스로 애플리케이션을 실행하여 로그인과 데이터 조회·변경 기능이 동작함을 수동 검증했습니다.
 
+### 후속 변경 이후 현재 구성
+
+위에서 확인한 마이그레이션 3개와 DB 버전 `2`는 이 환경을 처음 도입했을 때의 결과입니다. 이후 관리자 역할을 정리한 `V3__simplify_manager_roles.sql`과 결제 중복을 제한한 `V4__add_unique_payment_parking.sql`을 추가했습니다.
+
+테스트용 DB는 별도의 Compose 프로젝트와 `.env.test`로 실행합니다. [docker-compose.test.yml](../../docker-compose.test.yml)은 Flyway 실행 경로에서 로컬 시연 데이터를 제외하므로, 테스트 DB에는 버전 마이그레이션과 필수 기준 데이터만 적용됩니다. 테스트에서 추가로 필요한 데이터는 해당 테스트 코드에서 준비하고 정리합니다.
+
 ## 관련 구현
 
 - [docker-compose.yml](../../docker-compose.yml)

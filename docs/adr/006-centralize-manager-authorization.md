@@ -43,10 +43,11 @@
 
 ### 2. 역할별 URL 권한을 AuthorizationFilter에서 검사
 
-`AuthorizationFilter`를 추가하고 `web.xml`에서 `LoginCheckFilter` 다음에 실행되도록 등록합니다.
+`AuthorizationFilter`를 추가하고 `web.xml`에서 `LoginCheckFilter` 다음에 실행되도록 등록했습니다. 이후 CSRF 검사를 추가하여 현재 필터 실행 순서는 `CsrfFilter` → `LoginCheckFilter` → `AuthorizationFilter`입니다.
 
 ```text
 요청
+→ CsrfFilter: 상태 변경 요청의 CSRF 토큰 검사
 → LoginCheckFilter: 로그인·추가 인증 완료 여부 검사
 → AuthorizationFilter: 역할별 URL 접근 권한 검사
 → Controller: 실제 대상 데이터 권한 검사
@@ -119,7 +120,7 @@ JSP에서는 역할에 따른 리다이렉트를 수행하지 않습니다. 역�
 
 - `ManagerRole` enum이 `NORMAL`, `ADMIN` 두 값만 포함하는 것을 확인했습니다.
 - Java와 JSP에서 `ManagerRole.SUPER` 참조가 남지 않았음을 재검색했습니다.
-- `web.xml`에서 `LoginCheckFilter`, `AuthorizationFilter` 순서로 `/*`에 매핑된 것을 확인했습니다.
+- 이 결정 당시 `web.xml`에서 `LoginCheckFilter`, `AuthorizationFilter` 순서로 `/*`에 매핑된 것을 확인했습니다. 현재는 `CsrfFilter`가 두 필터보다 먼저 실행됩니다.
 - 관리자 수정 세 화면의 OTP 발송·검증 요청이 대상 `managerId`를 함께 전송하는 것을 확인했습니다.
 - 관리자 수정 최종 POST 세 경로가 인증 완료 ID와 이메일을 검사하는 것을 확인했습니다.
 
