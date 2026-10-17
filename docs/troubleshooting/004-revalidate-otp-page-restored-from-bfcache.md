@@ -74,7 +74,7 @@ Expires: 0
 
 ### 3. BFCache 복원 시 페이지 다시 요청
 
-`login_email_otp.jsp`의 `pageshow` 이벤트에서 `event.persisted`가 `true`이면 `window.location.reload()`를 호출합니다. 브라우저가 메모리에서 화면을 복원했더라도 새 GET 요청을 발생시켜 서버가 현재 세션 상태를 다시 판단하도록 했습니다.
+`login_email_otp.jsp`가 불러오는 `login-email-otp.js`의 `pageshow` 이벤트에서 `event.persisted`가 `true`이면 `window.location.reload()`를 호출합니다. 브라우저가 메모리에서 화면을 복원했더라도 새 GET 요청을 발생시켜 서버가 현재 세션 상태를 다시 판단하도록 했습니다.
 
 ### 4. 인증 취소 시 로그아웃 처리
 
@@ -131,7 +131,7 @@ Expires: 0
 
 ## 남은 한계
 
-- `pageshow`를 이용한 BFCache 재검사는 현재 `ADMIN`·`SUPER`가 사용하는 로그인 OTP JSP에만 적용되어 있습니다.
+- `pageshow`를 이용한 BFCache 재검사는 현재 `ADMIN`이 사용하는 로그인 OTP 화면에만 적용되어 있습니다.
 - JavaScript가 실행되지 않는 환경에서는 `pageshow` 재요청이 동작하지 않습니다. 이 경우에도 복원된 화면에서 서버 기능을 사용하려면 새로운 요청이 필요하며, 서버는 해당 요청에서 세션과 인증 상태를 다시 검사해야 합니다.
 - 브라우저별 BFCache 적용 조건이 다를 수 있으므로 지원 브라우저에서 수동 검증이 필요합니다.
 
